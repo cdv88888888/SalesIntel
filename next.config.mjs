@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  serverExternalPackages: ['firebase-admin', '@google-cloud/bigquery'],
+  skipProxyUrlNormalize: true,
+  output: 'standalone',
+  distDir: process.env.NEXT_DIST_DIR || '.next',
 };
 
 export default nextConfig;
