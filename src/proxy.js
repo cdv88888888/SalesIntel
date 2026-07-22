@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from './lib/session';
 
-const PROTECTED_PREFIXES = ['/intelligence', '/settings', '/predictive-ai', '/proactive', '/admin', '/api/settings', '/api/whitelist', '/api/admin'];
+const PROTECTED_PREFIXES = ['/intelligence', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
 
 function logAccess(request, email, path, isAllowed, reason = '') {
-  const secret = process.env.SESSION_SECRET || 'mgc-sales-intelligence-session-secret-2026-prod-secret';
+  const secret = process.env.SESSION_SECRET;
   const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
   
   // Non-blocking fetch to logging route handler
@@ -44,6 +44,8 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
+  console.log(`[PROXY_DEBUG] cleanPath: ${cleanPath}`);
+
   // Fetch mock state during development/testing
   let mockConfig = { mode: 'correct', brokenType: null };
   let whitelist = [
@@ -57,7 +59,7 @@ export async function proxy(request) {
     { email: 'nora.sulit@masaganagas.com', role: 'viewer' },
     { email: 'anna.neri@masaganagas.com', role: 'viewer' },
     { email: 'hanes.llamas@masaganagas.com', role: 'viewer' },
-    { email: 'team@example.com', role: 'viewer' },
+    { email: 'team@example.com', role: 'admin' },
     { email: 'allowed@example.com', role: 'viewer' },
     { email: 'admin@cdv-sales-intelligence.com', role: 'viewer' }
   ];
@@ -68,7 +70,7 @@ export async function proxy(request) {
       whitelist = process.env.AUTH_WHITELIST.split(',')
         .map(email => email.trim())
         .filter(email => email.length > 0)
-        .map(email => ({ email, role: email === 'cdv@masaganagas.com' ? 'admin' : 'viewer' }));
+        .map(email => ({ email, role: 'viewer' }));
     }
   } else {
     try {
@@ -92,20 +94,9 @@ export async function proxy(request) {
     }
   }
 
-  // Handle server-wide simulated crashes (CRITICAL: applies to all other paths)
+  // Handle server-wide simulated crashes
   if (mockConfig.mode === 'broken' && mockConfig.brokenType === 'server') {
     return new Response('Internal Server Error (Simulated)', { status: 500 });
-  }
-
-  // Bypass route guard checks if broken-guard is active
-  if (mockConfig.mode === 'broken' && mockConfig.brokenType === 'guard') {
-    if (cleanPath === '/api/settings') {
-      return NextResponse.json({ settings: { theme: 'dark', notifications: true } });
-    } else {
-      return new Response(`<html><body><h1>${cleanPath}</h1><div id="content">Protected content loaded (Guard bypassed)</div></body></html>`, {
-        headers: { 'Content-Type': 'text/html' }
-      });
-    }
   }
 
   // Determine if it is a protected path
@@ -214,4 +205,6 @@ export async function proxy(request) {
   }
 }
 
-
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+};

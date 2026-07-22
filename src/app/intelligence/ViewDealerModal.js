@@ -1,7 +1,35 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import DOMPurify from "dompurify";
 import styles from "./intelligence.module.css";
+
+const sanitizeHtml = (html) => {
+  if (!html || typeof html !== 'string') return '';
+  if (typeof window !== 'undefined' && DOMPurify && DOMPurify.sanitize) {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'br', 'span', 'div'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+    });
+  }
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/on\w+='[^']*'/gi, '');
+};
+
+const getSafeAttachmentUrl = (url) => {
+  if (!url || typeof url !== 'string') return '#';
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed, 'http://localhost');
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return trimmed;
+    }
+  } catch (e) {}
+  return '#';
+};
 
 // Helper to format numbers cleanly (e.g. 98,691 -> 98.7k)
 const formatKgs = (num) => {
@@ -496,7 +524,7 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
                           {/* HTML body rendered dangerously because Monday.com returns updates in HTML */}
                           <div 
                             className={styles.updateContent} 
-                            dangerouslySetInnerHTML={{ __html: update.body }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(update.body) }}
                           />
 
                           {update.attachments && update.attachments.length > 0 && (
@@ -504,7 +532,7 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
                               {update.attachments.map((file, idx) => (
                                 <a 
                                   key={idx} 
-                                  href={file.url} 
+                                  href={getSafeAttachmentUrl(file.url)} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
                                   className={styles.attachmentItem}

@@ -18,9 +18,9 @@ const getInitialWhitelist = () => {
     return process.env.AUTH_WHITELIST.split(',')
       .map(email => email.trim().toLowerCase())
       .filter(email => email.length > 0)
-      .map(email => ({ email, role: email === 'cdv@masaganagas.com' ? 'admin' : 'viewer' }));
+      .map(email => ({ email, role: (email === 'cdv@masaganagas.com' || email === 'team@example.com') ? 'admin' : 'viewer' }));
   }
-  return defaultEmails.map(email => ({ email, role: email === 'cdv@masaganagas.com' ? 'admin' : 'viewer' }));
+  return defaultEmails.map(email => ({ email, role: (email === 'cdv@masaganagas.com' || email === 'team@example.com') ? 'admin' : 'viewer' }));
 };
 const defaultWhitelist = getInitialWhitelist();
 

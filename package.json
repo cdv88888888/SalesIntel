@@ -10,7 +10,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "test:e2e": "node tests/run-e2e.js"
+    "test": "node tests/run-e2e-real.js",
+    "test:e2e": "node tests/run-e2e-real.js"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.3.1",

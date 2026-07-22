@@ -9,6 +9,7 @@ import RiskChart from "../../components/RiskChart";
 import { getSettings } from "../../lib/settings";
 
 export default async function RiskAndChurn({ searchParams }) {
+  await cookies();
   const params = await searchParams;
   const segment = params?.segment || 'dealer';
   

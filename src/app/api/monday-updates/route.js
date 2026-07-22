@@ -16,6 +16,27 @@ function getMondayMappings() {
   return {};
 }
 
+function sanitizeHtml(html) {
+  if (!html || typeof html !== 'string') return '';
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/on\w+='[^']*'/gi, '');
+}
+
+function getSafeUrl(url) {
+  if (!url || typeof url !== 'string') return '#';
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed, 'http://localhost');
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return trimmed;
+    }
+  } catch (e) {}
+  return '#';
+}
+
 // Helper to load mock updates
 function getMockUpdates(dealerId) {
   try {
@@ -23,7 +44,12 @@ function getMockUpdates(dealerId) {
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf8');
       const mockDb = JSON.parse(data);
-      return mockDb[dealerId] || mockDb['default'] || [];
+      const updates = mockDb[dealerId] || mockDb['default'] || [];
+      return updates.map(up => ({
+        ...up,
+        body: sanitizeHtml(up.body),
+        attachments: (up.attachments || []).map(a => ({ ...a, url: getSafeUrl(a.url) }))
+      }));
     }
   } catch (err) {
     console.error("Failed to load mock updates:", err);
@@ -212,10 +238,10 @@ export async function GET(request) {
         },
         createdAt: up.created_at,
         relativeTime,
-        body: up.body, // Live HTML body
+        body: sanitizeHtml(up.body), // Live HTML body
         attachments: (up.assets || []).map(asset => ({
           name: asset.name,
-          url: asset.public_url,
+          url: getSafeUrl(asset.public_url),
           type: asset.name.toLowerCase().match(/\.(jpeg|jpg|gif|png)$/) ? 'image' : 'file'
         })),
         replies: (up.replies || []).map(r => ({
