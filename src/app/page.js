@@ -32,7 +32,7 @@ export default async function Dashboard({ searchParams }) {
   const params = await searchParams;
   const segment = params.segment || 'dealer';
 
-  const settings = await getSettings();
+  const settings = await getSettings(null, segment);
   const MONTHLY_SALES_TARGET = settings.globalTarget || 150000;
   const dealerTargets = settings.dealerTargets || {};
   let atRiskDealers = [];
@@ -98,12 +98,12 @@ export default async function Dashboard({ searchParams }) {
     <div className={styles.dashboard}>
       <main className={styles.mainColumn}>
         <header className={styles.header}>
-          <h1 className="gradient-text">Dealer Intelligence</h1>
+          <h1 className="gradient-text">CDV-sales-intelligence</h1>
           <p>Smart Relationship Management & Operational Automation</p>
         </header>
 
         {/* New Feature: Monthly Target Tracker */}
-        <section className={`${styles.section} glass-panel`} style={{ borderColor: 'var(--primary-accent)', display: 'flex', alignItems: 'center', gap: '32px' }}>
+        <section className={`${styles.section} glass-panel ${styles.monthlyGoalCard}`}>
           
           <div style={{ width: '140px', height: '140px', flexShrink: 0, position: 'relative', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
             <svg width="100%" height="100%" viewBox="0 0 100 100">

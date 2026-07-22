@@ -1,7 +1,10 @@
 {
-  "name": "dealer-intelligence",
+  "name": "CDV-sales-intelligence",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20"
+  },
   "scripts": {
     "dev": "next dev -p 3005 --webpack",
     "build": "next build --webpack",
@@ -13,14 +16,18 @@
     "@google-cloud/bigquery": "^8.3.1",
     "@google-cloud/bigquery-2d43d264c358db9b": "npm:@google-cloud/bigquery@^8.3.1",
     "@google/genai": "^2.10.0",
+    "esbuild": "^0.19.2",
     "firebase": "^12.15.0",
-    "firebase-admin": "^13.10.0",
-    "firebase-admin-a14c8a5423a75469": "npm:firebase-admin@^13.10.0",
+    "firebase-frameworks": "^0.11.8",
+    "firebase-functions": "^7.2.5",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
+    "recharts": "^3.9.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
