@@ -1,8 +1,9 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { signSession, verifySession } from '../../../../lib/session';
-import { getMockConfig, addActiveSession, removeActiveSession, getActiveSessions, getUserRole } from '../../../../lib/mockStore';
+import { getMockConfig, addActiveSession, removeActiveSession, getActiveSessions } from '../../../../lib/mockStore';
 import { checkUserAccess } from '../../../../lib/auth';
+import { getUserRoleFromFirestore } from '../../../../lib/whitelist';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -41,7 +42,8 @@ export async function GET(request) {
 
   if (session && isActive) {
     const email = session.email.trim().toLowerCase();
-    const role = getUserRole(email);
+    const { getUserRoleFromFirestore } = await import('../../../../lib/whitelist.js');
+    const role = await getUserRoleFromFirestore(email);
     return NextResponse.json({ user: { email: session.email, role } });
   }
   return NextResponse.json({ user: null });

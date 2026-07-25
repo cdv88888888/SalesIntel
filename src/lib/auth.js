@@ -1,4 +1,4 @@
-import { auth } from './firebase';
+import { auth } from './firebase.js';
 import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 /**
@@ -13,47 +13,27 @@ export async function checkUserAccess(email) {
 
   if (typeof window === 'undefined') {
     // Server-side
-    let whitelist = [
-      'team@example.com',
-      'allowed@example.com',
-      'admin@cdv-sales-intelligence.com',
-      'maclaire.jabines@masaganagas.com',
-      'janalbert.santos@masaganagas.com',
-      'cdv@masaganagas.com',
-      'anton.antonio@masaganagas.com',
-      'melroziene.dorio@masaganagas.com',
-      'patrick.yao@masaganagas.com',
-      'marialourdes.jordan@masaganagas.com',
-      'nora.sulit@masaganagas.com',
-      'anna.neri@masaganagas.com',
-      'hanes.llamas@masaganagas.com'
-    ];
-    if (process.env.NODE_ENV === 'production') {
-      if (process.env.AUTH_WHITELIST) {
-        whitelist = process.env.AUTH_WHITELIST.split(',')
-          .map(e => e.trim())
-          .filter(e => e.length > 0);
-      }
-    } else {
-      try {
-        const { getWhitelist, getMockConfig } = await import('./mockStore');
-        const mockConfig = getMockConfig();
-        if (mockConfig && mockConfig.mode === 'broken') {
-          if (mockConfig.brokenType === 'whitelist') {
-            return true;
-          } else if (mockConfig.brokenType === 'access-denied') {
-            return false;
-          }
+    try {
+      const { getMockConfig } = await import('./mockStore.js');
+      const mockConfig = getMockConfig();
+      if (mockConfig && mockConfig.mode === 'broken') {
+        if (mockConfig.brokenType === 'whitelist') {
+          return true;
+        } else if (mockConfig.brokenType === 'access-denied') {
+          return false;
         }
-        whitelist = getWhitelist();
-      } catch (e) {
-        console.error("ERROR IN checkUserAccess server-side mockStore load:", e);
       }
+      
+      const { getWhitelistedUsersFromFirestore } = await import('./whitelist.js');
+      const whitelist = await getWhitelistedUsersFromFirestore();
+      return whitelist.some(u => {
+        const emailStr = typeof u === 'string' ? u : u.email;
+        return emailStr.trim().toLowerCase() === cleanEmail;
+      });
+    } catch (e) {
+      console.error("ERROR IN checkUserAccess server-side Firestore load:", e);
+      return false;
     }
-    return whitelist.map(e => {
-      if (typeof e === 'string') return e.trim().toLowerCase();
-      return e.email.trim().toLowerCase();
-    }).includes(cleanEmail);
   } else {
     // Client-side: query session check endpoint
     try {

@@ -16,9 +16,14 @@ const defaultEmails = [
 const getInitialWhitelist = () => {
   if (process.env.AUTH_WHITELIST) {
     return process.env.AUTH_WHITELIST.split(',')
-      .map(email => email.trim().toLowerCase())
-      .filter(email => email.length > 0)
-      .map(email => ({ email, role: (email === 'cdv@masaganagas.com' || email === 'team@example.com') ? 'admin' : 'viewer' }));
+      .map(entry => entry.trim())
+      .filter(entry => entry.length > 0)
+      .map(entry => {
+        const parts = entry.split(':');
+        const email = parts[0].trim().toLowerCase();
+        const role = parts[1] ? parts[1].trim() : ((email === 'cdv@masaganagas.com' || email === 'team@example.com') ? 'admin' : 'viewer');
+        return { email, role };
+      });
   }
   return defaultEmails.map(email => ({ email, role: (email === 'cdv@masaganagas.com' || email === 'team@example.com') ? 'admin' : 'viewer' }));
 };

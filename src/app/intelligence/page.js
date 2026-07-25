@@ -85,8 +85,8 @@ export default async function BusinessIntelligence({ searchParams }) {
         let valB = b[sortBy];
         
         if (sortBy === 'target') {
-          valA = dealerTargets[a.id] !== undefined ? dealerTargets[a.id] : (a.prevKgsSold ? a.prevKgsSold * 1.15 : 0);
-          valB = dealerTargets[b.id] !== undefined ? dealerTargets[b.id] : (b.prevKgsSold ? b.prevKgsSold * 1.15 : 0);
+          valA = dealerTargets[a.id] !== undefined ? dealerTargets[a.id] : (a.prevKgsSold ? a.prevKgsSold * 1.15 : (a.avgMonthKgs ? a.avgMonthKgs * 1.15 : 0));
+          valB = dealerTargets[b.id] !== undefined ? dealerTargets[b.id] : (b.prevKgsSold ? b.prevKgsSold * 1.15 : (b.avgMonthKgs ? b.avgMonthKgs * 1.15 : 0));
         } else if (sortBy === 'name') {
           valA = a.name || "";
           valB = b.name || "";
@@ -138,7 +138,7 @@ export default async function BusinessIntelligence({ searchParams }) {
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <div>
-            <h1 className="gradient-text">Dealer Volume Analytics</h1>
+            <h1 className="gradient-text">Volume Analytics</h1>
             <p>Real-time Sales in KGs & Performance Tracking</p>
           </div>
           <form method="GET" className={styles.filterForm}>
@@ -240,7 +240,7 @@ export default async function BusinessIntelligence({ searchParams }) {
               const isHighest = val === chartMax && chartMax > 0;
               const isLowest = val === chartMin && chartMin < chartMax && val > 0;
               
-              let bgColor = 'rgba(255,255,255,0.08)';
+              let bgColor = 'var(--chart-bar-inactive)';
               let glow = 'none';
               let borderColor = '1px solid transparent';
               
@@ -263,7 +263,7 @@ export default async function BusinessIntelligence({ searchParams }) {
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '32px', justifyContent: 'flex-end' }}>
                     {isHighest && <span style={{fontSize: '0.65rem', color: 'var(--success-color)', fontWeight: 'bold', lineHeight: 1, marginBottom: '2px'}}>MAX</span>}
                     {isLowest && <span style={{fontSize: '0.65rem', color: 'var(--danger-color)', fontWeight: 'bold', lineHeight: 1, marginBottom: '2px'}}>MIN</span>}
-                    <span style={{ fontSize: '0.75rem', color: isSelected || isHighest || isLowest ? 'var(--text-primary)' : 'var(--text-secondary)', opacity: val > 0 ? 1 : 0, fontWeight: isSelected || isHighest || isLowest ? 600 : 400, transition: 'opacity 0.2s', lineHeight: 1 }}>
+                    <span style={{ fontSize: '0.75rem', color: isSelected || isHighest || isLowest ? 'var(--text-primary)' : 'var(--text-secondary)', opacity: val > 0 ? 1 : 0, fontWeight: isSelected || isHighest || isLowest ? 600 : 400, transition: 'opacity 0.2s', lineHeight: 1, whiteSpace: 'nowrap' }}>
                       {(val / 1000).toFixed(1)}k
                     </span>
                   </div>
@@ -307,7 +307,7 @@ export default async function BusinessIntelligence({ searchParams }) {
           </thead>
           <tbody>
             {dealers.map((dealer) => {
-              const target = dealerTargets[dealer.id] !== undefined ? dealerTargets[dealer.id] : (dealer.prevKgsSold ? dealer.prevKgsSold * 1.15 : 0);
+              const target = dealerTargets[dealer.id] !== undefined ? dealerTargets[dealer.id] : (dealer.prevKgsSold ? dealer.prevKgsSold * 1.15 : (dealer.avgMonthKgs ? dealer.avgMonthKgs * 1.15 : 0));
               return (
                 <DealerRow 
                   key={dealer.id}

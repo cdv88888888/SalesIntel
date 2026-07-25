@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 
@@ -29,6 +29,65 @@ function SettingsContent() {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [isManagingUsers, setIsManagingUsers] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('dark');
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
+
+  const ALLOWED_ADMINS = useMemo(() => ['cdv@masaganagas.com', 'janalbert.santos@masaganagas.com'], []);
+  const canManageUsers = useMemo(() => ALLOWED_ADMINS.includes(currentUserEmail), [ALLOWED_ADMINS, currentUserEmail]);
+
+  useEffect(() => {
+    async function loadUserSession() {
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+        if (data?.user?.email) {
+          setCurrentUserEmail(data.user.email.trim().toLowerCase());
+        }
+      } catch (err) {
+        console.error("Failed to load user session:", err);
+      }
+    }
+    loadUserSession();
+  }, []);
+
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'desc' });
+
+  const sortedDealers = useMemo(() => {
+    const list = [...dealersList];
+    if (!sortConfig.key) return list;
+
+    list.sort((a, b) => {
+      let valA = a[sortConfig.key];
+      let valB = b[sortConfig.key];
+
+      if (sortConfig.key === 'name') {
+        valA = a.name || a.id || "";
+        valB = b.name || b.id || "";
+        return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+
+      valA = valA !== null && valA !== undefined ? valA : -999999999;
+      valB = valB !== null && valB !== undefined ? valB : -999999999;
+
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return list;
+  }, [dealersList, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'desc';
+    if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = 'asc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const renderSortIndicator = (key) => {
+    if (sortConfig.key !== key) return null;
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  };
 
   useEffect(() => {
     const t = localStorage.getItem('theme') || document.documentElement.getAttribute('data-theme') || 'dark';
@@ -375,15 +434,25 @@ function SettingsContent() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Customer Name</th>
-                  <th>Historical Avg (KG)</th>
-                  <th>Lowest (KG)</th>
-                  <th>Highest (KG)</th>
-                  <th>Assigned Target (KG)</th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('name')}>
+                    Customer Name{renderSortIndicator('name')}
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('avgMonthKgs')}>
+                    Historical Avg (KG){renderSortIndicator('avgMonthKgs')}
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('lowestMonthKgs')}>
+                    Lowest (KG){renderSortIndicator('lowestMonthKgs')}
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('highestMonthKgs')}>
+                    Highest (KG){renderSortIndicator('highestMonthKgs')}
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('target')}>
+                    Assigned Target (KG){renderSortIndicator('target')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {dealersList.map(dealer => (
+                {sortedDealers.map(dealer => (
                   <tr key={dealer.id}>
                     <td>
                       <div style={{ fontWeight: 500 }}>{dealer.name || dealer.id}</div>
@@ -418,57 +487,63 @@ function SettingsContent() {
         </section>
       )}
 
-      <section className={`${styles.section} glass-panel`} style={{ marginTop: '32px' }}>
-        <h2 className={styles.sectionTitle}>Onboarded Users</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          Users authorized to access the system.
-        </p>
-        
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-          <input 
-            type="email" 
-            className={styles.inputField} 
-            placeholder="Add new user email..."
-            value={newUserEmail}
-            onChange={(e) => setNewUserEmail(e.target.value)}
-            style={{ flexGrow: 1 }}
-          />
-          <button 
-            className={styles.button} 
-            onClick={addUser}
-            disabled={!newUserEmail || isManagingUsers}
-          >
-            Add User
-          </button>
-        </div>
+      {canManageUsers && (
+        <section className={`${styles.section} glass-panel`} style={{ marginTop: '32px' }}>
+          <h2 className={styles.sectionTitle}>Onboarded Users</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            Users authorized to access the system.
+          </p>
+          
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+            <input 
+              type="email" 
+              className={styles.inputField} 
+              placeholder="Add new user email..."
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              style={{ flexGrow: 1 }}
+            />
+            <button 
+              className={styles.button} 
+              onClick={addUser}
+              disabled={!newUserEmail || isManagingUsers}
+            >
+              Add User
+            </button>
+          </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {whitelist.map((user) => (
-            <div key={user.email || user} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '0.9rem' }}>
-              <span style={{ minWidth: '200px' }}>{user.email || user}</span>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <select 
-                  value={user.role || 'viewer'} 
-                  onChange={(e) => updateUserRole(user.email || user, e.target.value)}
-                  disabled={isManagingUsers || (user.email || user) === 'cdv@masaganagas.com'}
-                  style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '4px 8px', outline: 'none' }}
-                >
-                  <option value="admin" style={{ color: '#000' }}>Admin</option>
-                  <option value="viewer" style={{ color: '#000' }}>Viewer</option>
-                </select>
-                <button 
-                  onClick={() => removeUser(user.email || user)}
-                  disabled={isManagingUsers || (user.email || user) === 'cdv@masaganagas.com'}
-                  style={{ background: 'transparent', border: '1px solid var(--danger-color)', color: 'var(--danger-color)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', opacity: (isManagingUsers || (user.email || user) === 'cdv@masaganagas.com') ? 0.5 : 1 }}
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))}
-          {whitelist.length === 0 && <div style={{ color: 'var(--text-secondary)' }}>No users found.</div>}
-        </div>
-      </section>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {whitelist.map((user) => {
+              const emailStr = user.email || user;
+              const isProtected = ALLOWED_ADMINS.includes((emailStr || '').trim().toLowerCase());
+              return (
+                <div key={emailStr} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '0.9rem' }}>
+                  <span style={{ minWidth: '200px' }}>{emailStr}</span>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <select 
+                      value={user.role || 'viewer'} 
+                      onChange={(e) => updateUserRole(emailStr, e.target.value)}
+                      disabled={isManagingUsers || isProtected}
+                      style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '4px 8px', outline: 'none' }}
+                    >
+                      <option value="admin" style={{ color: '#000' }}>Admin</option>
+                      <option value="viewer" style={{ color: '#000' }}>Viewer</option>
+                    </select>
+                    <button 
+                      onClick={() => removeUser(emailStr)}
+                      disabled={isManagingUsers || isProtected}
+                      style={{ background: 'transparent', border: '1px solid var(--danger-color)', color: 'var(--danger-color)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', opacity: (isManagingUsers || isProtected) ? 0.5 : 1 }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {whitelist.length === 0 && <div style={{ color: 'var(--text-secondary)' }}>No users found.</div>}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

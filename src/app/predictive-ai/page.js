@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { getDealerAggregates, getAvailableMonths } from "../../lib/bigquery";
 import { getSettings } from "../../lib/settings";
+import ClientClickWrapper from "../../components/ClientClickWrapper";
 import { cookies } from "next/headers";
 
 export default async function PredictiveAI({ searchParams }) {
@@ -193,8 +194,15 @@ export default async function PredictiveAI({ searchParams }) {
 
       <div className={styles.grid}>
         {predictions.map(dealer => (
-          <div key={dealer.id} className={`${styles.card} glass-panel`} style={{ borderColor: dealer.status === 'DANGER' ? 'rgba(248, 113, 113, 0.3)' : dealer.status === 'WARNING' ? 'rgba(250, 204, 21, 0.3)' : dealer.status === 'ACHIEVED' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.05)' }}>
-            
+          <ClientClickWrapper 
+            key={dealer.id} 
+            dealerId={dealer.id}
+            className={`${styles.card} glass-panel`} 
+            style={{ 
+              borderColor: dealer.status === 'DANGER' ? 'rgba(248, 113, 113, 0.3)' : dealer.status === 'WARNING' ? 'rgba(250, 204, 21, 0.3)' : dealer.status === 'ACHIEVED' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.05)',
+              cursor: 'pointer'
+            }}
+          >
             <div className={styles.cardHeader}>
               <div className={styles.dealerName}>{dealer.name}</div>
               <div className={`${styles.statusBadge} ${dealer.status === 'DANGER' ? styles.statusDanger : dealer.status === 'WARNING' ? styles.statusWarning : dealer.status === 'ACHIEVED' ? styles.statusAchieved : styles.statusSafe}`}>
@@ -244,7 +252,7 @@ export default async function PredictiveAI({ searchParams }) {
               {dealer.insight}
             </div>
             
-          </div>
+          </ClientClickWrapper>
         ))}
       </div>
     </div>

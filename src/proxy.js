@@ -1,7 +1,82 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from './lib/session';
 
-const PROTECTED_PREFIXES = ['/intelligence', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
+const PROTECTED_PREFIXES = ['/intelligence', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/gemini-ai', '/api/chat', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
+
+// Module-level in-memory cache for Firestore REST API whitelist (15s TTL)
+let cachedWhitelist = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 15000;
+
+const DEFAULT_WHITELIST = [
+  { email: 'cdv@masaganagas.com', role: 'admin' },
+  { email: 'maclaire.jabines@masaganagas.com', role: 'viewer' },
+  { email: 'janalbert.santos@masaganagas.com', role: 'viewer' },
+  { email: 'anton.antonio@masaganagas.com', role: 'viewer' },
+  { email: 'melroziene.dorio@masaganagas.com', role: 'viewer' },
+  { email: 'patrick.yao@masaganagas.com', role: 'viewer' },
+  { email: 'marialourdes.jordan@masaganagas.com', role: 'viewer' },
+  { email: 'nora.sulit@masaganagas.com', role: 'viewer' },
+  { email: 'anna.neri@masaganagas.com', role: 'viewer' },
+  { email: 'hanes.llamas@masaganagas.com', role: 'viewer' },
+  { email: 'team@example.com', role: 'admin' },
+  { email: 'allowed@example.com', role: 'viewer' },
+  { email: 'admin@cdv-sales-intelligence.com', role: 'viewer' }
+];
+
+function getStaticFallbackWhitelist() {
+  if (process.env.AUTH_WHITELIST) {
+    return process.env.AUTH_WHITELIST.split(',')
+      .map(entry => entry.trim())
+      .filter(entry => entry.length > 0)
+      .map(entry => {
+        const parts = entry.split(':');
+        const email = parts[0].trim().toLowerCase();
+        const role = parts[1] ? parts[1].trim() : ((email === 'cdv@masaganagas.com' || email === 'team@example.com') ? 'admin' : 'viewer');
+        return { email, role };
+      });
+  }
+  return DEFAULT_WHITELIST;
+}
+
+async function fetchWhitelistedUsersFromFirestoreREST() {
+  const now = Date.now();
+  if (cachedWhitelist !== null && (now - lastCacheTime) < CACHE_TTL_MS) {
+    return cachedWhitelist;
+  }
+
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 
+                    process.env.FIREBASE_PROJECT_ID || 
+                    process.env.GCP_PROJECT || 
+                    'sales-intel-cdv-2026';
+
+  const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/whitelisted_users`;
+
+  try {
+    const res = await fetch(restUrl, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.documents) && data.documents.length > 0) {
+        const parsed = data.documents.map(doc => {
+          const fields = doc.fields || {};
+          const email = fields.email?.stringValue || doc.name.split('/').pop();
+          const role = fields.role?.stringValue || 'viewer';
+          return { email: email.toLowerCase(), role };
+        });
+        cachedWhitelist = parsed;
+        lastCacheTime = Date.now();
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error('[PROXY_FIRESTORE_REST_ERROR] Failed querying Firestore REST API, using fallback:', err);
+  }
+
+  const fallback = getStaticFallbackWhitelist();
+  cachedWhitelist = fallback;
+  lastCacheTime = Date.now();
+  return fallback;
+}
 
 function logAccess(request, email, path, isAllowed, reason = '') {
   const secret = process.env.SESSION_SECRET;
@@ -29,16 +104,17 @@ function logAccess(request, email, path, isAllowed, reason = '') {
 export async function proxy(request) {
   const { pathname, search } = request.nextUrl;
 
-  // Normalize pathname to handle multiple slashes
+  // Normalize pathname to handle multiple slashes and lowercasing for case-insensitive route matching
   const cleanPath = pathname.replace(/\/+/g, '/');
+  const lowerPath = cleanPath.toLowerCase();
 
   // Bypass middleware checks for internal Next.js assets, favicon, mock/auth APIs,
   // and the POST logging API to avoid infinite loops
-  const isMockOrAuth = cleanPath.startsWith('/api/mock') || 
-                       cleanPath.startsWith('/api/auth') || 
-                       (cleanPath === '/api/admin/logs' && request.method === 'POST') ||
-                       cleanPath.startsWith('/_next') ||
-                       cleanPath === '/favicon.ico';
+  const isMockOrAuth = lowerPath.startsWith('/api/mock') || 
+                       lowerPath.startsWith('/api/auth') || 
+                       (lowerPath === '/api/admin/logs' && request.method === 'POST') ||
+                       lowerPath.startsWith('/_next') ||
+                       lowerPath === '/favicon.ico';
 
   if (isMockOrAuth) {
     return NextResponse.next();
@@ -46,33 +122,12 @@ export async function proxy(request) {
 
   console.log(`[PROXY_DEBUG] cleanPath: ${cleanPath}`);
 
-  // Fetch mock state during development/testing
+  // Fetch mock state during development/testing, but query Firestore REST first
   let mockConfig = { mode: 'correct', brokenType: null };
-  let whitelist = [
-    { email: 'cdv@masaganagas.com', role: 'admin' },
-    { email: 'maclaire.jabines@masaganagas.com', role: 'viewer' },
-    { email: 'janalbert.santos@masaganagas.com', role: 'viewer' },
-    { email: 'anton.antonio@masaganagas.com', role: 'viewer' },
-    { email: 'melroziene.dorio@masaganagas.com', role: 'viewer' },
-    { email: 'patrick.yao@masaganagas.com', role: 'viewer' },
-    { email: 'marialourdes.jordan@masaganagas.com', role: 'viewer' },
-    { email: 'nora.sulit@masaganagas.com', role: 'viewer' },
-    { email: 'anna.neri@masaganagas.com', role: 'viewer' },
-    { email: 'hanes.llamas@masaganagas.com', role: 'viewer' },
-    { email: 'team@example.com', role: 'admin' },
-    { email: 'allowed@example.com', role: 'viewer' },
-    { email: 'admin@cdv-sales-intelligence.com', role: 'viewer' }
-  ];
+  let whitelist = await fetchWhitelistedUsersFromFirestoreREST();
   let activeSessions = [];
   
-  if (process.env.NODE_ENV === 'production') {
-    if (process.env.AUTH_WHITELIST) {
-      whitelist = process.env.AUTH_WHITELIST.split(',')
-        .map(email => email.trim())
-        .filter(email => email.length > 0)
-        .map(email => ({ email, role: 'viewer' }));
-    }
-  } else {
+  if (process.env.NODE_ENV !== 'production' || process.env.TESTING_MODE === 'true') {
     try {
       const stateRes = await fetch(new URL(`/api/mock/state?t=${Date.now()}`, request.nextUrl.origin), {
         cache: 'no-store',
@@ -86,7 +141,9 @@ export async function proxy(request) {
       if (stateRes.ok) {
         const data = await stateRes.json();
         mockConfig = data.config || mockConfig;
-        whitelist = data.whitelist || whitelist;
+        if (data.whitelist && data.whitelist.length > 0) {
+          whitelist = data.whitelist;
+        }
         activeSessions = data.activeSessions || activeSessions;
       }
     } catch (e) {
@@ -100,8 +157,8 @@ export async function proxy(request) {
   }
 
   // Determine if it is a protected path
-  const isRoot = cleanPath === '/';
-  const isProtected = isRoot || PROTECTED_PREFIXES.some(prefix => cleanPath.startsWith(prefix));
+  const isRoot = lowerPath === '/';
+  const isProtected = isRoot || PROTECTED_PREFIXES.some(prefix => lowerPath.startsWith(prefix));
 
   if (!isProtected) {
     return NextResponse.next();
@@ -118,7 +175,7 @@ export async function proxy(request) {
     // Unauthenticated
     logAccess(request, 'anonymous', cleanPath, false, 'Unauthenticated');
 
-    if (cleanPath.startsWith('/api/')) {
+    if (lowerPath.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     } else {
       const searchParams = new URLSearchParams(search);
@@ -155,11 +212,11 @@ export async function proxy(request) {
 
   // Role-based Access Control (RBAC): only admins can access settings and admin dashboard
   if (isAllowed && role !== 'admin') {
-    const isAdminOrSettings = cleanPath.startsWith('/settings') || 
-                              cleanPath.startsWith('/api/settings') || 
-                              cleanPath.startsWith('/api/whitelist') ||
-                              cleanPath.startsWith('/admin') ||
-                              cleanPath.startsWith('/api/admin');
+    const isAdminOrSettings = lowerPath.startsWith('/settings') || 
+                              lowerPath.startsWith('/api/settings') || 
+                              lowerPath.startsWith('/api/whitelist') ||
+                              lowerPath.startsWith('/admin') ||
+                              lowerPath.startsWith('/api/admin');
     if (isAdminOrSettings) {
       isAllowed = false;
     }
@@ -172,7 +229,7 @@ export async function proxy(request) {
     return NextResponse.next();
   } else {
     // Unauthorized
-    if (cleanPath.startsWith('/api/')) {
+    if (lowerPath.startsWith('/api/')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     } else {
       // Clear session on server (bridge to Node.js api)

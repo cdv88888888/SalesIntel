@@ -7,6 +7,7 @@ import ExpandableKanban from "../../components/ExpandableKanban";
 import RiskTableModal from "../../components/RiskTableModal";
 import RiskChart from "../../components/RiskChart";
 import { getSettings } from "../../lib/settings";
+import ClientClickWrapper from "../../components/ClientClickWrapper";
 
 export default async function RiskAndChurn({ searchParams }) {
   await cookies();
@@ -100,7 +101,12 @@ export default async function RiskAndChurn({ searchParams }) {
   }
 
   const renderRiskCard = (dealer, type) => (
-    <div key={dealer.id} className={styles.card} style={{ borderLeft: type === 'lost' ? '4px solid #ef4444' : (type === 'no_orders' ? '4px solid #f59e0b' : (type === 'new' ? '4px solid #10b981' : '4px solid #3b82f6')) }}>
+    <ClientClickWrapper 
+      key={dealer.id} 
+      dealerId={dealer.id}
+      className={styles.card} 
+      style={{ borderLeft: type === 'lost' ? '4px solid #ef4444' : (type === 'no_orders' ? '4px solid #f59e0b' : (type === 'new' ? '4px solid #10b981' : '4px solid #3b82f6')) }}
+    >
       <div className={styles.dealerName}>{dealer.name}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {type === 'new' && (
@@ -156,7 +162,7 @@ export default async function RiskAndChurn({ searchParams }) {
           </div>
         )}
       </div>
-    </div>
+    </ClientClickWrapper>
   );
 
   return (

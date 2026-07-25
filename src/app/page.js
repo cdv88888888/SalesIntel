@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic';
 
 import { getDealerAggregates, getAvailableMonths } from "../lib/bigquery";
 import { getSettings } from "../lib/settings";
-import ViewDealerModal from "./intelligence/ViewDealerModal";
+import ClientClickWrapper from "../components/ClientClickWrapper";
+import CrmUpdatesStream from "./intelligence/CrmUpdatesStreamWrapper";
 import { cookies } from "next/headers";
 
 const ActivityRing = ({ radius, stroke, progress, color, bg }) => {
@@ -155,7 +156,7 @@ export default async function Dashboard({ searchParams }) {
           
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {atRiskDealers.map(dealer => (
-              <div key={dealer.id} className={styles.alertCard}>
+              <ClientClickWrapper key={dealer.id} dealerId={dealer.id} className={styles.alertCard}>
                 <div className={styles.alertHeader}>
                   <span>REVENUE AT RISK ALERT: {dealer.name}</span>
                   <span>Needs Attention</span>
@@ -163,11 +164,8 @@ export default async function Dashboard({ searchParams }) {
                 <div className={styles.alertBody}>
                   <p>Volume collapsed below minimum established benchmark. Current volume is only {dealer.progress}% of the baseline target.</p>
                 </div>
-                <ViewDealerModal 
-                  dealer={dealer} 
-                  customTrigger={<button className={styles.button} style={{ width: '100%' }}>View Data & Playbook</button>} 
-                />
-              </div>
+                <button className={styles.button} style={{ width: '100%', pointerEvents: 'none' }}>View Data & Playbook</button>
+              </ClientClickWrapper>
             ))}
           </div>
         </section>
@@ -181,7 +179,11 @@ export default async function Dashboard({ searchParams }) {
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
             {atRiskDealers.map(dealer => (
               <div key={`perf-${dealer.id}`}>
-                <h3 style={{ fontSize: "1rem", marginBottom: "8px" }}>{dealer.name}</h3>
+                <ClientClickWrapper dealerId={dealer.id}>
+                  <h3 style={{ fontSize: "1rem", marginBottom: "8px", color: 'var(--primary-accent)', textDecoration: 'underline', cursor: 'pointer' }}>
+                    {dealer.name}
+                  </h3>
+                </ClientClickWrapper>
                 <div className={styles.trackerStats} style={{ marginBottom: "8px" }}>
                   <div>
                     <div className={styles.statLabel}>Current Volume (Total KGS)</div>
@@ -216,12 +218,12 @@ export default async function Dashboard({ searchParams }) {
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {atRiskDealers.map(dealer => (
-              <div key={`ai-${dealer.id}`} className={styles.actionCard}>
+              <ClientClickWrapper key={`ai-${dealer.id}`} dealerId={dealer.id} className={styles.actionCard}>
                 <div className={styles.actionHeader}>
                   ✨ Gemini AI Insight
                 </div>
                 <p>{dealer.name}&apos;s ordering cadence has slowed down significantly relative to their normal baseline. Suggest deploying a pre-approved volume promotion immediately to shield this account from rival poaching.</p>
-              </div>
+              </ClientClickWrapper>
             ))}
           </div>
         </section>
@@ -245,19 +247,10 @@ export default async function Dashboard({ searchParams }) {
           <button className={styles.button}>Submit Log & Unlock Playbook</button>
         </section>
 
-        {/* Placeholder for Feature 5 & 6 (Phase 2 CRM Integration) */}
-        <section className={`${styles.section} glass-panel`} style={{ opacity: 0.5 }}>
-          <h2 className={styles.sectionTitle}>
-            🔄 CRM Updates Stream
-          </h2>
-          <p style={{ fontSize: "0.9rem" }}>
-            (Pending Monday.com Integration)
-          </p>
-          <div style={{ marginTop: "16px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            <p><strong>2026-02-07 | Mel Dorio</strong></p>
-            <p>Subject: Swapping Approval...</p>
-          </div>
-        </section>
+        {/* Feature 5 & 6: Live CRM Updates Stream (Monday.com Integration) */}
+        <div className="glass-panel" style={{ padding: "24px" }}>
+          <CrmUpdatesStream />
+        </div>
       </aside>
     </div>
   );

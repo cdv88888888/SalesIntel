@@ -1,27 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import styles from "./intelligence.module.css";
-import ViewDealerModal from "./ViewDealerModal";
+import { useClientDrawer } from "../../context/ClientDrawerContext";
 
 export default function DealerRow({ dealer, startPeriod, endPeriod, target }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openClient } = useClientDrawer();
 
   return (
     <>
       <tr 
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => openClient(dealer)}
         style={{ cursor: "pointer" }}
       >
         <td style={{ fontWeight: 500 }}>
-          <Link 
-            href={`?start=${startPeriod}&end=${endPeriod}&customer=${dealer.id}`} 
-            style={{ color: "var(--primary-accent)", textDecoration: "underline" }}
-            onClick={(e) => e.stopPropagation()}
+          <span 
+            onClick={() => openClient(dealer)} 
+            style={{ color: "var(--primary-accent)", textDecoration: "underline", cursor: "pointer" }}
           >
             {dealer.name || "Unknown"}
-          </Link>
+          </span>
         </td>
         <td>
           <span className={`${styles.badge} ${dealer.classification === 'Exclusive' ? styles.badgeExclusive : styles.badgeStandard}`}>
@@ -37,7 +35,7 @@ export default function DealerRow({ dealer, startPeriod, endPeriod, target }) {
             title="View Intelligence"
             onClick={(e) => {
               e.stopPropagation();
-              setIsModalOpen(true);
+              openClient(dealer);
             }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -45,15 +43,6 @@ export default function DealerRow({ dealer, startPeriod, endPeriod, target }) {
               <circle cx="12" cy="12" r="3" />
             </svg>
           </button>
-          <ViewDealerModal 
-            dealer={dealer} 
-            isOpen={isModalOpen} 
-            onClose={() => setIsModalOpen(false)} 
-            hideTrigger={true}
-            startPeriod={startPeriod}
-            endPeriod={endPeriod}
-            target={target}
-          />
         </td>
       </tr>
     </>

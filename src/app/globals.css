@@ -23,6 +23,7 @@
   --metric-pink-bg: rgba(250, 17, 79, 0.35);
   --metric-green-bg: rgba(166, 254, 0, 0.3);
   --metric-cyan-bg: rgba(0, 229, 255, 0.3);
+  --chart-bar-inactive: rgba(255, 255, 255, 0.12);
   color-scheme: dark;
 }
 
@@ -51,6 +52,7 @@
   --metric-pink-bg: rgba(208, 0, 60, 0.12);
   --metric-green-bg: rgba(4, 120, 87, 0.12);
   --metric-cyan-bg: rgba(2, 132, 199, 0.12);
+  --chart-bar-inactive: rgba(15, 23, 42, 0.1);
   color-scheme: light;
 }
 

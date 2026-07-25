@@ -58,7 +58,7 @@ export async function getSingleDealerIntelligence(dealerId, segment = 'dealer') 
     const defaultMonth = String(availableMonths[0].month).padStart(2, '0');
     const period = `${defaultYear}-${defaultMonth}`;
     
-    const dealers = await getDealerAggregates(period, period, [dealerId], segment);
+    const dealers = await getDealerAggregates(period, period, [dealerId, dealerId.toUpperCase()], segment);
     if (dealers && dealers.length > 0) {
       // Return a plain object copy
       return JSON.parse(JSON.stringify(dealers[0]));

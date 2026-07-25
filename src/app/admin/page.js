@@ -27,7 +27,7 @@ export default function AdminLogsPage() {
   const [filterDate, setFilterDate] = useState('');
   
   // Sorting state
-  const [sortAsc, setSortAsc] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: 'timestamp', direction: 'desc' });
 
   const fetchLogs = async () => {
     setIsLoading(true);
@@ -84,15 +84,42 @@ export default function AdminLogsPage() {
       });
     }
 
-    // Apply Sorting (default is descending by timestamp)
-    result.sort((a, b) => {
-      const timeA = new Date(a.timestamp).getTime();
-      const timeB = new Date(b.timestamp).getTime();
-      return sortAsc ? timeA - timeB : timeB - timeA;
-    });
+    // Apply Sorting
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        if (sortConfig.key === 'timestamp') {
+          const timeA = new Date(a.timestamp || 0).getTime();
+          const timeB = new Date(b.timestamp || 0).getTime();
+          return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
+        }
+
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+
+        // String comparison
+        valA = String(valA || '').toLowerCase();
+        valB = String(valB || '').toLowerCase();
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
 
     setFilteredLogs(result);
-  }, [logs, searchEmail, filterType, filterStatus, filterDate, sortAsc]);
+  }, [logs, searchEmail, filterType, filterStatus, filterDate, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'desc';
+    if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = 'asc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const renderSortIndicator = (key) => {
+    if (sortConfig.key !== key) return null;
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  };
 
   const clearFilters = () => {
     setSearchEmail('');
@@ -291,17 +318,36 @@ export default function AdminLogsPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ cursor: 'pointer' }} onClick={() => setSortAsc(!sortAsc)}>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('timestamp')}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      Timestamp
-                      <ArrowUpDown size={14} />
+                      Timestamp{renderSortIndicator('timestamp')}
                     </div>
                   </th>
-                  <th>User Email</th>
-                  <th>Action / Path</th>
-                  <th>Type</th>
-                  <th>IP Address</th>
-                  <th>Status</th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('email')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      User Email{renderSortIndicator('email')}
+                    </div>
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('action')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      Action / Path{renderSortIndicator('action')}
+                    </div>
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('type')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      Type{renderSortIndicator('type')}
+                    </div>
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('ip')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      IP Address{renderSortIndicator('ip')}
+                    </div>
+                  </th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('status')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      Status{renderSortIndicator('status')}
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>

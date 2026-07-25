@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { verifySession } from '@/lib/session';
 
 // Helper to load settings mappings
 function getMondayMappings() {
@@ -29,7 +30,7 @@ function getSafeUrl(url) {
   if (!url || typeof url !== 'string') return '#';
   const trimmed = url.trim();
   try {
-    const parsed = new URL(trimmed, 'http://localhost');
+    const parsed = new URL(trimmed);
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
       return trimmed;
     }
@@ -57,7 +58,26 @@ function getMockUpdates(dealerId) {
   return [];
 }
 
+// Helper to add mondayUrl to formatted updates (useful for both live and mock updates)
+function addMondayUrlToUpdates(updates, dealerId, liveSlug, liveBoardId, liveItemId) {
+  const mappings = getMondayMappings();
+  const resolvedItemId = liveItemId || mappings[dealerId]?.mondayItemId || '9763751807';
+  const resolvedBoardId = liveBoardId || (process.env.MONDAY_BOARD_ID || '').split(',')[0].trim() || '1244621950';
+  const resolvedSlug = liveSlug || 'masaganagas';
+
+  return updates.map(up => ({
+    ...up,
+    mondayUrl: `https://${resolvedSlug}.monday.com/boards/${resolvedBoardId}/pulses/${resolvedItemId}/posts/${up.id}`
+  }));
+}
+
 export async function GET(request) {
+  const cookieToken = request.cookies.get('__session')?.value;
+  const session = await verifySession(cookieToken);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const dealerId = searchParams.get('dealerId');
   const dealerName = searchParams.get('dealerName') || '';
@@ -78,7 +98,8 @@ export async function GET(request) {
   if (!isConfigured) {
     console.log(`Monday.com credentials not configured, falling back to mock data for dealer: ${dealerId}`);
     const mockUpdates = getMockUpdates(dealerId);
-    return NextResponse.json({ updates: mockUpdates, source: 'mock' });
+    const updatesWithUrl = addMondayUrlToUpdates(mockUpdates, dealerId);
+    return NextResponse.json({ updates: updatesWithUrl, source: 'mock' });
   }
 
   const boardIds = boardsString.split(',').map(id => id.trim()).filter(id => id.length > 0);
@@ -147,7 +168,7 @@ export async function GET(request) {
       return NextResponse.json({ updates: [], source: 'live_empty' });
     }
 
-    // 2. Fetch updates for the Monday Item
+    // 2. Fetch updates for the Monday Item (along with account slug and board ID)
     const updatesResponse = await fetch("https://api.monday.com/v2", {
       method: "POST",
       headers: {
@@ -158,9 +179,17 @@ export async function GET(request) {
       body: JSON.stringify({
         query: `
           query {
+            me {
+              account {
+                slug
+              }
+            }
             items (ids: [${mondayItemId}]) {
               id
               name
+              board {
+                id
+              }
               updates {
                 id
                 body
@@ -186,7 +215,6 @@ export async function GET(request) {
             }
           }
         `
-        // Query parameters
       })
     });
 
@@ -200,6 +228,10 @@ export async function GET(request) {
     if (!item) {
       return NextResponse.json({ updates: [], source: 'live_not_found' });
     }
+
+    const liveSlug = data.data?.me?.account?.slug || 'masaganagas';
+    const liveBoardId = item.board?.id || boardIds[0] || '1244621950';
+    const liveItemId = item.id;
 
     // Format the updates for our UI
     const formattedUpdates = (item.updates || []).map(up => {
@@ -255,11 +287,13 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json({ updates: formattedUpdates, source: 'live' });
+    const updatesWithUrl = addMondayUrlToUpdates(formattedUpdates, dealerId, liveSlug, liveBoardId, liveItemId);
+    return NextResponse.json({ updates: updatesWithUrl, source: 'live' });
 
   } catch (err) {
     console.error("Live Monday.com fetch failed, falling back to mock data:", err);
     const mockUpdates = getMockUpdates(dealerId);
-    return NextResponse.json({ updates: mockUpdates, source: 'mock_fallback' });
+    const updatesWithUrl = addMondayUrlToUpdates(mockUpdates, dealerId);
+    return NextResponse.json({ updates: updatesWithUrl, source: 'mock_fallback' });
   }
 }

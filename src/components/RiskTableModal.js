@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { getMonthlySalesByDealers, getSingleDealerIntelligence } from '../app/actions';
-import ViewDealerModal from '../app/intelligence/ViewDealerModal';
+import { getMonthlySalesByDealers } from '../app/actions';
+import { useClientDrawer } from '../context/ClientDrawerContext';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -13,10 +13,7 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
   const [monthlyData, setMonthlyData] = useState({}); // { dealerId: { '2026-01': 100, '2026-02': 200 } }
 
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
-
-  const [selectedDealerIntell, setSelectedDealerIntell] = useState(null);
-  const [isIntelligenceLoading, setIsIntelligenceLoading] = useState(false);
-  const [isIntelligenceModalOpen, setIsIntelligenceModalOpen] = useState(false);
+  const { openClient } = useClientDrawer();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -33,22 +30,8 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
     };
   }, [isOpen]);
 
-  const handleRowClick = async (dealerId) => {
-    setIsIntelligenceLoading(true);
-    try {
-      const fullDealerData = await getSingleDealerIntelligence(dealerId, segment);
-      if (fullDealerData) {
-        setSelectedDealerIntell(fullDealerData);
-        setIsIntelligenceModalOpen(true);
-      } else {
-        alert("Could not load intelligence for this dealer.");
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Error loading intelligence data.");
-    } finally {
-      setIsIntelligenceLoading(false);
-    }
+  const handleRowClick = (dealerId) => {
+    openClient(dealerId);
   };
 
   const handleOpen = async (e) => {
@@ -126,8 +109,8 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
       withStats.sort((a, b) => {
         let aVal, bVal;
         if (sortConfig.key === 'name') {
-          aVal = a.name.toLowerCase();
-          bVal = b.name.toLowerCase();
+          aVal = (a.name || '').toLowerCase();
+          bVal = (b.name || '').toLowerCase();
         } else if (sortConfig.key === 'ytd') {
           aVal = a.ytdTotal;
           bVal = b.ytdTotal;
@@ -173,7 +156,7 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
     
     const rows = processedDealers.map(dealer => {
       const row = [
-        `"${dealer.name.replace(/"/g, '""')}"`
+        `"${(dealer.name || '').replace(/"/g, '""')}"`
       ];
       if (title === 'Volume Decline') {
         row.push(dealer.declineRate ? `-${dealer.declineRate.toFixed(1)}%` : '0%');
@@ -441,26 +424,6 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
         </div>
       )}
 
-      {isIntelligenceLoading && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', zIndex: 10000,
-          display: 'flex', justifyContent: 'center', alignItems: 'center'
-        }}>
-          <div style={{ background: 'var(--surface-dark)', padding: '20px 40px', borderRadius: '8px', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-            Loading Intelligence Data...
-          </div>
-        </div>
-      )}
-
-      {isIntelligenceModalOpen && selectedDealerIntell && (
-        <ViewDealerModal 
-          dealer={selectedDealerIntell} 
-          isOpen={isIntelligenceModalOpen} 
-          onClose={() => setIsIntelligenceModalOpen(false)}
-          hideTrigger={true}
-        />
-      )}
     </>
   );
 }

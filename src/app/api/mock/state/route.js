@@ -2,12 +2,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
-import { getMockConfig, getWhitelist, getActiveSessions } from '../../../../lib/mockStore';
+import { getMockConfig, getActiveSessions } from '../../../../lib/mockStore.js';
+import { getWhitelistedUsersFromFirestore } from '../../../../lib/whitelist.js';
 
 export async function GET() {
+  const whitelist = await getWhitelistedUsersFromFirestore();
   return NextResponse.json({
     config: getMockConfig(),
-    whitelist: getWhitelist(),
+    whitelist,
     activeSessions: getActiveSessions()
   });
 }

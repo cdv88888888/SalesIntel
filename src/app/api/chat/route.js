@@ -60,17 +60,17 @@ export async function POST(req) {
       ]
     }];
 
-    // Format history for the SDK
-    const formattedHistory = (history || []).map(h => ({
+    // Format history for the SDK, ensuring turn alternation starting with a user turn
+    const rawHistory = Array.isArray(history) ? history : [];
+    // Drop initial model messages if history starts with model role
+    let firstUserIdx = rawHistory.findIndex(h => h.role === 'user');
+    const validHistory = firstUserIdx >= 0 ? rawHistory.slice(firstUserIdx) : [];
+
+    const formattedHistory = validHistory.map(h => ({
       role: h.role === 'user' ? 'user' : 'model',
-      parts: [{ text: h.content }]
+      parts: [{ text: String(h.content || '') }]
     }));
 
-    // We can't set history directly on the object easily in some versions, 
-    // but the new SDK supports it in create() via `history` property.
-    // If not, we'll just prepend the history to the prompt if needed, 
-    // but let's try the standard history param.
-    // Actually, the new SDK expects `history` in the create options.
     const chatWithHistory = ai.chats.create({
       model: 'gemini-2.5-flash',
       history: formattedHistory,
@@ -84,27 +84,37 @@ export async function POST(req) {
     console.log("Sending message to Gemini...");
     let result = await chatWithHistory.sendMessage({ message: message });
 
-    let finalResponseText = result.text;
+    let finalResponseText = result.text || '';
     
-    // Check if the model decided to call a function
-    if (result.functionCalls && result.functionCalls.length > 0) {
+    // Process function call turns in a loop (up to 5 iterations)
+    let turns = 0;
+    while (result.functionCalls && result.functionCalls.length > 0 && turns < 5) {
+       turns++;
        const call = result.functionCalls[0];
        if (call.name === 'runBigQuery') {
           const sqlQuery = call.args.query;
-          console.log('Gemini generated SQL:', sqlQuery);
+          console.log(`[Turn ${turns}] Gemini generated SQL:`, sqlQuery);
           
           let queryResultJSON = '[]';
           try {
              const bq = getBigQueryClient();
              const [rows] = await bq.query({ query: sqlQuery });
-             // Sanitize values to prevent BigQuery types (like BigQuery Date objects) from crashing JSON.stringify
+             
+             // Sanitize values to prevent BigQuery types (Date objects, BigInt, custom objects) from crashing JSON.stringify
              const sanitizedRows = rows.map(row => {
                const newRow = {};
                for (const key in row) {
-                 if (row[key] && typeof row[key].value === 'string') {
-                    newRow[key] = row[key].value;
+                 const val = row[key];
+                 if (val === null || val === undefined) {
+                   newRow[key] = val;
+                 } else if (val instanceof Date) {
+                   newRow[key] = val.toISOString();
+                 } else if (typeof val === 'object' && val.value !== undefined) {
+                   newRow[key] = val.value;
+                 } else if (typeof val === 'bigint') {
+                   newRow[key] = Number(val);
                  } else {
-                    newRow[key] = row[key];
+                   newRow[key] = val;
                  }
                }
                return newRow;
@@ -115,9 +125,8 @@ export async function POST(req) {
              queryResultJSON = JSON.stringify({ error: bqError.message });
           }
 
-          console.log("Sending query results back to Gemini...");
-          // Send the result back to the model
-          const toolResult = await chatWithHistory.sendMessage({
+          console.log(`[Turn ${turns}] Sending query results back to Gemini...`);
+          result = await chatWithHistory.sendMessage({
             message: [{
               functionResponse: {
                 name: 'runBigQuery',
@@ -126,8 +135,20 @@ export async function POST(req) {
             }]
           });
           
-          finalResponseText = toolResult.text;
+          if (result.text) {
+             finalResponseText = result.text;
+          }
+       } else {
+          break;
        }
+    }
+
+    if (!finalResponseText && result.text) {
+      finalResponseText = result.text;
+    }
+
+    if (!finalResponseText) {
+      finalResponseText = "No text content was returned by the AI. Please rephrase your query.";
     }
 
     return new Response(JSON.stringify({ text: finalResponseText }), {

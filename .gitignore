@@ -41,7 +41,20 @@ yarn-error.log*
 next-env.d.ts
 
 # credentials
-# bq-credentials.json
+bq-credentials.json
+*.json.key
 
-# mock store data
-/data/
+# agents
+.agents/
+
+*.log
+.firebase/
+.next-challenger*/
+# scratch & temporary scripts
+scratch/
+test-*.js
+test-*.mjs
+test_*.js
+test_*.mjs
+
+

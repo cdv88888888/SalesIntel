@@ -6,58 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { Bot, X, Maximize2, Minimize2, Send, Download } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useChat } from '../context/ChatContext';
-
-const TableWithCSV = ({ children }) => {
-  const handleDownload = (e) => {
-    const table = e.currentTarget.parentElement.querySelector('table');
-    if (!table) return;
-    let csv = [];
-    const rows = table.querySelectorAll('tr');
-    for (let i = 0; i < rows.length; i++) {
-      let row = [], cols = rows[i].querySelectorAll('td, th');
-      for (let j = 0; j < cols.length; j++) 
-        row.push('"' + (cols[j].textContent || '').replace(/"/g, '""') + '"');
-      csv.push(row.join(','));
-    }
-    const csvFile = new Blob([csv.join('\\n')], {type: 'text/csv'});
-    const downloadLink = document.createElement('a');
-    downloadLink.download = 'sales_intelligence_data.csv';
-    downloadLink.href = window.URL.createObjectURL(csvFile);
-    downloadLink.style.display = 'none';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    downloadLink.remove();
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', margin: '16px 0', width: '100%' }}>
-      <div style={{ width: '100%', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>{children}</table>
-      </div>
-      <button 
-        onClick={handleDownload} 
-        style={{ 
-          background: 'var(--primary-accent)', 
-          color: 'white', 
-          padding: '6px 12px', 
-          borderRadius: '6px', 
-          border: 'none', 
-          cursor: 'pointer', 
-          fontSize: '0.8rem', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '6px',
-          transition: 'opacity 0.2s'
-        }}
-        onMouseOver={e => e.currentTarget.style.opacity = 0.8}
-        onMouseOut={e => e.currentTarget.style.opacity = 1}
-      >
-        <Download size={14} />
-        Download CSV
-      </button>
-    </div>
-  );
-};
+import SortableMarkdownTable from './SortableMarkdownTable';
 
 export default function GeminiChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -234,7 +183,7 @@ export default function GeminiChatWidget() {
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  table: ({node, ...props}) => <TableWithCSV {...props} />
+                  table: ({node, ...props}) => <SortableMarkdownTable {...props} />
                 }}
               >
                 {msg.content}

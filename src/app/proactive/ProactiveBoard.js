@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import ExpandableKanban from '../../components/ExpandableKanban';
 import styles from './page.module.css';
+import { useClientDrawer } from '../../context/ClientDrawerContext';
 
 export default function ProactiveBoard({ initialColumns }) {
   const [columns, setColumns] = useState(initialColumns);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [dragOverCol, setDragOverCol] = useState(null);
+  const { openClient } = useClientDrawer();
 
   const handleDragStart = (e, card, sourceColumn) => {
     e.stopPropagation();
@@ -15,46 +17,79 @@ export default function ProactiveBoard({ initialColumns }) {
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.stopPropagation();
   };
 
-  const handleDragEnter = (e) => {
+  const handleDragEnter = (e, colKey) => {
     e.preventDefault();
-    setIsDragOver(true);
+    e.stopPropagation();
+    setDragOverCol(colKey);
   };
 
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e) => {
+  const handleDragLeave = (e) => {
     e.preventDefault();
-    setIsDragOver(false);
+    e.stopPropagation();
+    setDragOverCol(null);
+  };
+
+  const handleDrop = (e, targetColumn = 'confirmed') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverCol(null);
     try {
       const dataStr = e.dataTransfer.getData("application/json");
       if (!dataStr) return;
       const { cardId, sourceColumn } = JSON.parse(dataStr);
 
-      // Only allow dragging from 'overdue' and 'today' columns
-      if (sourceColumn !== 'overdue' && sourceColumn !== 'today') return;
+      if (!sourceColumn || sourceColumn === targetColumn) return;
 
-      const sourceCards = columns[sourceColumn];
-      const card = sourceCards.find(c => c.id === cardId);
-      if (!card) return;
+      // Only allow dragging from 'overdue' and 'today' to 'confirmed'
+      if ((sourceColumn === 'overdue' || sourceColumn === 'today') && targetColumn === 'confirmed') {
+        const sourceCards = columns[sourceColumn];
+        const card = sourceCards.find(c => c.id === cardId);
+        if (!card) return;
 
-      // Default delivery date to local date (YYYY-MM-DD)
-      const localDate = new Date();
-      const year = localDate.getFullYear();
-      const month = String(localDate.getMonth() + 1).padStart(2, '0');
-      const day = String(localDate.getDate()).padStart(2, '0');
-      const todayStr = `${year}-${month}-${day}`;
+        // Default delivery date to local date (YYYY-MM-DD)
+        const localDate = new Date();
+        const year = localDate.getFullYear();
+        const month = String(localDate.getMonth() + 1).padStart(2, '0');
+        const day = String(localDate.getDate()).padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
 
-      const updatedCard = { ...card, deliveryDate: todayStr };
+        const updatedCard = { ...card, deliveryDate: todayStr };
 
-      setColumns(prev => ({
-        ...prev,
-        [sourceColumn]: prev[sourceColumn].filter(c => c.id !== cardId),
-        confirmed: [...prev.confirmed, updatedCard]
-      }));
+        setColumns(prev => ({
+          ...prev,
+          [sourceColumn]: prev[sourceColumn].filter(c => c.id !== cardId),
+          confirmed: [...prev.confirmed, updatedCard]
+        }));
+      }
+      // Dragging from 'confirmed' back to 'overdue' or 'today'
+      else if (sourceColumn === 'confirmed' && (targetColumn === 'overdue' || targetColumn === 'today')) {
+        const sourceCards = columns.confirmed;
+        const card = sourceCards.find(c => c.id === cardId);
+        if (!card) return;
+
+        // Delete/clear deliveryDate from card object
+        const { deliveryDate, ...cleanedCard } = card;
+
+        setColumns(prev => {
+          const targetList = [...(prev[targetColumn] || []), cleanedCard];
+          if (targetColumn === 'overdue') {
+            // Restore overdue sorting: daysUntilExpected ascending
+            targetList.sort((a, b) => a.daysUntilExpected - b.daysUntilExpected);
+          } else if (targetColumn === 'today') {
+            // Restore today sorting: pitchVolume descending
+            targetList.sort((a, b) => b.pitchVolume - a.pitchVolume);
+          }
+
+          return {
+            ...prev,
+            confirmed: prev.confirmed.filter(c => c.id !== cardId),
+            [targetColumn]: targetList
+          };
+        });
+      }
     } catch (err) {
       console.error("Drop operation failed:", err);
     }
@@ -76,7 +111,11 @@ export default function ProactiveBoard({ initialColumns }) {
         className={`${styles.card} ${isDraggable ? styles.draggableCard : ''}`}
         draggable={isDraggable}
         onDragStart={isDraggable ? (e) => handleDragStart(e, dealer, columnKey) : undefined}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          openClient(dealer.id);
+        }}
+        style={{ cursor: 'pointer' }}
       >
         <div className={styles.dealerName}>{dealer.name}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -114,8 +153,14 @@ export default function ProactiveBoard({ initialColumns }) {
     return (
       <div
         key={dealer.id}
-        className={styles.card}
-        onClick={(e) => e.stopPropagation()}
+        className={`${styles.card} ${styles.draggableCard}`}
+        draggable={true}
+        onDragStart={(e) => handleDragStart(e, dealer, 'confirmed')}
+        onClick={(e) => {
+          e.stopPropagation();
+          openClient(dealer.id);
+        }}
+        style={{ cursor: 'pointer' }}
       >
         <div className={styles.dealerName}>{dealer.name}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -138,7 +183,10 @@ export default function ProactiveBoard({ initialColumns }) {
             <input
               type="date"
               value={dealer.deliveryDate || ''}
-              onChange={(e) => handleDateChange(dealer.id, e.target.value)}
+              onChange={(e) => {
+                e.stopPropagation();
+                handleDateChange(dealer.id, e.target.value);
+              }}
               onClick={(e) => e.stopPropagation()}
               className={styles.dateInput}
             />
@@ -146,7 +194,9 @@ export default function ProactiveBoard({ initialColumns }) {
         </div>
       </div>
     );
-  };  const handleExportCSV = () => {
+  };
+
+  const handleExportCSV = () => {
     const columnLabels = {
       overdue: 'Overdue',
       today: 'Call Today',
@@ -229,7 +279,13 @@ export default function ProactiveBoard({ initialColumns }) {
 
       <ExpandableKanban className={styles.kanbanBoard}>
       {/* 1. Overdue */}
-      <div className={`${styles.column} ${styles.colOverdue}`}>
+      <div
+        className={`${styles.column} ${styles.colOverdue} ${dragOverCol === 'overdue' ? styles.dragOver : ''}`}
+        onDragOver={handleDragOver}
+        onDragEnter={(e) => handleDragEnter(e, 'overdue')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, 'overdue')}
+      >
         <div className={styles.columnHeader}>
           <div className={styles.columnTitle}>Overdue</div>
           <div className={styles.countBadge}>{columns.overdue.length}</div>
@@ -245,7 +301,13 @@ export default function ProactiveBoard({ initialColumns }) {
       </div>
 
       {/* 2. Call Today */}
-      <div className={`${styles.column} ${styles.colToday}`}>
+      <div
+        className={`${styles.column} ${styles.colToday} ${dragOverCol === 'today' ? styles.dragOver : ''}`}
+        onDragOver={handleDragOver}
+        onDragEnter={(e) => handleDragEnter(e, 'today')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, 'today')}
+      >
         <div className={styles.columnHeader}>
           <div className={styles.columnTitle}>Call Today</div>
           <div className={styles.countBadge}>{columns.today.length}</div>
@@ -260,13 +322,13 @@ export default function ProactiveBoard({ initialColumns }) {
         </div>
       </div>
 
-      {/* 3. Confirmed Delivery (New Column - Styled Blue) */}
+      {/* 3. Confirmed Delivery */}
       <div
-        className={`${styles.column} ${styles.colConfirmed} ${isDragOver ? styles.dragOver : ''}`}
+        className={`${styles.column} ${styles.colConfirmed} ${dragOverCol === 'confirmed' ? styles.dragOver : ''}`}
         onDragOver={handleDragOver}
-        onDragEnter={handleDragEnter}
+        onDragEnter={(e) => handleDragEnter(e, 'confirmed')}
         onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        onDrop={(e) => handleDrop(e, 'confirmed')}
       >
         <div className={styles.columnHeader}>
           <div className={styles.columnTitle}>Confirmed Delivery</div>

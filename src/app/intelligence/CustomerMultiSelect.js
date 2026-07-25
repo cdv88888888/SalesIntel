@@ -79,8 +79,8 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
         style={{
           width: '100%',
           padding: '10px 14px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'var(--input-bg)',
+          border: '1px solid var(--border-color)',
           borderRadius: '8px',
           color: 'var(--text-primary)',
           fontSize: '0.95rem',
@@ -142,13 +142,13 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
           top: '46px',
           left: 0,
           right: 0,
-          background: '#1a1f2e',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'var(--surface-dark)',
+          border: '1px solid var(--border-color)',
           borderRadius: '8px',
           maxHeight: '300px',
           overflowY: 'auto',
           zIndex: 50,
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
         }}>
           {filteredDealers.length === 0 ? (
             <div style={{ padding: '12px', color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
@@ -162,12 +162,12 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
                 style={{
                   padding: '10px 14px',
                   cursor: 'pointer',
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: '1px solid var(--border-color)',
                   fontSize: '0.9rem',
                   color: 'var(--text-primary)',
                   transition: 'background 0.2s ease'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-hover)'}
                 onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 {dealer.name}

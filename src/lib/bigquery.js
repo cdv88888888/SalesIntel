@@ -143,7 +143,7 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
   const prevEndPeriod = `${parseInt(endYear) - 1}-${endMonth}`;
   const { startDate: prevStartDate, endDate: prevEndDate } = getPeriodBoundaries(prevStartPeriod, prevEndPeriod);
 
-  const customerFilter = customerIds.length > 0 ? `AND Customer_No_ IN UNNEST(@customerIds)` : ``;
+  const customerFilter = customerIds.length > 0 ? `AND (Customer_No_ IN UNNEST(@customerIds) OR UPPER(Customer_Name) IN UNNEST(@customerIds))` : ``;
   const channelFilter = getChannelFilterString(segment);
 
   const query = `
@@ -289,26 +289,26 @@ export const getAvailableMonths = unstable_cache(
   { revalidate: 43200 }
 );
 
-export const getAvailableDealers = unstable_cache(
-  async (segment = 'dealer') => await _getAvailableDealers(segment),
-  ['bq-dealers'],
+export const getAvailableDealers = (segment = 'dealer') => unstable_cache(
+  async () => await _getAvailableDealers(segment),
+  ['bq-dealers', segment],
   { revalidate: 7200 }
-);
+)();
 
-export const getTrendData = unstable_cache(
-  async (startPeriod, endPeriod, segment = 'dealer') => await _getTrendData(startPeriod, endPeriod, segment),
-  ['bq-trend'],
+export const getTrendData = (startPeriod, endPeriod, segment = 'dealer') => unstable_cache(
+  async () => await _getTrendData(startPeriod, endPeriod, segment),
+  ['bq-trend', startPeriod, endPeriod, segment],
   { revalidate: 7200 }
-);
+)();
 
-export const getDealerAggregates = unstable_cache(
-  async (startPeriod, endPeriod, customerIds = [], segment = 'dealer') => await _getDealerAggregates(startPeriod, endPeriod, customerIds, segment),
-  ['bq-aggregates'],
+export const getDealerAggregates = (startPeriod, endPeriod, customerIds = [], segment = 'dealer') => unstable_cache(
+  async () => await _getDealerAggregates(startPeriod, endPeriod, customerIds, segment),
+  ['bq-aggregates', startPeriod, endPeriod, customerIds.join(','), segment],
   { revalidate: 7200 }
-);
+)();
 
-export const getProactiveCallingData = unstable_cache(
-  async (segment = 'dealer') => await _getProactiveCallingData(segment),
-  ['bq-proactive'],
+export const getProactiveCallingData = (segment = 'dealer') => unstable_cache(
+  async () => await _getProactiveCallingData(segment),
+  ['bq-proactive', segment],
   { revalidate: 7200 }
-);
+)();

@@ -3,13 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import DOMPurify from "dompurify";
 import styles from "./intelligence.module.css";
+import { useClientDrawer } from "../../context/ClientDrawerContext";
 
 const sanitizeHtml = (html) => {
   if (!html || typeof html !== 'string') return '';
   if (typeof window !== 'undefined' && DOMPurify && DOMPurify.sanitize) {
     return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'br', 'span', 'div'],
-      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+      ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'br', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tbody', 'tr', 'td', 'th', 'img'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style', 'src', 'alt', 'width', 'height']
     });
   }
   return html
@@ -23,7 +24,7 @@ const getSafeAttachmentUrl = (url) => {
   if (!url || typeof url !== 'string') return '#';
   const trimmed = url.trim();
   try {
-    const parsed = new URL(trimmed, 'http://localhost');
+    const parsed = new URL(trimmed);
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
       return trimmed;
     }
@@ -67,14 +68,18 @@ const ActivityRing = ({ radius, stroke, progress, color, bg }) => {
   );
 };
 
-export default function ViewDealerModal({ dealer, customTrigger, isOpen: controlledIsOpen, onClose: controlledOnClose, hideTrigger, startPeriod, endPeriod, target: propTarget }) {
+export default function ViewDealerModal({ dealer: propDealer, customTrigger, isOpen: controlledIsOpen, onClose: controlledOnClose, hideTrigger, startPeriod, endPeriod, target: propTarget }) {
+  const context = useClientDrawer();
+  const isGlobal = propDealer === undefined;
+
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [timeframe, setTimeframe] = useState(6);
   const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(false);
   const chartRef = useRef(null);
 
-  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const isOpen = isGlobal ? (context?.isOpen || false) : (controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen);
+  const dealer = isGlobal ? context?.dealer : propDealer;
 
   useEffect(() => {
     if (chartRef.current) {
@@ -107,8 +112,12 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
 
   const openModal = () => setInternalIsOpen(true);
   const closeModal = () => {
-    setInternalIsOpen(false);
-    if (controlledOnClose) controlledOnClose();
+    if (isGlobal) {
+      context?.closeClient();
+    } else {
+      setInternalIsOpen(false);
+      if (controlledOnClose) controlledOnClose();
+    }
   };
 
   const closeModalRef = useRef(closeModal);
@@ -131,11 +140,32 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
     };
   }, [isOpen]);
 
-  const target = propTarget !== undefined ? propTarget : (dealer?.prevKgsSold ? dealer.prevKgsSold * 1.15 : 0);
+  if (isOpen && isGlobal && (context?.isLoading || !dealer)) {
+    return (
+      <div className={styles.modalOverlay} onClick={closeModal}>
+        <div className={`${styles.modalContent} glass-panel`} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHeader}>
+            <div>
+              <h3 className={styles.modalTitle} style={{ marginBottom: '4px' }}>Loading Details...</h3>
+            </div>
+            <button className={styles.closeButton} onClick={closeModal}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60%', gap: '16px' }}>
+            <div className={styles.loadingSpinner} style={{ width: '48px', height: '48px' }}></div>
+            <span style={{ color: 'var(--text-secondary)' }}>Syncing with BigQuery & Monday.com...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const target = (propTarget !== undefined && propTarget > 0) ? propTarget : (dealer?.prevKgsSold ? dealer.prevKgsSold * 1.15 : (dealer?.avgMonthKgs ? dealer.avgMonthKgs * 1.15 : 0));
   const current = dealer?.kgsSold || 0;
   const prev = dealer?.prevKgsSold || 0;
   const isBelowTarget = current < target;
-  const percentOfTarget = target > 0 ? Math.min(Math.round((current / target) * 100), 100) : 0;
+  const percentOfTarget = target > 0 ? Math.min(Math.round((current / target) * 100), 100) : (current > 0 ? 100 : 0);
   
   // Trend calculation
   const diffFromPrev = current - prev;
@@ -193,7 +223,7 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
 
   return (
     <>
-      {!hideTrigger && (
+      {!isGlobal && !hideTrigger && (
         customTrigger ? (
           <div onClick={openModal} style={{ display: 'inline-block', width: '100%' }}>
             {customTrigger}
@@ -252,12 +282,12 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
                       <div style={{ flex: '1 1 380px', display: 'flex', alignItems: 'center', gap: '24px', background: 'rgba(255, 255, 255, 0.02)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                         <div style={{ width: '160px', height: '160px', flexShrink: 0, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
                           <svg width="100%" height="100%" viewBox="0 0 100 100">
-                            {/* Target - Red/Pink (#FA114F) */}
-                            <ActivityRing radius={40} stroke={9} progress={percentOfTarget} color="#FA114F" bg="rgba(250, 17, 79, 0.35)" />
-                            {/* Growth - Green/Lime (#A6FE00) */}
-                            <ActivityRing radius={29} stroke={9} progress={prev > 0 ? Math.round((current / prev) * 100) : 0} color="#A6FE00" bg="rgba(166, 254, 0, 0.3)" />
-                            {/* Consistency - Cyan (#00E5FF) */}
-                            <ActivityRing radius={18} stroke={9} progress={dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : 0} color="#00E5FF" bg="rgba(0, 229, 255, 0.3)" />
+                             {/* Target - Red/Pink (#FA114F) */}
+                             <ActivityRing radius={40} stroke={9} progress={percentOfTarget} color="#FA114F" bg="rgba(250, 17, 79, 0.35)" />
+                             {/* Growth - Green/Lime (#A6FE00) */}
+                             <ActivityRing radius={29} stroke={9} progress={prev > 0 ? Math.round((current / prev) * 100) : (current > 0 ? 100 : 0)} color="#A6FE00" bg="rgba(166, 254, 0, 0.3)" />
+                             {/* Consistency - Cyan (#00E5FF) */}
+                             <ActivityRing radius={18} stroke={9} progress={dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : (current > 0 ? 100 : 0)} color="#00E5FF" bg="rgba(0, 229, 255, 0.3)" />
                           </svg>
                         </div>
                         
@@ -275,7 +305,7 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
                               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#A6FE00', boxShadow: '0 0 8px rgba(166,254,0,0.5)', flexShrink: 0 }}></div>
                               <span style={{ fontSize: '1.05rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Prev Period (YoY) <span style={{fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 'bold'}}>({formatKgs(prev)} kg)</span></span>
                             </div>
-                            <span style={{ fontWeight: 'bold', color: '#A6FE00', fontSize: '1.1rem' }}>{prev > 0 ? Math.round((current / prev) * 100) : 0}%</span>
+                             <span style={{ fontWeight: 'bold', color: '#A6FE00', fontSize: '1.1rem' }}>{prev > 0 ? Math.round((current / prev) * 100) : (current > 0 ? 100 : 0)}%</span>
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
@@ -283,7 +313,7 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
                               <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#00E5FF', boxShadow: '0 0 8px rgba(0,229,255,0.5)', flexShrink: 0 }}></div>
                               <span style={{ fontSize: '1.05rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Historical Average <span style={{fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 'bold'}}>({formatKgs(dealer?.avgMonthKgs)} kg)</span></span>
                             </div>
-                            <span style={{ fontWeight: 'bold', color: '#00E5FF', fontSize: '1.1rem' }}>{dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : 0}%</span>
+                             <span style={{ fontWeight: 'bold', color: '#00E5FF', fontSize: '1.1rem' }}>{dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : (current > 0 ? 100 : 0)}%</span>
                           </div>
                         </div>
                       </div>
@@ -551,23 +581,26 @@ export default function ViewDealerModal({ dealer, customTrigger, isOpen: control
                           )}
 
                           <div className={styles.cardInteractions}>
-                            <div className={styles.interactionButtons}>
-                              <button className={styles.interactionBtn}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-                                Like
-                              </button>
-                              <button className={styles.interactionBtn}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                Reply
-                              </button>
-                            </div>
+                            {update.mondayUrl ? (
+                              <a 
+                                href={update.mondayUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className={styles.mondayLinkBtn}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                  <polyline points="15 3 21 3 21 9"></polyline>
+                                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                                </svg>
+                                Open in Monday.com
+                              </a>
+                            ) : (
+                              <div></div>
+                            )}
                             {update.viewsCount !== undefined && (
                               <span>👁️ {update.viewsCount}</span>
                             )}
-                          </div>
-
-                          <div className={styles.replyComposerPlaceholder}>
-                            Write a reply...
                           </div>
                         </div>
                       ))
