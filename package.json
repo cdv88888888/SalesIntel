@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev -p 3005 --webpack",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "test": "node tests/run-e2e-real.js",
@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.3.1",
-    "@google-cloud/bigquery-2d43d264c358db9b": "npm:@google-cloud/bigquery@^8.3.1",
     "@google/genai": "^2.10.0",
     "esbuild": "^0.19.2",
     "firebase": "^12.15.0",
