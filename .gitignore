@@ -39,3 +39,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# credentials
+bq-credentials.json
+*.json.key
+
+# agents
+.agents/
+
+*.log
+.firebase/
+.next-challenger*/
+# scratch & temporary scripts
+scratch/
+test-*.js
+test-*.mjs
+test_*.js
+test_*.mjs
+
+
