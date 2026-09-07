@@ -1,8 +1,48 @@
 import { BigQuery } from '@google-cloud/bigquery';
-import credentials from '../../bq-credentials.json' assert { type: 'json' };
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { unstable_cache } from 'next/cache';
 
 let bqClient = null;
+let resolvedCredentials;
+
+/**
+ * Resolve the BigQuery service-account credentials at runtime, WITHOUT a
+ * build-time dependency on a git-ignored file. Resolution order:
+ *   1. BQ_CREDENTIALS_JSON / GOOGLE_SERVICE_ACCOUNT_JSON env var (raw JSON or base64)
+ *   2. ./bq-credentials.json on disk (local dev), read lazily at runtime
+ *   3. null -> fall back to Application Default Credentials
+ *
+ * Returning null (rather than a hard import) keeps the production build from
+ * failing when the credentials file is absent from the CI checkout.
+ */
+function loadBigQueryCredentials() {
+  if (resolvedCredentials !== undefined) return resolvedCredentials;
+
+  const raw = process.env.BQ_CREDENTIALS_JSON || process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (raw && raw.trim()) {
+    try {
+      const text = raw.trim().startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8');
+      resolvedCredentials = JSON.parse(text);
+      return resolvedCredentials;
+    } catch (err) {
+      console.error('[BIGQUERY] Failed to parse credentials from environment:', err.message);
+    }
+  }
+
+  try {
+    const filePath = path.join(process.cwd(), 'bq-credentials.json');
+    if (existsSync(filePath)) {
+      resolvedCredentials = JSON.parse(readFileSync(filePath, 'utf8'));
+      return resolvedCredentials;
+    }
+  } catch (err) {
+    console.error('[BIGQUERY] Failed to read local bq-credentials.json:', err.message);
+  }
+
+  resolvedCredentials = null;
+  return resolvedCredentials;
+}
 
 let cachedMonths = null;
 let cachedMonthsTime = 0;
@@ -14,13 +54,28 @@ const DEALERS_CACHE_TTL = 1000 * 60 * 60 * 2; // 2 hours
 
 export function getBigQueryClient() {
   if (!bqClient) {
-    bqClient = new BigQuery({
-      projectId: credentials.project_id,
-      credentials: {
-        client_email: credentials.client_email,
-        private_key: credentials.private_key,
-      }
-    });
+    const credentials = loadBigQueryCredentials();
+    const projectId =
+      (credentials && credentials.project_id) ||
+      process.env.BQ_PROJECT_ID ||
+      process.env.GOOGLE_CLOUD_PROJECT ||
+      undefined;
+
+    if (credentials && credentials.client_email && credentials.private_key) {
+      bqClient = new BigQuery({
+        projectId,
+        credentials: {
+          client_email: credentials.client_email,
+          private_key: credentials.private_key,
+        },
+      });
+    } else {
+      // No explicit service-account credentials found: rely on Application
+      // Default Credentials. BigQuery-backed pages will error at request time
+      // if ADC is unavailable, but the build and non-BigQuery routes still work.
+      console.warn('[BIGQUERY] No service-account credentials found; falling back to Application Default Credentials.');
+      bqClient = new BigQuery(projectId ? { projectId } : {});
+    }
   }
   return bqClient;
 }
