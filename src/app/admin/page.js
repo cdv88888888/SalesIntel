@@ -7,10 +7,13 @@ import {
   Download, 
   RefreshCw, 
   Calendar, 
-  Filter, 
+  Filter,
   Layers,
   Database,
-  ArrowUpDown
+  ArrowUpDown,
+  Users,
+  UserCheck,
+  UserX
 } from 'lucide-react';
 import styles from './page.module.css';
 
@@ -32,6 +35,13 @@ export default function AdminLogsPage() {
   // Filter out automated security test payloads by default
   const [hideTestPayloads, setHideTestPayloads] = useState(true);
   const [isPurging, setIsPurging] = useState(false);
+
+  // Registered-user roster with per-user login/activity roll-up
+  const [registeredUsers, setRegisteredUsers] = useState([]);
+  const [otherUsers, setOtherUsers] = useState([]);
+  const [usersError, setUsersError] = useState(null);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [activeWindowDays, setActiveWindowDays] = useState(30);
 
   const isTestPayload = (email) => {
     if (!email || typeof email !== 'string') return true;
@@ -87,8 +97,29 @@ export default function AdminLogsPage() {
     }
   };
 
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    setUsersError(null);
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch registered users');
+      }
+      setRegisteredUsers(data.users || []);
+      setOtherUsers(data.others || []);
+      if (typeof data.activeWindowDays === 'number') setActiveWindowDays(data.activeWindowDays);
+    } catch (err) {
+      console.error('Error fetching registered users:', err);
+      setUsersError(err.message);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchLogs();
+    fetchUsers();
   }, []);
 
   // Filter logs logic
@@ -204,6 +235,27 @@ export default function AdminLogsPage() {
     new Set(logs.map(log => log.email).filter(e => e && (!hideTestPayloads || !isTestPayload(e))))
   ).sort();
 
+  // Dropdown lists EVERY registered user (even those with no activity yet),
+  // unioned with any other real emails found in the logs.
+  const dropdownEmails = Array.from(
+    new Set([
+      ...registeredUsers.map(u => u.email),
+      ...uniqueEmails,
+    ].filter(Boolean))
+  ).sort();
+
+  const formatWhen = (iso) => {
+    if (!iso) return 'Never';
+    const then = new Date(iso).getTime();
+    if (Number.isNaN(then)) return 'Never';
+    // Absolute UTC timestamp (pure); recency is already reflected by the
+    // server-computed "Currently Using" active/idle flag.
+    return iso.replace('T', ' ').substring(0, 16);
+  };
+
+  const loggedInCount = registeredUsers.filter(u => u.hasLoggedIn).length;
+  const activeCount = registeredUsers.filter(u => u.active).length;
+
   // Calculate metrics
   const totalLogs = filteredLogs.length;
   const totalLogins = filteredLogs.filter(log => log.type === 'login').length;
@@ -287,6 +339,136 @@ export default function AdminLogsPage() {
         </div>
       </section>
 
+      {/* Registered Users Roster */}
+      <section className={`${styles.tableSection} glass-panel`}>
+        <div className={styles.tableHeader}>
+          <Users size={16} />
+          <h2>Registered Users</h2>
+          <span className={styles.recordCount}>
+            {usersLoading
+              ? 'Loading…'
+              : `${loggedInCount} of ${registeredUsers.length} have logged in · ${activeCount} active in last ${activeWindowDays}d`}
+          </span>
+          <button
+            className={styles.iconButton}
+            onClick={fetchUsers}
+            disabled={usersLoading}
+            title="Refresh registered users"
+            style={{ marginLeft: 'auto' }}
+          >
+            <RefreshCw size={16} className={usersLoading ? styles.spin : ''} />
+          </button>
+        </div>
+
+        {usersError ? (
+          <div className={`${styles.errorAlert} glass-panel`}>
+            <ShieldAlert size={20} className={styles.errorIcon} />
+            <div>
+              <h3>Could not load registered users</h3>
+              <p>{usersError}</p>
+            </div>
+          </div>
+        ) : usersLoading ? (
+          <div className={styles.loadingContainer}>
+            <RefreshCw size={28} className={styles.spin} style={{ color: 'var(--primary-accent)' }} />
+            <p>Loading registered users…</p>
+          </div>
+        ) : registeredUsers.length === 0 ? (
+          <div className={styles.emptyContainer}>
+            <Users size={40} style={{ color: 'var(--text-secondary)', marginBottom: '12px', opacity: 0.5 }} />
+            <h3>No registered users found</h3>
+          </div>
+        ) : (
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>User Email</th>
+                  <th>Role</th>
+                  <th>Login Status</th>
+                  <th>Logins</th>
+                  <th>Last Login</th>
+                  <th>Last Activity</th>
+                  <th>Currently Using</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registeredUsers.map((u) => (
+                  <tr
+                    key={u.email}
+                    onClick={() => setSearchEmail(u.email)}
+                    style={{ cursor: 'pointer' }}
+                    title="Filter the activity log below by this user"
+                  >
+                    <td className={styles.emailTd}>{u.email}</td>
+                    <td>
+                      <span className={`${styles.badge} ${u.role === 'admin' ? styles.loginBadge : styles.accessBadge}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${u.hasLoggedIn ? styles.statusSuccess : styles.statusDanger}`}>
+                        {u.hasLoggedIn ? (
+                          <><UserCheck size={13} style={{ marginRight: 4, verticalAlign: 'text-bottom' }} />Logged in</>
+                        ) : (
+                          <><UserX size={13} style={{ marginRight: 4, verticalAlign: 'text-bottom' }} />Never</>
+                        )}
+                      </span>
+                    </td>
+                    <td>{u.loginCount.toLocaleString()}</td>
+                    <td className={styles.timestampTd}>{formatWhen(u.lastLogin)}</td>
+                    <td className={styles.timestampTd}>{formatWhen(u.lastActivity)}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${u.active ? styles.statusSuccess : styles.statusDanger}`}>
+                        {u.active ? 'Active' : 'Idle'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {!usersLoading && !usersError && otherUsers.length > 0 && (
+          <div style={{ marginTop: '20px' }}>
+            <div className={styles.tableHeader}>
+              <ShieldAlert size={16} />
+              <h2>Other people using the app (not registered)</h2>
+              <span className={styles.recordCount}>{otherUsers.length} email(s) with successful logins</span>
+            </div>
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>User Email</th>
+                    <th>Logins</th>
+                    <th>Last Login</th>
+                    <th>Last Activity</th>
+                    <th>Currently Using</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {otherUsers.map((u) => (
+                    <tr key={u.email} onClick={() => setSearchEmail(u.email)} style={{ cursor: 'pointer' }}>
+                      <td className={styles.emailTd}>{u.email}</td>
+                      <td>{u.loginCount.toLocaleString()}</td>
+                      <td className={styles.timestampTd}>{formatWhen(u.lastLogin)}</td>
+                      <td className={styles.timestampTd}>{formatWhen(u.lastActivity)}</td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${u.active ? styles.statusSuccess : styles.statusDanger}`}>
+                          {u.active ? 'Active' : 'Idle'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Filters Section */}
       <section className={`${styles.filtersContainer} glass-panel`}>
         <div className={styles.filtersHeader}>
@@ -306,7 +488,7 @@ export default function AdminLogsPage() {
               onChange={(e) => setSearchEmail(e.target.value)}
             >
               <option value="">All Users</option>
-              {uniqueEmails.map(email => (
+              {dropdownEmails.map(email => (
                 <option key={email} value={email}>{email}</option>
               ))}
             </select>
