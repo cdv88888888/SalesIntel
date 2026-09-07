@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { verifySession } from '@/lib/session';
 import { getUserRole } from '@/lib/mockStore';
 
@@ -89,6 +89,59 @@ export async function POST(request) {
     return NextResponse.json({ success: true, id: docRef.id });
   } catch (err) {
     console.error('Error writing log to Firestore:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+// DELETE: Purge test security logs from Firestore (Admin only)
+export async function DELETE(request) {
+  try {
+    const token = request.cookies.get('__session')?.value;
+    const session = await verifySession(token);
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const email = session.email.trim().toLowerCase();
+    const role = getUserRole(email);
+    
+    if (role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const logsRef = collection(db, 'access_logs');
+    const querySnapshot = await getDocs(query(logsRef, limit(1000)));
+    
+    const isTestEmail = (em) => {
+      if (!em || typeof em !== 'string') return true;
+      const clean = em.toLowerCase();
+      return (
+        clean.includes('<script>') ||
+        clean.includes("' or '") ||
+        clean.includes('aaaaa') ||
+        clean.includes('example.com') ||
+        clean.includes('evil.com') ||
+        clean === 'undefined' ||
+        clean === 'unknown'
+      );
+    };
+
+    let deletedCount = 0;
+    const deletePromises = [];
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (isTestEmail(data.email)) {
+        deletePromises.push(deleteDoc(docSnap.ref));
+        deletedCount++;
+      }
+    });
+
+    await Promise.all(deletePromises);
+
+    return NextResponse.json({ success: true, deletedCount });
+  } catch (err) {
+    console.error('Error purging test logs from Firestore:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

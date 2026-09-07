@@ -19,9 +19,8 @@ const DEFAULT_WHITELIST = [
   { email: 'nora.sulit@masaganagas.com', role: 'viewer' },
   { email: 'anna.neri@masaganagas.com', role: 'viewer' },
   { email: 'hanes.llamas@masaganagas.com', role: 'viewer' },
-  { email: 'team@example.com', role: 'admin' },
-  { email: 'allowed@example.com', role: 'viewer' },
-  { email: 'admin@cdv-sales-intelligence.com', role: 'viewer' }
+  { email: 'jenette.morente@masaganagas.com', role: 'viewer' },
+  { email: 'richardyao@masaganagas.com', role: 'viewer' }
 ];
 
 function getStaticFallbackWhitelist() {
@@ -62,6 +61,12 @@ async function fetchWhitelistedUsersFromFirestoreREST() {
           const email = fields.email?.stringValue || doc.name.split('/').pop();
           const role = fields.role?.stringValue || 'viewer';
           return { email: email.toLowerCase(), role };
+        });
+        const fallback = getStaticFallbackWhitelist();
+        fallback.forEach(item => {
+          if (!parsed.some(p => p.email === item.email)) {
+            parsed.push(item);
+          }
         });
         cachedWhitelist = parsed;
         lastCacheTime = Date.now();

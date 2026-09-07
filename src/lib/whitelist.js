@@ -19,8 +19,7 @@ import {
 const COLLECTION_NAME = 'whitelisted_users';
 
 const DEFAULT_ADMINS = [
-  { email: 'cdv@masaganagas.com', role: 'admin' },
-  { email: 'team@example.com', role: 'admin' }
+  { email: 'cdv@masaganagas.com', role: 'admin' }
 ];
 
 const DEFAULT_VIEWERS = [
@@ -33,8 +32,8 @@ const DEFAULT_VIEWERS = [
   'nora.sulit@masaganagas.com',
   'anna.neri@masaganagas.com',
   'hanes.llamas@masaganagas.com',
-  'allowed@example.com',
-  'admin@cdv-sales-intelligence.com'
+  'jenette.morente@masaganagas.com',
+  'richardyao@masaganagas.com'
 ];
 
 /**
@@ -138,10 +137,17 @@ export async function getWhitelistedUsersFromFirestore() {
     }
 
     const list = snapshot.docs.map(d => ({
-      email: d.id,
+      email: d.id.toLowerCase(),
       role: d.data().role || 'viewer',
       timestamp: d.data().timestamp
     }));
+
+    const defaults = getDefaultUsers();
+    defaults.forEach(def => {
+      if (!list.some(u => u.email.toLowerCase() === def.email.toLowerCase())) {
+        list.push(def);
+      }
+    });
 
     return list;
   } catch (err) {
@@ -157,13 +163,18 @@ export async function getWhitelistedUsersFromFirestore() {
 export async function getUserRoleFromFirestore(email) {
   if (!email || typeof email !== 'string') return 'viewer';
   const cleanEmail = email.trim().toLowerCase();
+  const defaultAdmin = DEFAULT_ADMINS.find(a => a.email.toLowerCase() === cleanEmail);
 
   try {
     const docRef = doc(db, COLLECTION_NAME, cleanEmail);
     const docSnap = await withTimeout(getDoc(docRef), 10000);
 
     if (docSnap.exists()) {
-      return docSnap.data().role || 'viewer';
+      return docSnap.data().role || (defaultAdmin ? defaultAdmin.role : 'viewer');
+    }
+
+    if (defaultAdmin) {
+      return defaultAdmin.role;
     }
 
     // If not found in Firestore doc, check if collection is empty and seed
@@ -179,6 +190,7 @@ export async function getUserRoleFromFirestore(email) {
     return getMockUserRole(cleanEmail);
   } catch (err) {
     console.error(`[WHITELIST_ROLE_ERROR] Failed fetching role for ${cleanEmail} from Firestore:`, err.message);
+    if (defaultAdmin) return defaultAdmin.role;
     return getMockUserRole(cleanEmail);
   }
 }

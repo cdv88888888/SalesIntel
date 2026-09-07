@@ -29,6 +29,43 @@ export default function AdminLogsPage() {
   // Sorting state
   const [sortConfig, setSortConfig] = useState({ key: 'timestamp', direction: 'desc' });
 
+  // Filter out automated security test payloads by default
+  const [hideTestPayloads, setHideTestPayloads] = useState(true);
+  const [isPurging, setIsPurging] = useState(false);
+
+  const isTestPayload = (email) => {
+    if (!email || typeof email !== 'string') return true;
+    const clean = email.toLowerCase();
+    return (
+      clean.includes('<script>') ||
+      clean.includes("' or '") ||
+      clean.includes('aaaaa') ||
+      clean.includes('example.com') ||
+      clean.includes('evil.com') ||
+      clean === 'undefined' ||
+      clean === 'unknown'
+    );
+  };
+
+  const handlePurgeTestLogs = async () => {
+    if (!confirm("Are you sure you want to permanently delete all security test payload logs from Firestore?")) return;
+    setIsPurging(true);
+    try {
+      const res = await fetch('/api/admin/logs', { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Successfully purged ${data.deletedCount || 0} test log entries.`);
+        fetchLogs();
+      } else {
+        alert(`Failed to purge test logs: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      alert(`Error purging test logs: ${err.message}`);
+    } finally {
+      setIsPurging(false);
+    }
+  };
+
   const fetchLogs = async () => {
     setIsLoading(true);
     setError(null);
@@ -57,6 +94,11 @@ export default function AdminLogsPage() {
   // Filter logs logic
   useEffect(() => {
     let result = [...logs];
+
+    // Filter out security test payloads if enabled
+    if (hideTestPayloads) {
+      result = result.filter(log => !isTestPayload(log.email));
+    }
 
     // Search by Email
     if (searchEmail.trim() !== '') {
@@ -106,7 +148,7 @@ export default function AdminLogsPage() {
     }
 
     setFilteredLogs(result);
-  }, [logs, searchEmail, filterType, filterStatus, filterDate, sortConfig]);
+  }, [logs, searchEmail, filterType, filterStatus, filterDate, sortConfig, hideTestPayloads]);
 
   const requestSort = (key) => {
     let direction = 'desc';
@@ -157,8 +199,10 @@ export default function AdminLogsPage() {
     document.body.removeChild(link);
   };
 
-  // Get unique emails from all logs for the dropdown filter option
-  const uniqueEmails = Array.from(new Set(logs.map(log => log.email).filter(Boolean))).sort();
+  // Get unique emails from all logs for the dropdown filter option (real users only)
+  const uniqueEmails = Array.from(
+    new Set(logs.map(log => log.email).filter(e => e && (!hideTestPayloads || !isTestPayload(e))))
+  ).sort();
 
   // Calculate metrics
   const totalLogs = filteredLogs.length;
@@ -177,6 +221,15 @@ export default function AdminLogsPage() {
           <div className={styles.headerActions}>
             <button className={styles.iconButton} onClick={fetchLogs} disabled={isLoading} title="Refresh Logs">
               <RefreshCw size={18} className={isLoading ? styles.spin : ''} />
+            </button>
+            <button 
+              className={styles.button} 
+              onClick={handlePurgeTestLogs} 
+              disabled={isPurging}
+              style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171' }}
+              title="Purge security test payload logs from Firestore"
+            >
+              {isPurging ? 'Purging...' : 'Purge Test Logs'}
             </button>
             <button 
               className={styles.button} 
