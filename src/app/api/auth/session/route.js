@@ -4,6 +4,7 @@ import { signSession, verifySession } from '../../../../lib/session';
 import { getMockConfig, addActiveSession, removeActiveSession, getActiveSessions } from '../../../../lib/mockStore';
 import { checkUserAccess } from '../../../../lib/auth';
 import { getUserRoleFromFirestore } from '../../../../lib/whitelist';
+import { recordAccessLog } from '../../../../lib/accessLog';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -12,22 +13,14 @@ export async function GET(request) {
   if (checkEmail) {
     const isAllowed = await checkUserAccess(checkEmail);
     if (!isAllowed) {
-      const secret = process.env.SESSION_SECRET || 'mgc-sales-intelligence-session-secret-2026-prod-secret';
-      const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
-      fetch(new URL('/api/admin/logs', request.url).origin + '/api/admin/logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-internal-key': secret
-        },
-        body: JSON.stringify({
-          email: checkEmail,
-          action: 'Login Attempt (Blocked: Not Whitelisted)',
-          type: 'login',
-          status: 'Denied',
-          ip
-        })
-      }).catch(err => console.error("Login denied logging failed:", err));
+      const ip = request.headers.get('x-forwarded-for') || request.ip || '127.0.0.1';
+      await recordAccessLog({
+        email: checkEmail,
+        action: 'Login Attempt (Blocked: Not Whitelisted)',
+        type: 'login',
+        status: 'Denied',
+        ip
+      });
     }
     return NextResponse.json({ allowed: isAllowed });
   }
@@ -80,24 +73,15 @@ export async function POST(request) {
       secure: process.env.NODE_ENV === 'production'
     });
 
-    // Log Login Success
-    const secret = process.env.SESSION_SECRET || 'mgc-sales-intelligence-session-secret-2026-prod-secret';
-    const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
-    
-    fetch(new URL('/api/admin/logs', request.url).origin + '/api/admin/logs', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-internal-key': secret
-      },
-      body: JSON.stringify({
-        email: trimmedEmail,
-        action: 'Login Success',
-        type: 'login',
-        status: 'Success',
-        ip
-      })
-    }).catch(err => console.error("Login logging failed:", err));
+    // Log Login Success (awaited direct write so sign-ins are reliably recorded)
+    const ip = request.headers.get('x-forwarded-for') || request.ip || '127.0.0.1';
+    await recordAccessLog({
+      email: trimmedEmail,
+      action: 'Login Success',
+      type: 'login',
+      status: 'Success',
+      ip
+    });
 
     return NextResponse.json({ success: true, user: { email: trimmedEmail } });
   } catch (err) {
@@ -125,24 +109,15 @@ export async function DELETE(request) {
     sameSite: 'lax'
   });
 
-  // Log Logout
-  const secret = process.env.SESSION_SECRET || 'mgc-sales-intelligence-session-secret-2026-prod-secret';
-  const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
-  
-  fetch(new URL('/api/admin/logs', request.url).origin + '/api/admin/logs', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-internal-key': secret
-    },
-    body: JSON.stringify({
-      email,
-      action: 'Logout',
-      type: 'login',
-      status: 'Success',
-      ip
-    })
-  }).catch(err => console.error("Logout logging failed:", err));
+  // Log Logout (awaited direct write)
+  const ip = request.headers.get('x-forwarded-for') || request.ip || '127.0.0.1';
+  await recordAccessLog({
+    email,
+    action: 'Logout',
+    type: 'login',
+    status: 'Success',
+    ip
+  });
 
   return NextResponse.json({ success: true });
 }
