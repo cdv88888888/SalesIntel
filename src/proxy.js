@@ -83,27 +83,41 @@ async function fetchWhitelistedUsersFromFirestoreREST() {
   return fallback;
 }
 
-function logAccess(request, email, path, isAllowed, reason = '') {
-  const secret = process.env.SESSION_SECRET;
-  const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
-  
-  // Non-blocking fetch to logging route handler
-  fetch(new URL('/api/admin/logs', request.nextUrl.origin), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-internal-key': secret
-    },
-    body: JSON.stringify({
-      email: email || 'unknown',
-      action: `Access ${path}${reason ? ` (${reason})` : ''}`,
-      type: 'access',
-      status: isAllowed ? 'Allowed' : 'Denied',
-      ip
-    })
-  }).catch(err => {
-    console.error('Middleware logging failed:', err);
-  });
+async function logAccess(request, email, path, isAllowed, reason = '') {
+  const ip = request.headers.get('x-forwarded-for') || request.ip || '127.0.0.1';
+
+  // Write the access event straight to Firestore via the REST API (the edge
+  // runtime cannot use the Firebase client SDK). This replaces the previous
+  // fire-and-forget self-POST to /api/admin/logs, which depended on internal
+  // URL resolution + a shared secret and silently dropped events when either
+  // failed. Awaited and wrapped so logging can never break navigation.
+  try {
+    const projectId =
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+      process.env.FIREBASE_PROJECT_ID ||
+      process.env.GCP_PROJECT ||
+      'sales-intel-cdv-2026';
+
+    const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/access_logs`;
+
+    await fetch(restUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          email: { stringValue: String(email || 'unknown').trim().toLowerCase() },
+          action: { stringValue: `Access ${path}${reason ? ` (${reason})` : ''}` },
+          type: { stringValue: 'access' },
+          status: { stringValue: isAllowed ? 'Allowed' : 'Denied' },
+          ip: { stringValue: ip || 'unknown' },
+          timestamp: { timestampValue: new Date().toISOString() },
+        },
+      }),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch (err) {
+    console.error('[PROXY_ACCESS_LOG_ERROR] Failed to write access log:', err?.message || err);
+  }
 }
 
 export async function proxy(request) {
@@ -178,7 +192,7 @@ export async function proxy(request) {
 
   if (!session || !isActive) {
     // Unauthenticated
-    logAccess(request, 'anonymous', cleanPath, false, 'Unauthenticated');
+    await logAccess(request, 'anonymous', cleanPath, false, 'Unauthenticated');
 
     if (lowerPath.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -228,7 +242,7 @@ export async function proxy(request) {
   }
 
   // Log the access!
-  logAccess(request, email, cleanPath, isAllowed, isAllowed ? '' : 'RBAC Denied');
+  await logAccess(request, email, cleanPath, isAllowed, isAllowed ? '' : 'RBAC Denied');
 
   if (isAllowed) {
     return NextResponse.next();
