@@ -63,6 +63,10 @@
     {
       "email": "jenette.morente@masaganagas.com",
       "role": "viewer"
+    },
+    {
+      "email": "beatriz.maayo@masaganagas.com",
+      "role": "viewer"
     }
   ],
   "mockConfig": {

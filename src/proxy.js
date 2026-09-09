@@ -20,7 +20,8 @@ const DEFAULT_WHITELIST = [
   { email: 'anna.neri@masaganagas.com', role: 'viewer' },
   { email: 'hanes.llamas@masaganagas.com', role: 'viewer' },
   { email: 'jenette.morente@masaganagas.com', role: 'viewer' },
-  { email: 'richardyao@masaganagas.com', role: 'viewer' }
+  { email: 'richardyao@masaganagas.com', role: 'viewer' },
+  { email: 'beatriz.maayo@masaganagas.com', role: 'viewer' }
 ];
 
 function getStaticFallbackWhitelist() {

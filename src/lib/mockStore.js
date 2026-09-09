@@ -13,7 +13,8 @@ const defaultEmails = [
   'anna.neri@masaganagas.com',
   'hanes.llamas@masaganagas.com',
   'jenette.morente@masaganagas.com',
-  'richardyao@masaganagas.com'
+  'richardyao@masaganagas.com',
+  'beatriz.maayo@masaganagas.com'
 ];
 const getInitialWhitelist = () => {
   if (process.env.AUTH_WHITELIST) {

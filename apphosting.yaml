@@ -43,7 +43,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: AUTH_WHITELIST
-    value: "cdv@masaganagas.com:admin,janalbert.santos@masaganagas.com:viewer,maclaire.jabines@masaganagas.com:viewer,jenette.morente@masaganagas.com:viewer,anton.antonio@masaganagas.com:viewer,melroziene.dorio@masaganagas.com:viewer,patrick.yao@masaganagas.com:viewer,marialourdes.jordan@masaganagas.com:viewer,nora.sulit@masaganagas.com:viewer,anna.neri@masaganagas.com:viewer,hanes.llamas@masaganagas.com:viewer,richardyao@masaganagas.com:viewer"
+    value: "cdv@masaganagas.com:admin,janalbert.santos@masaganagas.com:viewer,maclaire.jabines@masaganagas.com:viewer,jenette.morente@masaganagas.com:viewer,anton.antonio@masaganagas.com:viewer,melroziene.dorio@masaganagas.com:viewer,patrick.yao@masaganagas.com:viewer,marialourdes.jordan@masaganagas.com:viewer,nora.sulit@masaganagas.com:viewer,anna.neri@masaganagas.com:viewer,hanes.llamas@masaganagas.com:viewer,richardyao@masaganagas.com:viewer,beatriz.maayo@masaganagas.com:viewer"
     availability:
       - BUILD
       - RUNTIME
