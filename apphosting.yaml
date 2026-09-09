@@ -18,11 +18,11 @@ runConfig:
   concurrency: 80
 
 env:
-  # Signs the __session cookie.
-  - variable: SESSION_SECRET
-    secret: SESSION_SECRET
-    availability:
-      - RUNTIME
+  # SESSION_SECRET (signs the __session cookie) is NOT declared here. It is set
+  # as a console environment-variable override on the backend
+  # (App Hosting > backend > Settings > Environment > Add new), which needs no
+  # Secret Manager IAM grants. Once Secret Manager access is sorted out it can
+  # move back to a `secret:` reference like the entries below.
 
   # Monday.com board ids (plain value).
   - variable: MONDAY_BOARD_ID
@@ -30,7 +30,7 @@ env:
     availability:
       - RUNTIME
 
-  # --- Secrets not yet created in Secret Manager ---------------------------
+  # --- Secret Manager references (all disabled for now) --------------------
   # Each entry below is disabled until the matching secret exists and the
   # App Hosting compute service account has "Secret Manager Secret Accessor"
   # on it. A referenced-but-missing secret fails the rollout in the preparer
