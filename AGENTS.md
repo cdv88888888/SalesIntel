@@ -6,17 +6,24 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Deployment: Claude does it, the owner does not
 
-The owner does not want to be handed deploy or release commands to run
-themselves. When a change is merged to `main`, deploy it yourself:
+Production is hosted on **Vercel** (project `sales-intel`, id
+`prj_dP2IC6BjAGJChArY6NQpj81OqreZ`, team `cdv-4017s-projects`). Vercel is
+connected to this GitHub repo: every push to `main` builds and deploys to
+production automatically, and every PR gets a preview deployment that the
+`vercel[bot]` reports in a PR comment.
 
-1. Run `./deploy_retry.sh` (Firebase Hosting, project `sales-intel-cdv-2026`).
-2. Confirm the deploy succeeded and report the outcome.
+So "deploy" means: merge to `main`. Concretely, when a change is ready:
 
-Never end a task by telling the owner to run `git pull`, `deploy_retry.sh`,
-`firebase deploy`, or similar. If the environment lacks Firebase credentials
-(`FIREBASE_TOKEN` or `GOOGLE_APPLICATION_CREDENTIALS`), say so in one line and
-name the exact secret to add to the Claude Code environment so the next run
-can deploy unattended.
+1. Open the pull request and merge it once the Vercel check is green.
+2. Confirm the production deployment (Vercel bot comment on the PR, or the
+   Vercel MCP tools when they have access to the project) and report the
+   outcome to the owner.
 
-Likewise, when the owner says a change is needed now, open the pull request
-and merge it once it is green rather than stopping at the branch.
+Never end a task by telling the owner to run `git pull`, a deploy script,
+`vercel deploy`, `firebase deploy`, or similar. Do not use `deploy_retry.sh`
+or `apphosting.yaml`; they are leftovers from an earlier Firebase Hosting
+setup and are not the production path. No Firebase credential is required to
+ship a change.
+
+If the Vercel MCP connector cannot see the project (403/404), say so in one
+line and note that the connector needs project access granted in Vercel.
