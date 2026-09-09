@@ -108,7 +108,7 @@ export default function Sidebar() {
     <>
       {/* Mobile Header */}
       <div className={styles.mobileHeader}>
-        <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>AGY</div>
+        <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>MGC</div>
         <button onClick={() => setIsMobileOpen(true)} style={{ color: '#fff', padding: '8px' }}>
           <Menu size={24} />
         </button>
@@ -124,9 +124,9 @@ export default function Sidebar() {
         {/* Header / Brand */}
         <div className={styles.headerBrand} style={{ padding: isOpen ? '0 24px' : '0 0', justifyContent: isOpen ? 'flex-start' : 'center' }}>
           {isOpen ? (
-            <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Antigravity AGY</div>
+            <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>MGC Intelligence</div>
           ) : (
-            <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>AGY</div>
+            <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>MGC</div>
           )}
         </div>
 
