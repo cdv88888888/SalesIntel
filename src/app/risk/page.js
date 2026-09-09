@@ -2,6 +2,7 @@ import styles from "../proactive/page.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getProactiveCallingData } from "../../lib/bigquery";
+import { normalizeSegment } from "../../lib/segments";
 import { cookies } from "next/headers";
 import ExpandableKanban from "../../components/ExpandableKanban";
 import RiskTableModal from "../../components/RiskTableModal";
@@ -12,7 +13,7 @@ import ClientClickWrapper from "../../components/ClientClickWrapper";
 export default async function RiskAndChurn({ searchParams }) {
   await cookies();
   const params = await searchParams;
-  const segment = params?.segment || 'dealer';
+  const segment = normalizeSegment(params?.segment);
   
   let riskColumns = {
     newAccounts: [],

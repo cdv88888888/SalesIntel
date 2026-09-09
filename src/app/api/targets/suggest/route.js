@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAvailableMonths, getDealerAggregates } from '@/lib/bigquery';
 import { getSettings } from '@/lib/settings';
 import { cookies } from "next/headers";
+import { normalizeBaseSegment } from '@/lib/segments';
 
 function getPreviousMonthStr(monthStr) {
   if (!monthStr) return null;
@@ -30,7 +31,7 @@ export async function GET(request) {
       return NextResponse.json({ error: "No historical data found in BigQuery" }, { status: 404 });
     }
 
-    const segment = searchParams.get('segment') || 'dealer';
+    const segment = normalizeBaseSegment(searchParams.get('segment'));
 
     const latest = availableMonths[0];
     const currentPeriod = `${latest.year}-${String(latest.month).padStart(2, '0')}`;

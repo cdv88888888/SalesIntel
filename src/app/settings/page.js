@@ -3,10 +3,12 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
+import { normalizeBaseSegment } from '../../lib/segments';
 
 function SettingsContent() {
   const searchParams = useSearchParams();
-  const segment = searchParams.get('segment') || 'dealer';
+  // Targets are configured per concrete segment, so "all" falls back to dealer here.
+  const segment = normalizeBaseSegment(searchParams.get('segment'));
 
   const [globalTarget, setGlobalTarget] = useState(150000);
   const [dealerTargets, setDealerTargets] = useState({});

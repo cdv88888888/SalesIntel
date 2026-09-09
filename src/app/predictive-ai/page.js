@@ -2,13 +2,14 @@ import styles from "./page.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getDealerAggregates, getAvailableMonths } from "../../lib/bigquery";
+import { normalizeSegment } from "../../lib/segments";
 import { getSettings } from "../../lib/settings";
 import ClientClickWrapper from "../../components/ClientClickWrapper";
 import { cookies } from "next/headers";
 
 export default async function PredictiveAI({ searchParams }) {
   const params = await searchParams;
-  const segment = params.segment || 'dealer';
+  const segment = normalizeSegment(params.segment);
 
   const settings = await getSettings(null, segment);
   const dealerTargets = settings.dealerTargets || {};
