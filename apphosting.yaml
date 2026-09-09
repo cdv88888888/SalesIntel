@@ -24,29 +24,30 @@ env:
     availability:
       - RUNTIME
 
-  # Gemini chat widget.
-  - variable: GEMINI_API_KEY
-    secret: GEMINI_API_KEY
-    availability:
-      - RUNTIME
-
-  # Monday.com CRM updates feed.
-  - variable: MONDAY_API_TOKEN
-    secret: MONDAY_API_TOKEN
-    availability:
-      - RUNTIME
+  # Monday.com board ids (plain value).
   - variable: MONDAY_BOARD_ID
     value: "1244621950,1250913155"
     availability:
       - RUNTIME
 
-  # BigQuery service-account JSON (raw or base64). The sales dataset lives in a
-  # separate GCP project, so an explicit credential is simpler than granting
-  # the App Hosting compute account cross-project BigQuery roles.
-  - variable: BQ_CREDENTIALS_JSON
-    secret: BQ_CREDENTIALS_JSON
-    availability:
-      - RUNTIME
+  # --- Secrets not yet created in Secret Manager ---------------------------
+  # Each entry below is disabled until the matching secret exists and the
+  # App Hosting compute service account has "Secret Manager Secret Accessor"
+  # on it. A referenced-but-missing secret fails the rollout in the preparer
+  # step. Re-enable one at a time as the secrets are created.
+  #
+  # - variable: GEMINI_API_KEY          # Gemini chat widget
+  #   secret: GEMINI_API_KEY
+  #   availability:
+  #     - RUNTIME
+  # - variable: MONDAY_API_TOKEN        # Monday.com CRM updates feed
+  #   secret: MONDAY_API_TOKEN
+  #   availability:
+  #     - RUNTIME
+  # - variable: BQ_CREDENTIALS_JSON     # BigQuery service-account JSON
+  #   secret: BQ_CREDENTIALS_JSON
+  #   availability:
+  #     - RUNTIME
 
   # Fallback whitelist when Firestore's whitelisted_users is unavailable.
   - variable: AUTH_WHITELIST
