@@ -20,10 +20,30 @@ So "deploy" means: merge to `main`. Concretely, when a change is ready:
    outcome to the owner.
 
 Never end a task by telling the owner to run `git pull`, a deploy script,
-`vercel deploy`, `firebase deploy`, or similar. Do not use `deploy_retry.sh`
-or `apphosting.yaml`; they are leftovers from an earlier Firebase Hosting
-setup and are not the production path. No Firebase credential is required to
-ship a change.
+`vercel deploy`, `firebase deploy`, or similar. No Firebase credential is
+required to ship a change to Vercel.
 
 If the Vercel MCP connector cannot see the project (403/404), say so in one
 line and note that the connector needs project access granted in Vercel.
+
+## Firebase App Hosting migration (in progress)
+
+The owner wants hosting consolidated onto the existing Google billing
+account. A Firebase App Hosting backend on project `sales-intel-cdv-2026`,
+connected to this repo with `main` as the live branch, is being trialled
+alongside Vercel. `apphosting.yaml` is the live config for that backend:
+
+- Firebase web config comes from `FIREBASE_WEBAPP_CONFIG`, which App Hosting
+  injects for the associated web app; `next.config.mjs` maps it onto the
+  `NEXT_PUBLIC_FIREBASE_*` variables. Do not hard-code those values.
+- Secrets (`SESSION_SECRET`, `GEMINI_API_KEY`, `MONDAY_API_TOKEN`,
+  `BQ_CREDENTIALS_JSON`) are Secret Manager references. A rollout that fails
+  in the `preparer` step within seconds almost always means a referenced
+  secret is missing or the App Hosting compute service account lacks
+  "Secret Manager Secret Accessor" on it.
+- The old `relationship-hub` backend (us-east4, source-upload, failed
+  June 2026) is not the target; it is to be deleted after cutover.
+
+Vercel remains production until the App Hosting backend serves a working
+login and data load and the domain is switched. Update this section when the
+cutover happens.
