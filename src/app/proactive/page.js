@@ -2,11 +2,12 @@ import styles from "./page.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getProactiveCallingData } from "../../lib/bigquery";
+import { normalizeSegment } from "../../lib/segments";
 import ProactiveBoard from "./ProactiveBoard";
 
 export default async function ProactiveCalling({ searchParams }) {
   const params = await searchParams;
-  const segment = params?.segment || 'dealer';
+  const segment = normalizeSegment(params?.segment);
   let initialColumns = {
     overdue: [],
     today: [],

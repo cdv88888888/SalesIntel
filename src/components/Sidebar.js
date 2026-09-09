@@ -25,12 +25,13 @@ import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { logoutUser } from '../lib/auth';
 import SegmentToggle from './SegmentToggle';
+import { SEGMENTS, BASE_SEGMENTS, normalizeSegment } from '../lib/segments';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const segment = searchParams.get('segment') || 'dealer';
+  const segment = normalizeSegment(searchParams.get('segment'));
 
   const [isOpen, setIsOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -91,17 +92,28 @@ export default function Sidebar() {
     window.location.href = '/login';
   };
 
+  // Pages that are segment-aware list their segments beneath them.
+  // Targets are configured per concrete segment, so Settings offers no "All".
+  const ALL_SEGMENT_IDS = SEGMENTS.map(s => s.id);
   const navItems = [
-    { href: '/', label: 'Operations Hub', icon: LayoutDashboard },
-    { href: '/intelligence', label: 'Business Intelligence', icon: LineChart },
-    { href: '/predictive-ai', label: 'Predictive AI', icon: BrainCircuit },
-    { href: '/proactive', label: 'Proactive Calling', icon: PhoneCall },
-    { href: '/risk', label: 'Risk & Churn', icon: AlertTriangle },
+    { href: '/', label: 'Operations Hub', icon: LayoutDashboard, segments: ALL_SEGMENT_IDS },
+    { href: '/intelligence', label: 'Business Intelligence', icon: LineChart, segments: ALL_SEGMENT_IDS },
+    { href: '/predictive-ai', label: 'Predictive AI', icon: BrainCircuit, segments: ALL_SEGMENT_IDS },
+    { href: '/proactive', label: 'Proactive Calling', icon: PhoneCall, segments: ALL_SEGMENT_IDS },
+    { href: '/risk', label: 'Risk & Churn', icon: AlertTriangle, segments: ALL_SEGMENT_IDS },
     { href: '/gemini-ai', label: 'Gemini AI', icon: Bot },
     { href: '/admin', label: 'Admin Logs', icon: ClipboardList },
-    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/settings', label: 'Settings', icon: Settings, segments: BASE_SEGMENTS },
     { href: '/logic', label: 'Logic', icon: BookOpen },
   ];
+
+  // Carry the current segment across pages, falling back to the page's first
+  // supported segment when it does not offer the current one (e.g. "all" -> Settings).
+  const hrefFor = (item) => {
+    if (!item.segments) return item.href;
+    const target = item.segments.includes(segment) ? segment : item.segments[0];
+    return `${item.href}?segment=${target}`;
+  };
 
 
   return (
@@ -144,45 +156,38 @@ export default function Sidebar() {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
-              <Link 
-                key={item.href} 
-                href={`${item.href}?segment=${segment}`}
-                className={styles.navLink}
-                style={{
-                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  backgroundColor: isActive ? 'var(--surface-hover)' : 'transparent',
-                  justifyContent: isOpen ? 'flex-start' : 'center',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = 'var(--surface-hover)';
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = 'var(--text-secondary)';
-                  }
-                }}
-                onClick={() => setIsMobileOpen(false)}
-              >
-                <Icon size={20} style={{ minWidth: '20px' }} />
-                {isOpen && <span style={{ fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>}
-              </Link>
+              <div key={item.href}>
+                <Link 
+                  href={hrefFor(item)}
+                  className={styles.navLink}
+                  style={{
+                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    backgroundColor: isActive ? 'var(--surface-hover)' : 'transparent',
+                    justifyContent: isOpen ? 'flex-start' : 'center',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'var(--surface-hover)';
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                    }
+                  }}
+                  onClick={() => setIsMobileOpen(false)}
+                >
+                  <Icon size={20} style={{ minWidth: '20px' }} />
+                  {isOpen && <span style={{ fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>}
+                </Link>
+                {isOpen && item.segments && (
+                  <SegmentToggle pageHref={item.href} segments={item.segments} onNavigate={() => setIsMobileOpen(false)} />
+                )}
+              </div>
             );
           })}
-
-          {isOpen && (
-            <div style={{ marginTop: '24px', padding: '0 4px' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: 'bold' }}>
-                Segment
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                 <SegmentToggle />
-              </div>
-            </div>
-          )}
         </nav>
 
         {/* User Info & Logout */}

@@ -2,6 +2,7 @@ import styles from "./intelligence.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getDealerAggregates, getAvailableMonths, getTrendData, getAvailableDealers } from "../../lib/bigquery";
+import { normalizeSegment, SEGMENTS } from "../../lib/segments";
 import CustomerMultiSelect from "./CustomerMultiSelect";
 import Link from "next/link";
 import DealerRow from "./DealerRow";
@@ -16,7 +17,7 @@ export default async function BusinessIntelligence({ searchParams }) {
   let yearlyTotals = [];
   
   const params = await searchParams;
-  const segment = params.segment || 'dealer';
+  const segment = normalizeSegment(params.segment);
 
   let startPeriod = params.start || null;
   let endPeriod = params.end || null;
@@ -65,7 +66,7 @@ export default async function BusinessIntelligence({ searchParams }) {
       totalKgs = dealers.reduce((sum, d) => sum + (d.kgsSold || 0), 0);
 
       // Background cache warming for other segments to prevent lag when toggling
-      const otherSegments = ['dealer', 'commercial', 'bulk'].filter(s => s !== segment);
+      const otherSegments = SEGMENTS.map(s => s.id).filter(s => s !== segment);
       if (startPeriod && endPeriod) {
         Promise.all(otherSegments.map(async (s) => {
           try {

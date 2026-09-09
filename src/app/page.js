@@ -2,6 +2,7 @@ import styles from "./page.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getDealerAggregates, getAvailableMonths } from "../lib/bigquery";
+import { normalizeSegment } from "../lib/segments";
 import { getSettings } from "../lib/settings";
 import ClientClickWrapper from "../components/ClientClickWrapper";
 import CrmUpdatesStream from "./intelligence/CrmUpdatesStreamWrapper";
@@ -31,7 +32,7 @@ const ActivityRing = ({ radius, stroke, progress, color, bg }) => {
 
 export default async function Dashboard({ searchParams }) {
   const params = await searchParams;
-  const segment = params.segment || 'dealer';
+  const segment = normalizeSegment(params.segment);
 
   const settings = await getSettings(null, segment);
   const MONTHLY_SALES_TARGET = settings.globalTarget || 150000;

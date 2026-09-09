@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState } from 'react';
 import { getSingleDealerIntelligence } from '../app/actions';
+import { normalizeSegment } from '../lib/segments';
 
 const ClientDrawerContext = createContext();
 
@@ -25,7 +26,7 @@ export function ClientDrawerProvider({ children }) {
       if (!segment && typeof window !== 'undefined') {
         segment = new URLSearchParams(window.location.search).get('segment');
       }
-      segment = segment || 'dealer';
+      segment = normalizeSegment(segment);
       
       try {
         const fullData = await getSingleDealerIntelligence(id, segment);

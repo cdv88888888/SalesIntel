@@ -2,6 +2,7 @@ import { BigQuery } from '@google-cloud/bigquery';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { unstable_cache } from 'next/cache';
+import { ALL_SEGMENT, BASE_SEGMENTS } from './segments';
 
 let bqClient = null;
 let resolvedCredentials;
@@ -100,14 +101,20 @@ async function _getAvailableMonths() {
   return rows;
 }
 
+const SEGMENT_CHANNELS = {
+  dealer: ["MGSA", "MARKETER", "DEALER", "CODO", "DEALER - COBANKIAT", "DEALER-EXMARKETER", "RETAIL"],
+  commercial: ["COMMERCIAL", "commercial", "Commercial", "PHILGEPS", "philgeps"],
+  bulk: ["BULK", "bulk", "Bulk"],
+};
+
 function getChannelFilterString(segment) {
-  if (segment === 'commercial') {
-    return `AND Channel IN ("COMMERCIAL", "commercial", "Commercial", "PHILGEPS", "philgeps")`;
-  }
-  if (segment === 'bulk') {
-    return `AND Channel IN ("BULK", "bulk", "Bulk")`;
-  }
-  return `AND Channel IN ("MGSA", "MARKETER", "DEALER", "CODO", "DEALER - COBANKIAT", "DEALER-EXMARKETER", "RETAIL")`;
+  // "all" is the union of every known segment so its totals reconcile
+  // exactly with the sum of the Dealer, Commercial and Bulk views.
+  const channels = segment === ALL_SEGMENT
+    ? BASE_SEGMENTS.flatMap(s => SEGMENT_CHANNELS[s])
+    : (SEGMENT_CHANNELS[segment] || SEGMENT_CHANNELS.dealer);
+  const list = channels.map(c => `"${c}"`).join(', ');
+  return `AND Channel IN (${list})`;
 }
 
 async function _getAvailableDealers(segment = 'dealer') {
