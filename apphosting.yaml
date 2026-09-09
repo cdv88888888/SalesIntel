@@ -1,4 +1,15 @@
-# apphosting.yaml
+# Firebase App Hosting configuration.
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+#
+# Firebase web config (NEXT_PUBLIC_FIREBASE_*) is NOT listed here: App Hosting
+# injects FIREBASE_WEBAPP_CONFIG for the associated web app and next.config.mjs
+# maps it onto the NEXT_PUBLIC_* variables at build time.
+#
+# Secrets live in Secret Manager. The App Hosting compute service account
+# (firebase-app-hosting-compute@<project>.iam.gserviceaccount.com) must be
+# granted "Secret Manager Secret Accessor" on each one, e.g.
+#   firebase apphosting:secrets:grantaccess <SECRET> --backend <backend-id>
+
 runConfig:
   cpu: 1
   memoryMiB: 512
@@ -7,64 +18,38 @@ runConfig:
   concurrency: 80
 
 env:
-  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "YOUR_FIREBASE_API_KEY"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: "sales-intel-cdv-2026.firebaseapp.com"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: "sales-intel-cdv-2026"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: "sales-intel-cdv-2026.firebasestorage.app"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "543074535226"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: "1:543074535226:web:f8dff6402df572cd983203"
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
-    value: ""
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: AUTH_WHITELIST
-    value: "cdv@masaganagas.com:admin,janalbert.santos@masaganagas.com:viewer,maclaire.jabines@masaganagas.com:viewer,jenette.morente@masaganagas.com:viewer,anton.antonio@masaganagas.com:viewer,melroziene.dorio@masaganagas.com:viewer,patrick.yao@masaganagas.com:viewer,marialourdes.jordan@masaganagas.com:viewer,nora.sulit@masaganagas.com:viewer,anna.neri@masaganagas.com:viewer,hanes.llamas@masaganagas.com:viewer,richardyao@masaganagas.com:viewer"
-    availability:
-      - BUILD
-      - RUNTIME
+  # Signs the __session cookie.
   - variable: SESSION_SECRET
     secret: SESSION_SECRET
     availability:
-      - BUILD
       - RUNTIME
+
+  # Gemini chat widget.
   - variable: GEMINI_API_KEY
     secret: GEMINI_API_KEY
     availability:
-      - BUILD
       - RUNTIME
+
+  # Monday.com CRM updates feed.
   - variable: MONDAY_API_TOKEN
     secret: MONDAY_API_TOKEN
     availability:
-      - BUILD
       - RUNTIME
   - variable: MONDAY_BOARD_ID
     value: "1244621950,1250913155"
     availability:
-      - BUILD
       - RUNTIME
 
+  # BigQuery service-account JSON (raw or base64). The sales dataset lives in a
+  # separate GCP project, so an explicit credential is simpler than granting
+  # the App Hosting compute account cross-project BigQuery roles.
+  - variable: BQ_CREDENTIALS_JSON
+    secret: BQ_CREDENTIALS_JSON
+    availability:
+      - RUNTIME
+
+  # Fallback whitelist when Firestore's whitelisted_users is unavailable.
+  - variable: AUTH_WHITELIST
+    value: "cdv@masaganagas.com:admin,janalbert.santos@masaganagas.com:viewer,maclaire.jabines@masaganagas.com:viewer,jenette.morente@masaganagas.com:viewer,anton.antonio@masaganagas.com:viewer,melroziene.dorio@masaganagas.com:viewer,patrick.yao@masaganagas.com:viewer,marialourdes.jordan@masaganagas.com:viewer,nora.sulit@masaganagas.com:viewer,anna.neri@masaganagas.com:viewer,hanes.llamas@masaganagas.com:viewer,richardyao@masaganagas.com:viewer"
+    availability:
+      - RUNTIME
