@@ -317,7 +317,7 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
     -- The newest month in the table is still being written to. Charting it
     -- next to whole months makes a part-month look like a collapse, so the
     -- history stops at the last month the data covers end to end.
-    CompleteThrough AS (
+    DataWindow AS (
       SELECT
         IF(maxDate = LAST_DAY(maxDate, MONTH),
            maxDate,
@@ -336,7 +336,7 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
         SUM(Total_KGS_Sold) as monthlyKgs
       FROM \`accounts-recieva.SALES.SALES2023\`
       WHERE Date IS NOT NULL
-        AND Date <= (SELECT completeThrough FROM CompleteThrough)
+        AND Date <= (SELECT completeThrough FROM DataWindow)
         AND Customer_No_ IN (SELECT id FROM TopDealers)
         ${channelFilter}
       GROUP BY id, year, month
