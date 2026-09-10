@@ -4,6 +4,16 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# How the owner wants answers
+
+- **Short.** A few lines, not an essay. No option surveys, no restating what
+  he already said. Lead with the answer.
+- **New to coding, clear on systems.** Skip the code tutorial; explain what a
+  thing does and what it costs him, not how the syntax works.
+- **When he asks how to do something, walk him through it.** Numbered steps,
+  one action each, naming the exact button/field/page to click. Never answer a
+  "how do I" with a concept and leave him to work out the clicks.
+
 # Deployment: Claude does it, the owner does not
 
 Production is hosted on **Vercel** (project `sales-intel`, id
