@@ -3,6 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import { verifySession } from '@/lib/session';
 
+// Monday workspace slug, used to build item links when the live account
+// lookup is unavailable (the boards live at masagana-gas.monday.com).
+const MONDAY_SLUG = 'masagana-gas';
+
 // Helper to load settings mappings
 function getMondayMappings() {
   try {
@@ -63,7 +67,7 @@ function addMondayUrlToUpdates(updates, dealerId, liveSlug, liveBoardId, liveIte
   const mappings = getMondayMappings();
   const resolvedItemId = liveItemId || mappings[dealerId]?.mondayItemId || '9763751807';
   const resolvedBoardId = liveBoardId || (process.env.MONDAY_BOARD_ID || '').split(',')[0].trim() || '1244621950';
-  const resolvedSlug = liveSlug || 'masaganagas';
+  const resolvedSlug = liveSlug || MONDAY_SLUG;
 
   return updates.map(up => ({
     ...up,
@@ -229,7 +233,7 @@ export async function GET(request) {
       return NextResponse.json({ updates: [], source: 'live_not_found' });
     }
 
-    const liveSlug = data.data?.me?.account?.slug || 'masaganagas';
+    const liveSlug = data.data?.me?.account?.slug || MONDAY_SLUG;
     const liveBoardId = item.board?.id || boardIds[0] || '1244621950';
     const liveItemId = item.id;
 
