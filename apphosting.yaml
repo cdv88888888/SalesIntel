@@ -12,11 +12,16 @@
 #   firebase apphosting:secrets:grantaccess <SECRET> --backend <backend-id>
 
 runConfig:
-  cpu: 1
-  memoryMiB: 512
+  # A single Business Intelligence request runs several BigQuery jobs and holds
+  # their result sets in memory; 512MiB was not enough headroom for that plus
+  # the Next.js server, and an out-of-memory kill surfaces as an empty page.
+  cpu: 2
+  memoryMiB: 2048
   minInstances: 0
   maxInstances: 10
-  concurrency: 80
+  # Fewer requests per instance, so several heavy pages at once cannot pile up
+  # in one container's memory.
+  concurrency: 20
 
 env:
   # SESSION_SECRET (signs the __session cookie) is NOT declared here. It is set
