@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
-import { verifySession } from '@/lib/session';
+import { verifySession, getSessionSecret } from '@/lib/session';
 import { getUserRole } from '@/lib/mockStore';
 
 // GET: Fetch recent access logs from Firestore (Admin only)
@@ -61,10 +61,17 @@ export async function GET(request) {
 // POST: Add an access/login log to Firestore (Internal/Secure)
 export async function POST(request) {
   try {
-    // Basic verification using shared secret
+    // Basic verification using the shared session secret. No hard-coded
+    // fallback: an unset secret must refuse the call, not accept a key that
+    // anyone can read out of this repository.
     const internalKey = request.headers.get('x-internal-key');
-    const expectedKey = process.env.SESSION_SECRET || 'mgc-sales-intelligence-session-secret-2026-prod-secret';
-    
+    const expectedKey = getSessionSecret();
+
+    if (expectedKey === null) {
+      console.error('SESSION_SECRET is not set; refusing internal log writes.');
+      return NextResponse.json({ error: 'Server misconfigured: SESSION_SECRET is not set' }, { status: 503 });
+    }
+
     if (!internalKey || internalKey !== expectedKey) {
       return NextResponse.json({ error: 'Unauthorized internal call' }, { status: 401 });
     }

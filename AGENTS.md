@@ -36,11 +36,18 @@ alongside Vercel. `apphosting.yaml` is the live config for that backend:
 - Firebase web config comes from `FIREBASE_WEBAPP_CONFIG`, which App Hosting
   injects for the associated web app; `next.config.mjs` maps it onto the
   `NEXT_PUBLIC_FIREBASE_*` variables. Do not hard-code those values.
-- Secrets (`SESSION_SECRET`, `GEMINI_API_KEY`, `MONDAY_API_TOKEN`,
-  `BQ_CREDENTIALS_JSON`) are Secret Manager references. A rollout that fails
-  in the `preparer` step within seconds almost always means a referenced
-  secret is missing or the App Hosting compute service account lacks
-  "Secret Manager Secret Accessor" on it.
+- `SESSION_SECRET` is set as a console environment-variable override on the
+  backend (Settings > Environment > Add new), not as a Secret Manager
+  reference: the IAM grants for Secret Manager did not resolve. It is
+  mandatory — `src/lib/session.js` keeps no committed fallback key, so a
+  backend without it fails closed (login returns 503, existing cookies are
+  rejected). If sign-in breaks after a rollout, check that override first.
+- The remaining secrets (`GEMINI_API_KEY`, `MONDAY_API_TOKEN`,
+  `BQ_CREDENTIALS_JSON`) are commented-out Secret Manager references in
+  `apphosting.yaml`. A rollout that fails in the `preparer` step within
+  seconds almost always means a referenced secret is missing or the App
+  Hosting compute service account lacks "Secret Manager Secret Accessor"
+  on it.
 - The old `relationship-hub` backend (us-east4, source-upload, failed
   June 2026) is not the target; it is to be deleted after cutover.
 

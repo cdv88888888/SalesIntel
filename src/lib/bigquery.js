@@ -107,14 +107,38 @@ const SEGMENT_CHANNELS = {
   bulk: ["BULK", "bulk", "Bulk"],
 };
 
+// How many customers each concrete segment contributes to a listing. Applied
+// per segment (not to the whole result) so the "all" view is exactly the union
+// of the Dealer, Commercial and Bulk views rather than a truncation of them.
+const TOP_CUSTOMERS_PER_SEGMENT = 100;
+
+function quoteChannels(channels) {
+  return channels.map(c => `"${c}"`).join(', ');
+}
+
+function channelsFor(segment) {
+  if (segment === ALL_SEGMENT) {
+    return BASE_SEGMENTS.flatMap(s => SEGMENT_CHANNELS[s]);
+  }
+  // Own-property check only: an arbitrary string (e.g. "__proto__") must fall
+  // back to dealer, not resolve to something off Object.prototype.
+  return Object.hasOwn(SEGMENT_CHANNELS, segment)
+    ? SEGMENT_CHANNELS[segment]
+    : SEGMENT_CHANNELS.dealer;
+}
+
 function getChannelFilterString(segment) {
-  // "all" is the union of every known segment so its totals reconcile
-  // exactly with the sum of the Dealer, Commercial and Bulk views.
-  const channels = segment === ALL_SEGMENT
-    ? BASE_SEGMENTS.flatMap(s => SEGMENT_CHANNELS[s])
-    : (SEGMENT_CHANNELS[segment] || SEGMENT_CHANNELS.dealer);
-  const list = channels.map(c => `"${c}"`).join(', ');
-  return `AND Channel IN (${list})`;
+  // "all" selects the union of every known segment's channels.
+  return `AND Channel IN (${quoteChannels(channelsFor(segment))})`;
+}
+
+// SQL expression mapping a row's Channel back to its segment id, so a listing
+// can be ranked within each segment.
+function getSegmentExpression() {
+  const whens = BASE_SEGMENTS
+    .map(s => `WHEN Channel IN (${quoteChannels(SEGMENT_CHANNELS[s])}) THEN "${s}"`)
+    .join(' ');
+  return `CASE ${whens} ELSE "other" END`;
 }
 
 async function _getAvailableDealers(segment = 'dealer') {
@@ -209,10 +233,11 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
   const channelFilter = getChannelFilterString(segment);
 
   const query = `
-    WITH TopDealers AS (
-      SELECT 
-        Customer_No_ as id, 
-        MAX(Customer_Name) as name, 
+    WITH PerSegment AS (
+      SELECT
+        Customer_No_ as id,
+        ${getSegmentExpression()} as segment,
+        MAX(Customer_Name) as name,
         MAX(Classification) as classification,
         SUM(Total_KGS_Sold) as kgsSold,
         SUM(Net_Sales_Amount) as netSales
@@ -220,9 +245,27 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
       WHERE Date BETWEEN CAST(@startDate AS DATE) AND CAST(@endDate AS DATE)
       ${customerFilter}
       ${channelFilter}
-      GROUP BY Customer_No_
-      ORDER BY kgsSold DESC
-      LIMIT 100
+      GROUP BY id, segment
+    ),
+    RankedPerSegment AS (
+      SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY segment ORDER BY kgsSold DESC) as segmentRank
+      FROM PerSegment
+    ),
+    -- Top N of each segment, then folded back to one row per customer. For a
+    -- single segment this is the plain top N; for "all" it is the union of the
+    -- three segment listings, so its totals reconcile with them.
+    TopDealers AS (
+      SELECT
+        id,
+        MAX(name) as name,
+        MAX(classification) as classification,
+        SUM(kgsSold) as kgsSold,
+        SUM(netSales) as netSales
+      FROM RankedPerSegment
+      WHERE segmentRank <= ${TOP_CUSTOMERS_PER_SEGMENT}
+      GROUP BY id
     ),
     PreviousMonth AS (
       SELECT 

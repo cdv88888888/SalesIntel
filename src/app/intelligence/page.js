@@ -2,7 +2,7 @@ import styles from "./intelligence.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getDealerAggregates, getAvailableMonths, getTrendData, getAvailableDealers } from "../../lib/bigquery";
-import { normalizeSegment, SEGMENTS } from "../../lib/segments";
+import { normalizeSegment, BASE_SEGMENTS } from "../../lib/segments";
 import CustomerMultiSelect from "./CustomerMultiSelect";
 import Link from "next/link";
 import DealerRow from "./DealerRow";
@@ -65,8 +65,10 @@ export default async function BusinessIntelligence({ searchParams }) {
       activeDealers = dealers.length;
       totalKgs = dealers.reduce((sum, d) => sum + (d.kgsSold || 0), 0);
 
-      // Background cache warming for other segments to prevent lag when toggling
-      const otherSegments = SEGMENTS.map(s => s.id).filter(s => s !== segment);
+      // Background cache warming for the other concrete segments, to prevent lag
+      // when toggling. "all" is left out on purpose: it scans every channel and
+      // is the most expensive query of the set.
+      const otherSegments = BASE_SEGMENTS.filter(s => s !== segment);
       if (startPeriod && endPeriod) {
         Promise.all(otherSegments.map(async (s) => {
           try {

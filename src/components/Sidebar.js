@@ -109,9 +109,12 @@ export default function Sidebar() {
 
   // Carry the current segment across pages, falling back to the page's first
   // supported segment when it does not offer the current one (e.g. "all" -> Settings).
+  // Pages with no segments of their own still carry it, so passing through one
+  // of them (Gemini AI, Admin Logs, Logic) does not reset the sidebar to Dealer.
   const hrefFor = (item) => {
-    if (!item.segments) return item.href;
-    const target = item.segments.includes(segment) ? segment : item.segments[0];
+    const target = !item.segments || item.segments.includes(segment)
+      ? segment
+      : item.segments[0];
     return `${item.href}?segment=${target}`;
   };
 

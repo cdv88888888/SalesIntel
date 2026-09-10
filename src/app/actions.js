@@ -3,8 +3,10 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { getBigQueryClient, getDealerAggregates, getAvailableMonths } from '../lib/bigquery';
+import { normalizeSegment } from '../lib/segments';
 
-export async function setSegmentCookie(segment) {
+export async function setSegmentCookie(rawSegment) {
+  const segment = normalizeSegment(rawSegment);
   const cookieStore = await cookies();
   cookieStore.set('segment', segment, { path: '/', maxAge: 31536000 });
   revalidatePath('/', 'layout');
@@ -47,8 +49,10 @@ export async function getMonthlySalesByDealers(dealerIds) {
   }
 }
 
-export async function getSingleDealerIntelligence(dealerId, segment = 'dealer') {
+export async function getSingleDealerIntelligence(dealerId, rawSegment = 'dealer') {
   if (!dealerId) return null;
+  // Server actions are callable with anything: coerce to a known segment.
+  const segment = normalizeSegment(rawSegment);
   
   try {
     const availableMonths = await getAvailableMonths();

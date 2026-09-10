@@ -5,7 +5,8 @@
 # injects FIREBASE_WEBAPP_CONFIG for the associated web app and next.config.mjs
 # maps it onto the NEXT_PUBLIC_* variables at build time.
 #
-# Secrets live in Secret Manager. The App Hosting compute service account
+# Secrets referenced with `secret:` below live in Secret Manager. The App
+# Hosting compute service account
 # (firebase-app-hosting-compute@<project>.iam.gserviceaccount.com) must be
 # granted "Secret Manager Secret Accessor" on each one, e.g.
 #   firebase apphosting:secrets:grantaccess <SECRET> --backend <backend-id>
@@ -23,6 +24,11 @@ env:
   # (App Hosting > backend > Settings > Environment > Add new), which needs no
   # Secret Manager IAM grants. Once Secret Manager access is sorted out it can
   # move back to a `secret:` reference like the entries below.
+  #
+  # It is required: src/lib/session.js has no committed fallback key, so a
+  # deployment without it fails closed - login returns 503 and every existing
+  # cookie is rejected. Check the override first if sign-in breaks after a
+  # rollout.
 
   # Monday.com board ids (plain value).
   - variable: MONDAY_BOARD_ID
