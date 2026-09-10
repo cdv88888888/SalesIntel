@@ -1,5 +1,27 @@
-const FALLBACK_SECRET = 'production-super-secret-key-1234567890';
-const getSecret = () => process.env.SESSION_SECRET || FALLBACK_SECRET;
+// The key that signs the __session cookie. There is deliberately NO committed
+// fallback: a default baked into the repo would let anyone forge a session
+// cookie for any whitelisted address. When SESSION_SECRET is missing we fail
+// closed instead - outside production a random per-process key keeps local
+// development working, and in production signing and verification both refuse.
+const DEV_SECRET = (() => {
+  if (process.env.NODE_ENV === 'production') return null;
+  const bytes = new Uint8Array(32);
+  (globalThis.crypto || require('crypto').webcrypto).getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+})();
+
+// Returns the signing key, or null when none is configured.
+export function getSessionSecret() {
+  const secret = process.env.SESSION_SECRET;
+  if (typeof secret === 'string' && secret.length > 0) return secret;
+  return DEV_SECRET;
+}
+
+export function isSessionSecretConfigured() {
+  return getSessionSecret() !== null;
+}
+
+const getSecret = getSessionSecret;
 
 const getCrypto = () => {
   if (typeof globalThis !== 'undefined' && globalThis.crypto) {
@@ -23,12 +45,16 @@ function timingSafeEqual(a, b) {
 }
 
 export async function signSession(email) {
+  const secret = getSecret();
+  if (secret === null) {
+    throw new Error('SESSION_SECRET is not configured; refusing to issue a session cookie.');
+  }
   const payload = JSON.stringify({ email, createdAt: Date.now() });
   const payloadBase64 = btoa(payload);
   
   const myCrypto = getCrypto();
   const encoder = new TextEncoder();
-  const data = encoder.encode(payload + getSecret());
+  const data = encoder.encode(payload + secret);
   const hashBuffer = await myCrypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -38,7 +64,9 @@ export async function signSession(email) {
 
 export async function verifySession(token) {
   if (!token) return null;
-  if (process.env.NODE_ENV === 'production' && getSecret() === FALLBACK_SECRET) {
+  const secret = getSecret();
+  if (secret === null) {
+    console.error('SESSION_SECRET is not configured; rejecting all sessions.');
     return null;
   }
   const parts = token.split('.');
@@ -59,7 +87,7 @@ export async function verifySession(token) {
     
     const myCrypto = getCrypto();
     const encoder = new TextEncoder();
-    const data = encoder.encode(payloadStr + getSecret());
+    const data = encoder.encode(payloadStr + secret);
     const hashBuffer = await myCrypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const expectedSignature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');

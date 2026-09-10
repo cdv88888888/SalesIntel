@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSettings, saveSettings } from '@/lib/settings';
 import { verifySession } from '@/lib/session';
-import { normalizeSegment, normalizeBaseSegment, ALL_SEGMENT } from '@/lib/segments';
+import { normalizeSegment, BASE_SEGMENTS, ALL_SEGMENT } from '@/lib/segments';
 
 export async function GET(request) {
   const token = request.cookies.get('__session')?.value;
@@ -27,11 +27,15 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { month, segment: rawSegment = 'dealer', ...settingsData } = body;
-    if (rawSegment === ALL_SEGMENT) {
+    const { month, segment = 'dealer', ...settingsData } = body;
+    if (segment === ALL_SEGMENT) {
       return NextResponse.json({ error: 'Targets are set per segment; choose Dealer, Commercial or Bulk' }, { status: 400 });
     }
-    const segment = normalizeBaseSegment(rawSegment);
+    // Never coerce here: a typo'd segment would silently overwrite the dealer
+    // targets document and report success.
+    if (!BASE_SEGMENTS.includes(segment)) {
+      return NextResponse.json({ error: `Unknown segment "${segment}"` }, { status: 400 });
+    }
     const updated = await saveSettings(settingsData, month, segment);
     return NextResponse.json(updated);
   } catch (error) {

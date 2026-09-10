@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { signSession, verifySession } from '../../../../lib/session';
+import { signSession, verifySession, isSessionSecretConfigured } from '../../../../lib/session';
 import { getMockConfig, addActiveSession, removeActiveSession, getActiveSessions } from '../../../../lib/mockStore';
 import { checkUserAccess } from '../../../../lib/auth';
 import { getUserRoleFromFirestore } from '../../../../lib/whitelist';
@@ -48,6 +48,16 @@ export async function POST(request) {
   // Simulate Broken Auth mode
   if (mockConfig.mode === 'broken' && mockConfig.brokenType === 'auth') {
     return NextResponse.json({ error: 'Auth failed (Simulated)' }, { status: 500 });
+  }
+
+  // Without a signing key we cannot issue a trustworthy cookie. Say so plainly
+  // rather than failing later as a login -> redirect loop.
+  if (!isSessionSecretConfigured()) {
+    console.error('SESSION_SECRET is not set; login is disabled.');
+    return NextResponse.json(
+      { error: 'Server misconfigured: SESSION_SECRET is not set' },
+      { status: 503 }
+    );
   }
 
   try {
