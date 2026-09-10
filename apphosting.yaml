@@ -30,6 +30,15 @@ env:
   # cookie is rejected. Check the override first if sign-in breaks after a
   # rollout.
 
+  # BigQuery jobs run in the project that owns the sales dataset. With no
+  # BQ_CREDENTIALS_JSON set, the BigQuery client authenticates as the App
+  # Hosting compute service account, which must hold BigQuery Data Viewer and
+  # BigQuery Job User on this project.
+  - variable: BQ_PROJECT_ID
+    value: "accounts-recieva"
+    availability:
+      - RUNTIME
+
   # Monday.com board ids (plain value).
   - variable: MONDAY_BOARD_ID
     value: "1244621950,1250913155"
