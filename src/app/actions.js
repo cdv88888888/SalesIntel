@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { getBigQueryClient, getDealerAggregates, getAvailableMonths } from '../lib/bigquery';
-import { normalizeSegment } from '../lib/segments';
+import { normalizeSegment, ALL_SEGMENT } from '../lib/segments';
 
 export async function setSegmentCookie(rawSegment) {
   const segment = normalizeSegment(rawSegment);
@@ -57,15 +57,29 @@ export async function getSingleDealerIntelligence(dealerId, rawSegment = 'dealer
   try {
     const availableMonths = await getAvailableMonths();
     if (availableMonths.length === 0) return null;
-    
-    const defaultYear = availableMonths[0].year;
-    const defaultMonth = String(availableMonths[0].month).padStart(2, '0');
-    const period = `${defaultYear}-${defaultMonth}`;
-    
-    const dealers = await getDealerAggregates(period, period, [dealerId, dealerId.toUpperCase()], segment);
-    if (dealers && dealers.length > 0) {
-      // Return a plain object copy
-      return JSON.parse(JSON.stringify(dealers[0]));
+
+    const asPeriod = (m) => `${m.year}-${String(m.month).padStart(2, '0')}`;
+    const latest = asPeriod(availableMonths[0]);
+    // Months come back newest first; step back up to a year for the wider look.
+    const yearAgo = asPeriod(availableMonths[Math.min(11, availableMonths.length - 1)]);
+    const ids = [dealerId, dealerId.toUpperCase()];
+
+    // An account that has not ordered this month has no rows in the latest
+    // period, which is exactly the case for every overdue account on the
+    // Proactive Calling board. Widen the window, then drop the segment filter,
+    // before giving up - otherwise the drawer opens on a wall of zeros.
+    const attempts = [
+      [latest, latest, segment],
+      [yearAgo, latest, segment],
+      [yearAgo, latest, ALL_SEGMENT],
+    ];
+
+    for (const [start, end, seg] of attempts) {
+      const dealers = await getDealerAggregates(start, end, ids, seg);
+      if (dealers && dealers.length > 0) {
+        // Return a plain object copy
+        return JSON.parse(JSON.stringify(dealers[0]));
+      }
     }
     return null;
   } catch (error) {
