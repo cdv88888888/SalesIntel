@@ -2,7 +2,7 @@ import styles from "./intelligence.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getDealerAggregates, getAvailableMonths, getTrendData, getAvailableDealers } from "../../lib/bigquery";
-import { normalizeSegment, BASE_SEGMENTS } from "../../lib/segments";
+import { normalizeSegment } from "../../lib/segments";
 import CustomerMultiSelect from "./CustomerMultiSelect";
 import Link from "next/link";
 import DealerRow from "./DealerRow";
@@ -15,6 +15,7 @@ export default async function BusinessIntelligence({ searchParams }) {
   let activeDealers = 0;
   let availableMonths = [];
   let yearlyTotals = [];
+  let loadError = null;
   
   const params = await searchParams;
   const segment = normalizeSegment(params.segment);
@@ -65,24 +66,6 @@ export default async function BusinessIntelligence({ searchParams }) {
       activeDealers = dealers.length;
       totalKgs = dealers.reduce((sum, d) => sum + (d.kgsSold || 0), 0);
 
-      // Background cache warming for the other concrete segments, to prevent lag
-      // when toggling. "all" is left out on purpose: it scans every channel and
-      // is the most expensive query of the set.
-      const otherSegments = BASE_SEGMENTS.filter(s => s !== segment);
-      if (startPeriod && endPeriod) {
-        Promise.all(otherSegments.map(async (s) => {
-          try {
-            await Promise.all([
-              getDealerAggregates(startPeriod, endPeriod, [], s),
-              getTrendData(startPeriod, endPeriod, s),
-              getAvailableDealers(s)
-            ]);
-          } catch (e) {
-            // Ignore background warming errors
-          }
-        })).catch(() => {});
-      }
-
       dealers.sort((a, b) => {
         let valA = a[sortBy];
         let valB = b[sortBy];
@@ -112,7 +95,11 @@ export default async function BusinessIntelligence({ searchParams }) {
       });
     }
   } catch (err) {
+    // Rendering zeros for a failed query is indistinguishable from a month with
+    // no sales, which sends everyone hunting for a data problem that is really
+    // a query problem. Say what happened.
     console.error("Failed to load data from BigQuery:", err);
+    loadError = err?.message || String(err);
   }
 
   const getSortLink = (columnKey) => {
@@ -138,6 +125,16 @@ export default async function BusinessIntelligence({ searchParams }) {
 
   return (
     <div className={styles.page}>
+      {loadError && (
+        <div style={{
+          margin: '0 0 16px 0', padding: '12px 16px', borderRadius: '8px',
+          background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.35)',
+          color: 'var(--danger-color)', fontSize: '0.9rem'
+        }}>
+          <strong>Could not load sales data.</strong> The figures below are not
+          zero sales - the query failed: {loadError}
+        </div>
+      )}
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <div>
