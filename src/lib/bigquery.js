@@ -101,6 +101,43 @@ async function _getAvailableMonths() {
   return rows;
 }
 
+let cachedCompleteMonth = null;
+let cachedCompleteMonthTime = 0;
+
+// The newest month the dataset covers in full. The most recent month in the
+// table is usually still being written to, so comparing it against whole
+// months (or against the same month a year ago) understates it badly.
+async function _getLatestCompleteMonth() {
+  const now = Date.now();
+  if (cachedCompleteMonth && (now - cachedCompleteMonthTime < MONTHS_CACHE_TTL)) {
+    return cachedCompleteMonth;
+  }
+  const bq = getBigQueryClient();
+  const query = `
+    WITH Bounds AS (
+      SELECT MAX(Date) as maxDate
+      FROM \`accounts-recieva.SALES.SALES2023\`
+      WHERE Date IS NOT NULL
+    )
+    SELECT
+      -- Complete when the data reaches the last day of its own month;
+      -- otherwise the month before it is the newest complete one.
+      IF(maxDate = LAST_DAY(maxDate, MONTH),
+         maxDate,
+         DATE_SUB(DATE_TRUNC(maxDate, MONTH), INTERVAL 1 DAY)) as completeThrough
+    FROM Bounds
+  `;
+  const [rows] = await bq.query({ query });
+  const value = rows?.[0]?.completeThrough;
+  // BigQuery hands DATE columns back as { value: 'YYYY-MM-DD' }.
+  const iso = typeof value === 'string' ? value : value?.value;
+  if (!iso) return null;
+  const [year, month] = iso.split('-').map(Number);
+  cachedCompleteMonth = { year, month, period: `${year}-${String(month).padStart(2, '0')}` };
+  cachedCompleteMonthTime = now;
+  return cachedCompleteMonth;
+}
+
 const SEGMENT_CHANNELS = {
   dealer: ["MGSA", "MARKETER", "DEALER", "CODO", "DEALER - COBANKIAT", "DEALER-EXMARKETER", "RETAIL"],
   commercial: ["COMMERCIAL", "commercial", "Commercial", "PHILGEPS", "philgeps"],
@@ -277,6 +314,20 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
         ${channelFilter}
       GROUP BY Customer_No_
     ),
+    -- The newest month in the table is still being written to. Charting it
+    -- next to whole months makes a part-month look like a collapse, so the
+    -- history stops at the last month the data covers end to end.
+    CompleteThrough AS (
+      SELECT
+        IF(maxDate = LAST_DAY(maxDate, MONTH),
+           maxDate,
+           DATE_SUB(DATE_TRUNC(maxDate, MONTH), INTERVAL 1 DAY)) as completeThrough
+      FROM (
+        SELECT MAX(Date) as maxDate
+        FROM \`accounts-recieva.SALES.SALES2023\`
+        WHERE Date IS NOT NULL
+      )
+    ),
     MonthlyTotals AS (
       SELECT 
         Customer_No_ as id,
@@ -285,6 +336,7 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
         SUM(Total_KGS_Sold) as monthlyKgs
       FROM \`accounts-recieva.SALES.SALES2023\`
       WHERE Date IS NOT NULL
+        AND Date <= (SELECT completeThrough FROM CompleteThrough)
         AND Customer_No_ IN (SELECT id FROM TopDealers)
         ${channelFilter}
       GROUP BY id, year, month
@@ -391,6 +443,12 @@ async function _getProactiveCallingData(segment = 'dealer') {
 export const getAvailableMonths = unstable_cache(
   async () => await _getAvailableMonths(),
   ['bq-months'],
+  { revalidate: 43200 }
+);
+
+export const getLatestCompleteMonth = unstable_cache(
+  async () => await _getLatestCompleteMonth(),
+  ['bq-complete-month'],
   { revalidate: 43200 }
 );
 
