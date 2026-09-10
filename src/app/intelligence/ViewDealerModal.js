@@ -203,6 +203,10 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
     }
   }
 
+  // The matrix is year-over-year, so it spans every year in the history rather
+  // than following the 6m/1y/2y/3y button, which at 6m left it with one column.
+  const matrixYears = [...new Set(historyData.map(d => d.year))].sort((a, b) => a - b);
+
   const getAIRecommendation = () => {
     if (!dealer) return "Loading insights...";
 
@@ -399,12 +403,15 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
 
                               return (
                                 <div key={i} className={styles.miniChartCol}>
-                                  {isHighest && <span style={{fontSize: '0.65rem', color: 'var(--success-color)', fontWeight: 'bold', marginBottom: '2px'}}>MAX</span>}
-                                  {isLowest && <span style={{fontSize: '0.65rem', color: 'var(--danger-color)', fontWeight: 'bold', marginBottom: '2px'}}>MIN</span>}
                                   <div 
                                     className={`${styles.miniChartBar} ${styles.chartBarHasTooltip}`} 
                                     style={barStyle}
                                   >
+                                    {/* Floated above the bar rather than stacked in the column:
+                                        as a flex sibling the label shrank the very bars it marks,
+                                        drawing the tallest month shorter than its neighbours. */}
+                                    {isHighest && <span className={styles.miniChartFlag} style={{color: 'var(--success-color)'}}>MAX</span>}
+                                    {isLowest && <span className={styles.miniChartFlag} style={{color: 'var(--danger-color)'}}>MIN</span>}
                                     <div className={styles.customTooltip}>
                                       {`${d.month}/${d.year.toString().slice(2)}: ${formatKgs(d.monthlyKgs)} kg`}
                                     </div>
@@ -426,15 +433,15 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                             <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                               <tr>
                                 <th style={{ background: 'rgba(15, 23, 42, 1)' }}>Month</th>
-                                {[...new Set(chartData.map(d => d.year))].sort((a, b) => a - b).map(y => (
+                                {matrixYears.map(y => (
                                   <th key={y} style={{ background: 'rgba(15, 23, 42, 1)', textAlign: 'right' }}>{y}</th>
                                 ))}
                               </tr>
                             </thead>
                             <tbody>
                               {(() => {
-                                const tableMax = chartData.length > 0 ? Math.max(...chartData.map(h => h.monthlyKgs)) : 0;
-                                const tableMin = chartData.length > 0 ? Math.min(...chartData.map(h => h.monthlyKgs)) : 0;
+                                const tableMax = historyData.length > 0 ? Math.max(...historyData.map(h => h.monthlyKgs)) : 0;
+                                const tableMin = historyData.length > 0 ? Math.min(...historyData.map(h => h.monthlyKgs)) : 0;
 
                                 return [
                                   { val: 1, name: "January" }, { val: 2, name: "February" },
@@ -444,13 +451,13 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                                   { val: 9, name: "September" }, { val: 10, name: "October" },
                                   { val: 11, name: "November" }, { val: 12, name: "December" }
                                 ].map(m => {
-                                  const availableYears = [...new Set(chartData.map(d => d.year))].sort((a, b) => a - b);
+                                  const availableYears = matrixYears;
 
                                   return (
                                     <tr key={m.val}>
                                       <td style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{m.name}</td>
                                       {availableYears.map(y => {
-                                        const dataPoint = chartData.find(d => d.year === y && d.month === m.val);
+                                        const dataPoint = historyData.find(d => d.year === y && d.month === m.val);
                                         
                                         let isHighest = false;
                                         let isLowest = false;

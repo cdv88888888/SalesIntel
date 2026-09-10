@@ -478,6 +478,20 @@
   transition: all 0.3s ease;
 }
 
+/* Sits above the bar without taking part in the column's flex layout, so a
+   labelled bar is exactly as tall as its value says. */
+.miniChartFlag {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .miniChartBar:hover {
   opacity: 1;
   background: #60a5fa;

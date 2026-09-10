@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { getBigQueryClient, getDealerAggregates, getAvailableMonths } from '../lib/bigquery';
+import { getBigQueryClient, getDealerAggregates, getAvailableMonths, getLatestCompleteMonth } from '../lib/bigquery';
 import { normalizeSegment, ALL_SEGMENT } from '../lib/segments';
 
 export async function setSegmentCookie(rawSegment) {
@@ -59,7 +59,11 @@ export async function getSingleDealerIntelligence(dealerId, rawSegment = 'dealer
     if (availableMonths.length === 0) return null;
 
     const asPeriod = (m) => `${m.year}-${String(m.month).padStart(2, '0')}`;
-    const latest = asPeriod(availableMonths[0]);
+    // Report on the last month the data covers in full: the newest month is
+    // still being written to, so its total is a part-month and every
+    // comparison against it reads as a collapse.
+    const completeMonth = await getLatestCompleteMonth();
+    const latest = completeMonth?.period || asPeriod(availableMonths[0]);
     // Months come back newest first; step back up to a year for the wider look.
     const yearAgo = asPeriod(availableMonths[Math.min(11, availableMonths.length - 1)]);
     const ids = [dealerId, dealerId.toUpperCase()];
