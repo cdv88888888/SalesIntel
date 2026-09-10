@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+// Monday workspace slug, used to build item links when the live account
+// lookup is unavailable (the boards live at masagana-gas.monday.com).
+const MONDAY_SLUG = 'masagana-gas';
+
 function getMondayMappings() {
   try {
     const filePath = path.join(process.cwd(), 'data', 'monday-mappings.json');
@@ -47,7 +51,7 @@ function getMockStream() {
               name: up.author?.name || 'Unknown User',
               photo_original: up.author?.photo || null
             },
-            mondayUrl: `https://masaganagas.monday.com/boards/1244621950/pulses/${mondayItemId}/posts/${up.id}`
+            mondayUrl: `https://${MONDAY_SLUG}.monday.com/boards/1244621950/pulses/${mondayItemId}/posts/${up.id}`
           });
         }
       }
@@ -122,7 +126,7 @@ export async function GET() {
       throw new Error("Monday.com GraphQL execution failed");
     }
 
-    const slug = data.data?.me?.account?.slug || 'masaganagas';
+    const slug = data.data?.me?.account?.slug || MONDAY_SLUG;
     const updates = [];
     const boards = data.data?.boards || [];
 
