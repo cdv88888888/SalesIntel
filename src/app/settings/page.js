@@ -522,6 +522,16 @@ function SettingsContent() {
                 <div key={emailStr} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '0.9rem' }}>
                   <span style={{ minWidth: '200px' }}>{emailStr}</span>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    {/* Say why the controls are greyed out, rather than leaving
+                        it to be read as a broken row. */}
+                    {isProtected && (
+                      <span
+                        title="Permanent administrator: cannot be demoted or removed, so the app is never locked out of its own user management."
+                        style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}
+                      >
+                        Locked
+                      </span>
+                    )}
                     <select 
                       value={isProtected ? 'admin' : (user.role || 'viewer')} 
                       onChange={(e) => updateUserRole(emailStr, e.target.value)}
