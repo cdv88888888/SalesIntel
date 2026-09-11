@@ -11,7 +11,7 @@ const CACHE_TTL_MS = 15000;
 const DEFAULT_WHITELIST = [
   { email: 'cdv@masaganagas.com', role: 'admin' },
   { email: 'maclaire.jabines@masaganagas.com', role: 'viewer' },
-  { email: 'janalbert.santos@masaganagas.com', role: 'viewer' },
+  { email: 'janalbert.santos@masaganagas.com', role: 'admin' },
   { email: 'anton.antonio@masaganagas.com', role: 'viewer' },
   { email: 'melroziene.dorio@masaganagas.com', role: 'viewer' },
   { email: 'patrick.yao@masaganagas.com', role: 'viewer' },
