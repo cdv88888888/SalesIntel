@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from './lib/session';
+import { isPermanentAdmin } from './lib/admins';
 
 const PROTECTED_PREFIXES = ['/intelligence', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/gemini-ai', '/api/chat', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
 
@@ -220,6 +221,12 @@ export async function proxy(request) {
   let role = 'viewer';
   if (userRecord && typeof userRecord !== 'string') {
     role = userRecord.role;
+  }
+  // A locked account is an admin whatever the whitelist row says, and is never
+  // shut out of the screen that manages the whitelist.
+  if (isPermanentAdmin(email)) {
+    isAllowed = true;
+    role = 'admin';
   }
 
   // Apply broken modes for authorization

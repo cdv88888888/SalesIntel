@@ -16,6 +16,8 @@ import {
   removeFromWhitelist as removeFromMockWhitelist 
 } from './mockStore.js';
 
+import { isPermanentAdmin } from './admins.js';
+
 const COLLECTION_NAME = 'whitelisted_users';
 
 const DEFAULT_ADMINS = [
@@ -141,7 +143,7 @@ export async function getWhitelistedUsersFromFirestore() {
 
     const list = snapshot.docs.map(d => ({
       email: d.id.toLowerCase(),
-      role: d.data().role || 'viewer',
+      role: isPermanentAdmin(d.id) ? 'admin' : (d.data().role || 'viewer'),
       timestamp: d.data().timestamp
     }));
 
@@ -166,6 +168,8 @@ export async function getWhitelistedUsersFromFirestore() {
 export async function getUserRoleFromFirestore(email) {
   if (!email || typeof email !== 'string') return 'viewer';
   const cleanEmail = email.trim().toLowerCase();
+  // A locked account's stored role cannot be edited, so it is never the truth.
+  if (isPermanentAdmin(cleanEmail)) return 'admin';
   const defaultAdmin = DEFAULT_ADMINS.find(a => a.email.toLowerCase() === cleanEmail);
 
   try {
