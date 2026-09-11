@@ -19,12 +19,12 @@ import {
 const COLLECTION_NAME = 'whitelisted_users';
 
 const DEFAULT_ADMINS = [
-  { email: 'cdv@masaganagas.com', role: 'admin' }
+  { email: 'cdv@masaganagas.com', role: 'admin' },
+  { email: 'janalbert.santos@masaganagas.com', role: 'admin' }
 ];
 
 const DEFAULT_VIEWERS = [
   'maclaire.jabines@masaganagas.com',
-  'janalbert.santos@masaganagas.com',
   'anton.antonio@masaganagas.com',
   'melroziene.dorio@masaganagas.com',
   'patrick.yao@masaganagas.com',
