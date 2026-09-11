@@ -6,12 +6,10 @@ import {
   getUserRoleFromFirestore
 } from '@/lib/whitelist.js';
 import { verifySession } from '@/lib/session';
-
-const ALLOWED_ADMINS = ['cdv@masaganagas.com', 'janalbert.santos@masaganagas.com'];
+import { isPermanentAdmin } from '@/lib/admins.js';
 
 function isAllowedUser(email) {
-  if (!email) return false;
-  return ALLOWED_ADMINS.includes(email.trim().toLowerCase());
+  return isPermanentAdmin(email);
 }
 
 export async function GET(request) {

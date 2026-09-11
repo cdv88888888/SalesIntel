@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import { normalizeBaseSegment } from '../../lib/segments';
+import { isPermanentAdmin } from '../../lib/admins';
 
 function SettingsContent() {
   const searchParams = useSearchParams();
@@ -33,8 +34,7 @@ function SettingsContent() {
   const [currentTheme, setCurrentTheme] = useState('dark');
   const [currentUserEmail, setCurrentUserEmail] = useState('');
 
-  const ALLOWED_ADMINS = useMemo(() => ['cdv@masaganagas.com', 'janalbert.santos@masaganagas.com'], []);
-  const canManageUsers = useMemo(() => ALLOWED_ADMINS.includes(currentUserEmail), [ALLOWED_ADMINS, currentUserEmail]);
+  const canManageUsers = useMemo(() => isPermanentAdmin(currentUserEmail), [currentUserEmail]);
 
   useEffect(() => {
     async function loadUserSession() {
@@ -517,13 +517,13 @@ function SettingsContent() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {whitelist.map((user) => {
               const emailStr = user.email || user;
-              const isProtected = ALLOWED_ADMINS.includes((emailStr || '').trim().toLowerCase());
+              const isProtected = isPermanentAdmin(emailStr);
               return (
                 <div key={emailStr} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '0.9rem' }}>
                   <span style={{ minWidth: '200px' }}>{emailStr}</span>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <select 
-                      value={user.role || 'viewer'} 
+                      value={isProtected ? 'admin' : (user.role || 'viewer')} 
                       onChange={(e) => updateUserRole(emailStr, e.target.value)}
                       disabled={isManagingUsers || isProtected}
                       style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '4px 8px', outline: 'none' }}
