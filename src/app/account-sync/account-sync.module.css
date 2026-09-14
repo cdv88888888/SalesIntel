@@ -137,3 +137,8 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+.flag {
+  color: #fdab3d;
+  font-size: 0.7rem;
+}
