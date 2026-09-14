@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifySession } from './lib/session';
 import { isPermanentAdmin } from './lib/admins';
 
-const PROTECTED_PREFIXES = ['/intelligence', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/gemini-ai', '/api/chat', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
+const PROTECTED_PREFIXES = ['/intelligence', '/account-sync', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/gemini-ai', '/api/chat', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
 
 // Module-level in-memory cache for Firestore REST API whitelist (15s TTL)
 let cachedWhitelist = null;

@@ -388,6 +388,135 @@ async function _getDealerAggregates(startPeriod, endPeriod, customerIds = [], se
   return rows;
 }
 
+// One row per customer describing how they actually buy: when they last took a
+// delivery, how often they take one, what a typical drop looks like, and
+// whether their volume is falling. This is the input to the Monday sync - the
+// facts a person would otherwise read off the board and retype.
+async function _getAccountSignals() {
+  const bq = getBigQueryClient();
+  const query = `
+    WITH Bounds AS (
+      SELECT MAX(Date) as maxDate
+      FROM \`accounts-recieva.SALES.SALES2023\`
+      WHERE Date IS NOT NULL
+    ),
+    -- Two years of lines. kgEach separates the two ways gas is sold: a cylinder
+    -- SKU carries its fill weight (50, 47, 45, 11 ...), while bulk is priced in
+    -- volume brackets where Quantity holds kilograms, so kgEach lands on 1.
+    Lines AS (
+      SELECT
+        s.Customer_No_ as id,
+        s.Customer_Name as name,
+        s.Date,
+        s.Transaction_No_,
+        s.Channel,
+        s.Classification,
+        s.Item_Description as item,
+        s.Quantity,
+        s.Total_KGS_Sold as kgs,
+        SAFE_DIVIDE(s.Total_KGS_Sold, NULLIF(s.Quantity, 0)) as kgEach,
+        b.maxDate
+      FROM \`accounts-recieva.SALES.SALES2023\` s
+      CROSS JOIN Bounds b
+      WHERE s.Date IS NOT NULL
+        AND s.Customer_No_ IS NOT NULL
+        AND s.Date >= DATE_SUB(b.maxDate, INTERVAL 730 DAY)
+    ),
+    Deliveries AS (
+      SELECT
+        id,
+        Transaction_No_,
+        Date,
+        SUM(kgs) as orderKgs,
+        -- Cylinders only: a bulk line's Quantity is kilograms, not a count.
+        SUM(IF(kgEach > 1.5, Quantity, 0)) as orderCylinders
+      FROM Lines
+      GROUP BY id, Transaction_No_, Date
+    ),
+    Gaps AS (
+      SELECT
+        id,
+        DATE_DIFF(Date, LAG(Date) OVER (PARTITION BY id ORDER BY Date), DAY) as gapDays
+      FROM (SELECT DISTINCT id, Date FROM Deliveries)
+    ),
+    -- The median gap, not the average: one long dormancy would drag a mean out
+    -- past anything the account has ever actually done.
+    Cycle AS (
+      SELECT id, CAST(APPROX_QUANTILES(gapDays, 2)[OFFSET(1)] AS INT64) as cycleDays
+      FROM Gaps
+      WHERE gapDays > 0
+      GROUP BY id
+    ),
+    TypicalDrop AS (
+      SELECT
+        id,
+        CAST(APPROX_QUANTILES(orderKgs, 2)[OFFSET(1)] AS FLOAT64) as typicalDropKgs,
+        CAST(APPROX_QUANTILES(orderCylinders, 2)[OFFSET(1)] AS FLOAT64) as typicalCylinders
+      FROM Deliveries
+      GROUP BY id
+    ),
+    -- The SKU the account buys most, by volume: names the cylinder size and,
+    -- for the 50kg family, the class (50 = A, 47 = B, 45 = C).
+    RankedSku AS (
+      SELECT
+        id, item, kgEach,
+        SUM(kgs) as skuKgs,
+        ROW_NUMBER() OVER (PARTITION BY id ORDER BY SUM(kgs) DESC) as rn
+      FROM Lines
+      GROUP BY id, item, kgEach
+    ),
+    Volume AS (
+      SELECT
+        id,
+        SUM(IF(Date > DATE_SUB(maxDate, INTERVAL 90 DAY), kgs, 0)) as kgsLast90,
+        SUM(IF(Date <= DATE_SUB(maxDate, INTERVAL 90 DAY)
+               AND Date > DATE_SUB(maxDate, INTERVAL 180 DAY), kgs, 0)) as kgsPrior90
+      FROM Lines
+      GROUP BY id
+    ),
+    Account AS (
+      SELECT
+        id,
+        ANY_VALUE(name HAVING MAX Date) as name,
+        ANY_VALUE(Channel HAVING MAX Date) as channel,
+        ANY_VALUE(Classification HAVING MAX Date) as classification,
+        MAX(Date) as lastOrderDate,
+        COUNT(DISTINCT Transaction_No_) as deliveries,
+        ANY_VALUE(maxDate) as dataThrough
+      FROM Lines
+      GROUP BY id
+    )
+    SELECT
+      a.id,
+      a.name,
+      a.channel,
+      a.classification,
+      a.lastOrderDate,
+      a.deliveries,
+      DATE_DIFF(a.dataThrough, a.lastOrderDate, DAY) as daysSinceLast,
+      c.cycleDays,
+      DATE_ADD(a.lastOrderDate, INTERVAL IFNULL(c.cycleDays, 0) DAY) as nextExpectedDate,
+      DATE_DIFF(a.dataThrough, a.lastOrderDate, DAY) - c.cycleDays as daysOverdue,
+      t.typicalDropKgs,
+      t.typicalCylinders,
+      k.item as mainItem,
+      k.kgEach as mainKgEach,
+      v.kgsLast90,
+      v.kgsPrior90,
+      SAFE_DIVIDE(v.kgsLast90 - v.kgsPrior90, NULLIF(v.kgsPrior90, 0)) as volumeTrend,
+      a.dataThrough
+    FROM Account a
+    LEFT JOIN Cycle c ON c.id = a.id
+    LEFT JOIN TypicalDrop t ON t.id = a.id
+    LEFT JOIN RankedSku k ON k.id = a.id AND k.rn = 1
+    LEFT JOIN Volume v ON v.id = a.id
+    WHERE a.deliveries >= 2
+    ORDER BY daysOverdue DESC
+  `;
+  const [rows] = await bq.query({ query });
+  return rows;
+}
+
 async function _getProactiveCallingData(segment = 'dealer') {
   const bq = getBigQueryClient();
   const channelFilter = getChannelFilterString(segment);
@@ -469,6 +598,12 @@ export const getDealerAggregates = (startPeriod, endPeriod, customerIds = [], se
   ['bq-aggregates', startPeriod, endPeriod, customerIds.join(','), segment],
   { revalidate: 7200 }
 )();
+
+export const getAccountSignals = unstable_cache(
+  async () => await _getAccountSignals(),
+  ['bq-account-signals'],
+  { revalidate: 7200 }
+);
 
 export const getProactiveCallingData = (segment = 'dealer') => unstable_cache(
   async () => await _getProactiveCallingData(segment),
