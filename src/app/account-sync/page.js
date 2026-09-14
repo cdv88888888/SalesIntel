@@ -23,6 +23,37 @@ const formatKgs = (n) => {
 
 const DECLINE_THRESHOLD = -0.2;
 
+// An account is described in the unit it actually buys in: kilograms for bulk,
+// cylinders per delivery for cylinder SKUs - one line per size and class, since
+// a dealer taking 50kg Class A and 11kg on one run is not "26 cylinders".
+function parseSkuMix(raw) {
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) || [];
+  } catch {
+    return [];
+  }
+}
+
+function describeMix(row) {
+  const mix = parseSkuMix(row.skuMix).filter(s => Number(s.skuKgs) > 0);
+  if (mix.length === 0) return [];
+  return mix.slice(0, 3).map(s => {
+    const perDelivery = Number(s.cylindersPerDelivery) || 0;
+    const size = Number(s.kgEach) || 0;
+    // Bulk lines have no cylinder count; show what they are instead.
+    if (perDelivery < 0.5 || size <= 1.5) {
+      return { key: s.item, text: `${formatKgs(s.skuKgs)} kg`, note: s.item };
+    }
+    const rounded = perDelivery >= 10 ? Math.round(perDelivery) : perDelivery.toFixed(1).replace(/\.0$/, '');
+    return {
+      key: s.item,
+      text: `${rounded} × ${size % 1 === 0 ? size : size.toFixed(1)} kg`,
+      note: s.item,
+    };
+  });
+}
+
 function statusOf(row) {
   const overdue = Number(row.daysOverdue);
   if (!row.cycleDays) return { label: 'No pattern yet', tone: 'muted' };
@@ -103,7 +134,7 @@ export default async function AccountSync() {
               <th>Status</th>
               <th className={styles.num}>Typical drop</th>
               <th className={styles.num}>90d vs prior</th>
-              <th>Usual SKU</th>
+              <th>Buys as</th>
             </tr>
           </thead>
           <tbody>
@@ -111,7 +142,7 @@ export default async function AccountSync() {
               const status = statusOf(row);
               const trend = Number(row.volumeTrend);
               const hasTrend = Number.isFinite(trend) && Number(row.kgsPrior90) > 0;
-              const cylinders = Number(row.typicalCylinders) || 0;
+              const mix = describeMix(row);
               return (
                 <tr key={row.id}>
                   <td>
@@ -124,11 +155,9 @@ export default async function AccountSync() {
                   <td><span className={styles[status.tone]}>{status.label}</span></td>
                   <td className={styles.num}>
                     {formatKgs(row.typicalDropKgs)} kg
-                    {cylinders > 0 && (
-                      <div className={styles.sub}>
-                        {cylinders} × {Math.round(Number(row.mainKgEach))} kg
-                      </div>
-                    )}
+                    {mix.map(m => (
+                      <div key={m.key} className={styles.sub}>{m.text}</div>
+                    ))}
                   </td>
                   <td className={styles.num}>
                     {hasTrend ? (
@@ -140,7 +169,12 @@ export default async function AccountSync() {
                       {formatKgs(row.kgsLast90)} vs {formatKgs(row.kgsPrior90)}
                     </div>
                   </td>
-                  <td className={styles.sku}>{row.mainItem || '—'}</td>
+                  <td className={styles.sku}>
+                    <span className={styles.unit}>{row.buysAs}</span>
+                    {parseSkuMix(row.skuMix).slice(0, 3).map(m => (
+                      <div key={m.item}>{m.item}</div>
+                    ))}
+                  </td>
                 </tr>
               );
             })}
