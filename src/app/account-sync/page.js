@@ -2,6 +2,7 @@ import styles from "./account-sync.module.css";
 export const dynamic = 'force-dynamic';
 
 import { getAccountSignals } from "../../lib/bigquery";
+import { describeCylinder } from "../../lib/cylinders";
 
 // BigQuery hands DATE columns back as { value: 'YYYY-MM-DD' }.
 const asDate = (d) => (typeof d === 'string' ? d : d?.value) || null;
@@ -38,19 +39,17 @@ function parseSkuMix(raw) {
 function describeMix(row) {
   const mix = parseSkuMix(row.skuMix).filter(s => Number(s.skuKgs) > 0);
   if (mix.length === 0) return [];
-  return mix.slice(0, 3).map(s => {
+  return mix.slice(0, 4).map(s => {
+    const pack = describeCylinder(s.kgEach, s.item);
     const perDelivery = Number(s.cylindersPerDelivery) || 0;
-    const size = Number(s.kgEach) || 0;
-    // Bulk lines have no cylinder count; show what they are instead.
-    if (perDelivery < 0.5 || size <= 1.5) {
-      return { key: s.item, text: `${formatKgs(s.skuKgs)} kg`, note: s.item };
+
+    if (pack.isBulk || perDelivery < 0.5) {
+      return { key: s.item, text: `${formatKgs(s.skuKgs)} kg`, pack };
     }
-    const rounded = perDelivery >= 10 ? Math.round(perDelivery) : perDelivery.toFixed(1).replace(/\.0$/, '');
-    return {
-      key: s.item,
-      text: `${rounded} × ${size % 1 === 0 ? size : size.toFixed(1)} kg`,
-      note: s.item,
-    };
+    const count = perDelivery >= 10
+      ? Math.round(perDelivery)
+      : perDelivery.toFixed(1).replace(/\.0$/, '');
+    return { key: s.item, text: `${count} × ${pack.label}`, pack };
   });
 }
 
@@ -156,7 +155,11 @@ export default async function AccountSync() {
                   <td className={styles.num}>
                     {formatKgs(row.typicalDropKgs)} kg
                     {mix.map(m => (
-                      <div key={m.key} className={styles.sub}>{m.text}</div>
+                      <div key={m.key} className={styles.sub}>
+                        {m.text}
+                        {m.pack.discontinued && <span className={styles.flag}> discontinued</span>}
+                        {!m.pack.known && <span className={styles.flag}> not on price list</span>}
+                      </div>
                     ))}
                   </td>
                   <td className={styles.num}>
@@ -171,9 +174,9 @@ export default async function AccountSync() {
                   </td>
                   <td className={styles.sku}>
                     <span className={styles.unit}>{row.buysAs}</span>
-                    {parseSkuMix(row.skuMix).slice(0, 3).map(m => (
-                      <div key={m.item}>{m.item}</div>
-                    ))}
+                    {mix.some(m => m.pack.variant === null && m.pack.cylinder === '22 kg') && (
+                      <div className={styles.flag}>22 kg: Regular or Forklift unknown</div>
+                    )}
                   </td>
                 </tr>
               );
