@@ -455,15 +455,52 @@ async function _getAccountSignals() {
       FROM Deliveries
       GROUP BY id
     ),
-    -- The SKU the account buys most, by volume: names the cylinder size and,
-    -- for the 50kg family, the class (50 = A, 47 = B, 45 = C).
-    RankedSku AS (
+    -- An account is not one size. A dealer can take 50kg Class A, 50kg Class C
+    -- and 11kg on the same run, so a single cylinder count across all of them
+    -- would be meaningless. Keep the mix, per SKU, and let the caller show it.
+    -- Item_Description names both the size and the class (50 = A, 47 = B,
+    -- 45 = C on the 50kg family).
+    SkuMix AS (
       SELECT
-        id, item, kgEach,
+        id,
+        item,
+        kgEach,
         SUM(kgs) as skuKgs,
+        -- Cylinder lines carry a fill weight; bulk lines sit at 1 kg "each"
+        -- because Quantity is kilograms there, so they contribute no count.
+        SUM(IF(kgEach > 1.5, Quantity, 0)) as skuCylinders,
+        COUNT(DISTINCT Transaction_No_) as skuDeliveries,
         ROW_NUMBER() OVER (PARTITION BY id ORDER BY SUM(kgs) DESC) as rn
       FROM Lines
       GROUP BY id, item, kgEach
+    ),
+    SkuSummary AS (
+      SELECT
+        id,
+        TO_JSON_STRING(ARRAY_AGG(
+          STRUCT(
+            item,
+            kgEach,
+            skuKgs,
+            skuCylinders,
+            -- Cylinders per delivery of this SKU: the figure that is directly
+            -- comparable to an agreed "6 x 50kg".
+            SAFE_DIVIDE(skuCylinders, NULLIF(skuDeliveries, 0)) as cylindersPerDelivery
+          )
+          ORDER BY skuKgs DESC LIMIT 6
+        )) as skuMix
+      FROM SkuMix
+      GROUP BY id
+    ),
+    -- How the account buys overall, so a page can label it honestly rather
+    -- than forcing cylinders onto a bulk customer.
+    UnitSplit AS (
+      SELECT
+        id,
+        SUM(IF(kgEach > 1.5, kgs, 0)) as cylinderKgs,
+        SUM(IF(kgEach > 1.5, 0, kgs)) as bulkKgs
+      FROM Lines
+      GROUP BY id
     ),
     Volume AS (
       SELECT
@@ -501,6 +538,14 @@ async function _getAccountSignals() {
       t.typicalCylinders,
       k.item as mainItem,
       k.kgEach as mainKgEach,
+      sm.skuMix,
+      u.cylinderKgs,
+      u.bulkKgs,
+      CASE
+        WHEN u.bulkKgs > u.cylinderKgs THEN 'bulk'
+        WHEN u.bulkKgs > 0 THEN 'mixed'
+        ELSE 'cylinder'
+      END as buysAs,
       v.kgsLast90,
       v.kgsPrior90,
       SAFE_DIVIDE(v.kgsLast90 - v.kgsPrior90, NULLIF(v.kgsPrior90, 0)) as volumeTrend,
@@ -508,7 +553,9 @@ async function _getAccountSignals() {
     FROM Account a
     LEFT JOIN Cycle c ON c.id = a.id
     LEFT JOIN TypicalDrop t ON t.id = a.id
-    LEFT JOIN RankedSku k ON k.id = a.id AND k.rn = 1
+    LEFT JOIN SkuMix k ON k.id = a.id AND k.rn = 1
+    LEFT JOIN SkuSummary sm ON sm.id = a.id
+    LEFT JOIN UnitSplit u ON u.id = a.id
     LEFT JOIN Volume v ON v.id = a.id
     WHERE a.deliveries >= 2
     ORDER BY daysOverdue DESC
