@@ -18,6 +18,7 @@ import {
   Bot,
   Menu,
   ClipboardList,
+  RefreshCw,
   Sun,
   Moon
 } from 'lucide-react';
@@ -101,6 +102,7 @@ export default function Sidebar() {
     { href: '/predictive-ai', label: 'Predictive AI', icon: BrainCircuit, segments: ALL_SEGMENT_IDS },
     { href: '/proactive', label: 'Proactive Calling', icon: PhoneCall, segments: ALL_SEGMENT_IDS },
     { href: '/risk', label: 'Risk & Churn', icon: AlertTriangle, segments: ALL_SEGMENT_IDS },
+    { href: '/account-sync', label: 'Account Sync', icon: RefreshCw },
     { href: '/gemini-ai', label: 'Gemini AI', icon: Bot },
     { href: '/admin', label: 'Admin Logs', icon: ClipboardList },
     { href: '/settings', label: 'Settings', icon: Settings, segments: BASE_SEGMENTS },
