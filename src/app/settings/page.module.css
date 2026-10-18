@@ -1,0 +1,141 @@
+.container {
+  padding: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.section {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.inputField {
+  width: 100%;
+  max-width: 300px;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--input-text);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+}
+
+.button {
+  background: var(--primary-accent);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: #2563eb;
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.table th, .table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.tableInput {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--input-text);
+  padding: 8px;
+  border-radius: 4px;
+  width: 120px;
+}
+
+.tableInput:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  gap: 16px;
+}
+
+.alertError {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  margin-bottom: 16px;
+}
+
+.alertSuccess {
+  background: rgba(74, 222, 128, 0.1);
+  color: #86efac;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  margin-bottom: 16px;
+}

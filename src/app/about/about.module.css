@@ -1,0 +1,150 @@
+.container {
+  min-height: 100vh;
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4rem 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-y: auto;
+}
+
+.hero {
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 5rem;
+}
+
+.title {
+  font-size: 4rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  max-width: 800px;
+  margin: 0 auto 3rem auto;
+  line-height: 1.6;
+}
+
+.ctaButton {
+  background-color: var(--primary-accent);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 1rem 2.5rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+}
+
+.ctaButton:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.mockupContainer {
+  margin-top: 4rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mockupContainer img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.section {
+  max-width: 1200px;
+  width: 100%;
+  margin-bottom: 6rem;
+}
+
+.sectionHeader {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  padding: 2rem;
+  background: var(--surface-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-accent);
+}
+
+.cardIcon {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.cardDesc {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.problemList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.problemItem {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  border-left: 4px solid var(--danger-color);
+}
+
+.problemTitle {
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.footer {
+  text-align: center;
+  padding: 4rem 0 2rem 0;
+  border-top: 1px solid var(--border-color);
+  width: 100%;
+  max-width: 1200px;
+}

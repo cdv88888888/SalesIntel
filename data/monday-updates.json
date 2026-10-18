@@ -1,0 +1,72 @@
+{
+  "01-06-25008": [
+    {
+      "id": "update-1",
+      "author": {
+        "name": "Maria Lourdes Jordan",
+        "initials": "ML",
+        "avatarColor": "#10b981"
+      },
+      "createdAt": "2026-07-22T14:00:00Z",
+      "relativeTime": "29m",
+      "body": "2026-07-22\nPurchase Order from KJA SUMMIT\n\nSir RY @Richard Yao\n\nPurchase Order from KJA Summit . Delivery is scheduled on Saturday July 25, 2026\nQuantity: 20x50kg\nPrice: Php5,250 per cylinder",
+      "attachments": [
+        {
+          "name": "purchase_order.png",
+          "size": "32KB",
+          "type": "image"
+        }
+      ],
+      "likesCount": 0,
+      "viewsCount": 7,
+      "replies": []
+    },
+    {
+      "id": "update-2",
+      "author": {
+        "name": "Richel O. Camaroe",
+        "initials": "RO",
+        "avatarColor": "#8b5cf6"
+      },
+      "createdAt": "2026-07-21T14:28:20Z",
+      "relativeTime": "1d",
+      "body": "Update on Cylinder Return from Tempo Loan to KJA Summit Food\n\nDear All,\n\nThis is to provide an update regarding the cylinder returned from the temporary loan to KJA Summit Food. Kindly see the details below, together with the receiving report and photos of the cylinders provided by the delivery team for your reference.\n\nTransaction Date: July 20, 2026\nReceiving Report No. 36768\nCylinder Returned: 8x 50kg",
+      "attachments": [],
+      "likesCount": 0,
+      "viewsCount": 14,
+      "replies": []
+    },
+    {
+      "id": "update-3",
+      "author": {
+        "name": "Maria Lourdes Jordan",
+        "initials": "ML",
+        "avatarColor": "#10b981"
+      },
+      "createdAt": "2026-07-20T14:28:20Z",
+      "relativeTime": "2d",
+      "body": "2026-07-20\nSubject: KJA Client Concern – Weight Out (WO) Process Update\n\nSir RY @Richard Yao\n\nThis is to provide an update regarding the concern raised by KJA on the weight out (WO) process.\n\nThe client initially requested if they could be the ones to accomplish and write on the WO form. I explained that this is part of our standard procedure, wherein the delivery team is...",
+      "attachments": [],
+      "likesCount": 0,
+      "viewsCount": 18,
+      "replies": []
+    }
+  ],
+  "default": [
+    {
+      "id": "update-default-1",
+      "author": {
+        "name": "System Integration",
+        "initials": "SYS",
+        "avatarColor": "#6b7280"
+      },
+      "createdAt": "2026-07-22T12:00:00Z",
+      "relativeTime": "2h",
+      "body": "System Sync: Connection to Monday.com established. Waiting for account-specific updates to be posted on the Monday board.",
+      "attachments": [],
+      "likesCount": 1,
+      "viewsCount": 4,
+      "replies": []
+    }
+  ]
+}

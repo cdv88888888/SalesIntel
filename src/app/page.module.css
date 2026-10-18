@@ -1,0 +1,199 @@
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 24px;
+  padding: 32px;
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sideColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  margin-bottom: 8px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.section {
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Alert Component Styles */
+.alertCard {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.alertHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+.alertBody {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.button {
+  background: var(--primary-accent);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 16px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.button:hover {
+  background: #2563eb;
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+/* Volume Tracker Styles */
+.trackerStats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.statLabel {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.statValue {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.progressBarContainer {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-accent), #8b5cf6);
+  border-radius: 6px;
+  width: 78%; /* Mock value */
+  transition: width 1s ease-in-out;
+}
+
+/* Action Card Styles */
+.actionCard {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.actionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c4b5fd;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Field Logger Styles */
+.inputField {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-family: inherit;
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: var(--primary-accent);
+}
+
+.monthlyGoalCard {
+  border-color: var(--primary-accent) !important;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  .header p {
+    font-size: 0.95rem;
+  }
+  .sectionTitle {
+    font-size: 1.1rem;
+  }
+  .monthlyGoalCard {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  .trackerStats {
+    flex-direction: column;
+    gap: 16px !important;
+  }
+  .trackerStats > div {
+    text-align: center !important;
+  }
+  .monthlyGoalCard > div:last-child > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

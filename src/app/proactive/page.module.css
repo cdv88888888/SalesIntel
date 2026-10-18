@@ -1,0 +1,279 @@
+.dashboard {
+  padding: 32px 48px;
+  max-width: 1600px;
+  margin: 0 auto;
+  height: calc(100vh - 80px); /* Fill remaining height below nav */
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  margin-bottom: 32px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(138, 43, 226, 0.15);
+  border: 1px solid rgba(138, 43, 226, 0.4);
+  color: #d8b4fe;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.exportBtn:hover {
+  background: rgba(138, 43, 226, 0.3);
+  border-color: rgba(168, 85, 247, 0.6);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.3);
+  transform: translateY(-1px);
+}
+
+.kanbanBoard {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.column {
+  flex: 0 0 350px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.columnHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.columnTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.countBadge {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  padding-right: 8px; /* Room for scrollbar */
+}
+
+/* Custom Scrollbar for Card List */
+.cardList::-webkit-scrollbar {
+  width: 6px;
+}
+.cardList::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+.cardList::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+}
+
+.card {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dealerName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.statLabel {
+  color: var(--text-secondary);
+}
+
+.statValue {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pitchBox {
+  margin-top: 4px;
+  padding: 12px;
+  background: rgba(138, 43, 226, 0.1);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary-accent);
+}
+
+.pitchLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--primary-accent);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.pitchValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Column Specific Styles */
+.colOverdue {
+  border-top: 4px solid #f87171;
+}
+.colOverdue .columnTitle { color: #f87171; }
+.colOverdue .card { border-left: 3px solid #f87171; }
+
+.colToday {
+  border-top: 4px solid var(--primary-accent);
+}
+.colToday .columnTitle { color: var(--primary-accent); }
+.colToday .card { border-left: 3px solid var(--primary-accent); }
+
+.colThisWeek {
+  border-top: 4px solid #facc15;
+}
+.colThisWeek .columnTitle { color: #facc15; }
+
+.colFuture {
+  border-top: 4px solid #4ade80;
+  opacity: 0.8;
+}
+.colFuture .columnTitle { color: #4ade80; }
+
+/* Drag and Drop & Confirmed Column styling */
+.draggableCard {
+  cursor: grab;
+}
+.draggableCard:active {
+  cursor: grabbing;
+}
+
+.colConfirmed {
+  border-top: 4px solid #60a5fa;
+}
+.colConfirmed .columnTitle {
+  color: #60a5fa;
+}
+.colConfirmed .card {
+  border-left: 3px solid #60a5fa;
+  cursor: default; /* Clicks don't expand, normal cursor */
+}
+
+.dragOver {
+  background: rgba(96, 165, 250, 0.08) !important;
+  border: 1px dashed rgba(96, 165, 250, 0.4) !important;
+}
+
+.dateLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #60a5fa;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.dateInput {
+  color-scheme: dark;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+
+.dateInput:focus {
+  border-color: #60a5fa;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+    height: auto;
+    min-height: calc(100vh - 60px);
+  }
+  .header {
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+  }
+  .kanbanBoard {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+  .column {
+    flex: 1 1 auto;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+}
