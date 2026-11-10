@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { unstable_cache } from 'next/cache';
 import { ALL_SEGMENT, BASE_SEGMENTS } from './segments';
+import { assessAccounts, subtractMonths, toIsoDate, WINDOW_MONTHS } from './cadence';
 
 let bqClient = null;
 let resolvedCredentials;
@@ -786,6 +787,38 @@ async function _getProactiveCallingData(segment = 'dealer') {
   return rows;
 }
 
+// "Today" for the cadence rule, as a calendar date in the business timezone.
+function manilaToday() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+}
+
+// Order cadence engine input: one row per account per order date (several
+// transactions on a day are one order), read-only, one query per segment.
+// The median gap and status are worked out in JavaScript by ./cadence.
+async function _getAccountCadence(segment = 'dealer') {
+  const bq = getBigQueryClient();
+  const channelFilter = getChannelFilterString(segment);
+  const today = manilaToday();
+  const windowStart = subtractMonths(today, WINDOW_MONTHS);
+  const query = `
+    SELECT
+      Customer_No_ as id,
+      MAX(Customer_Name) as name,
+      MAX(Classification) as classification,
+      Date as date,
+      SUM(Total_KGS_Sold) as kg
+    FROM \`accounts-recieva.SALES.SALES2023\`
+    WHERE Customer_No_ IS NOT NULL
+      AND Date IS NOT NULL
+      AND Date >= DATE(@windowStart)
+      AND Date <= DATE(@today)
+      ${channelFilter}
+    GROUP BY Customer_No_, Date
+  `;
+  const [rows] = await bq.query({ query, params: { windowStart, today } });
+  return assessAccounts(rows.map(r => ({ ...r, date: toIsoDate(r.date) })), today);
+}
+
 export const getAvailableMonths = unstable_cache(
   async () => await _getAvailableMonths(),
   ['bq-months'],
@@ -831,5 +864,11 @@ export const getVolumeWatch = unstable_cache(
 export const getProactiveCallingData = (segment = 'dealer') => unstable_cache(
   async () => await _getProactiveCallingData(segment),
   ['bq-proactive', segment],
+  { revalidate: 7200 }
+)();
+
+export const getAccountCadence = (segment = 'dealer') => unstable_cache(
+  async () => await _getAccountCadence(segment),
+  ['bq-account-cadence', segment],
   { revalidate: 7200 }
 )();

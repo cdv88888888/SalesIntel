@@ -56,6 +56,53 @@ export default function LogicPage() {
           </code>
         </div>
       </section>
+
+      <section className={`${styles.section} glass-panel`}>
+        <h2 className={styles.sectionTitle}>Order Cadence: Proactive, At Risk, Lost</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
+          One rule for &quot;when should this account have ordered&quot;, worked out per account within its segment.
+        </p>
+
+        <div style={{ background: 'var(--s2)', padding: '16px', borderRadius: 'var(--r-card)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '8px', color: 'var(--text)', fontSize: '17px', lineHeight: '22px', letterSpacing: '-0.01em', fontWeight: 600 }}>1. Typical gap between orders (x)</h3>
+          <p style={{ fontSize: '15px', lineHeight: '22px' }}>
+            The system looks at the account&apos;s orders in the <strong>last 24 months</strong>. Several deliveries on the same day count as <strong>one order</strong>. <strong>x</strong> is the <strong>median</strong> number of days between one order date and the next, so a single long pause does not distort it. An account needs at least <strong>3 orders</strong> in the 24 months; with fewer it is <strong>New</strong> and has no x.
+          </p>
+        </div>
+        <div style={{ background: 'var(--s2)', padding: '16px', borderRadius: 'var(--r-card)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '8px', color: 'var(--text)', fontSize: '17px', lineHeight: '22px', letterSpacing: '-0.01em', fontWeight: 600 }}>2. Days since last order (d)</h3>
+          <p style={{ fontSize: '15px', lineHeight: '22px' }}>
+            <strong>d</strong> is the number of days from the account&apos;s most recent order to today. When the account orders again, d goes back to zero, so the status clears by itself.
+          </p>
+        </div>
+        <div style={{ background: 'var(--s2)', padding: '16px', borderRadius: 'var(--r-card)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '8px', color: 'var(--text)', fontSize: '17px', lineHeight: '22px', letterSpacing: '-0.01em', fontWeight: 600 }}>3. Status</h3>
+          <p style={{ fontSize: '15px', lineHeight: '22px', marginBottom: '12px' }}>
+            Compare d with x:
+          </p>
+          <code style={{ display: 'block', background: 'var(--surface)', padding: '12px', borderRadius: '12px', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums' }}>
+            Healthy: d &lt; 0.8x (rounded up)  |  Proactive: 0.8x &le; d &lt; 1.2x  |  At Risk: 1.2x &le; d &lt; 4x  |  Lost: d &ge; 4x
+          </code>
+        </div>
+        <div style={{ background: 'var(--s2)', padding: '16px', borderRadius: 'var(--r-card)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '8px', color: 'var(--text)', fontSize: '17px', lineHeight: '22px', letterSpacing: '-0.01em', fontWeight: 600 }}>4. Declining (separate flag)</h3>
+          <p style={{ fontSize: '15px', lineHeight: '22px' }}>
+            An account is <strong>Declining</strong> when its average kg per order over the <strong>last 3 months</strong> is below <strong>80%</strong> of its average kg per order over the 24 months. This is independent of status. If the account has no orders in the last 3 months it is not flagged Declining: that is a timing problem, and the status already shows it.
+          </p>
+        </div>
+        <div style={{ background: 'var(--s2)', padding: '16px', borderRadius: 'var(--r-card)', marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '8px', color: 'var(--text)', fontSize: '17px', lineHeight: '22px', letterSpacing: '-0.01em', fontWeight: 600 }}>5. Sorting</h3>
+          <p style={{ fontSize: '15px', lineHeight: '22px' }}>
+            Lists show the biggest accounts first, by average kg per order over 24 months.
+          </p>
+        </div>
+        <div style={{ background: 'var(--s2)', padding: '16px', borderRadius: 'var(--r-card)', marginBottom: '0' }}>
+          <h3 style={{ marginBottom: '8px', color: 'var(--text)', fontSize: '17px', lineHeight: '22px', letterSpacing: '-0.01em', fontWeight: 600 }}>Example</h3>
+          <p style={{ fontSize: '15px', lineHeight: '22px' }}>
+            An account that orders every <strong>10 days</strong> (x = 10) is <strong>Proactive from day 8</strong>, <strong>At Risk from day 12</strong> and <strong>Lost from day 40</strong> since its last order.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
