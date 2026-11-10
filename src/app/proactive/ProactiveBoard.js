@@ -5,7 +5,11 @@ import ExpandableKanban from '../../components/ExpandableKanban';
 import styles from './page.module.css';
 import { useClientDrawer } from '../../context/ClientDrawerContext';
 
-export default function ProactiveBoard({ initialColumns }) {
+const fmtDate = (iso) =>
+  iso ? new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : '-';
+const fmtDays = (n) => `${n % 1 ? n : Math.round(n)} days`;
+
+export default function ProactiveBoard({ initialColumns, loadError }) {
   const [columns, setColumns] = useState(initialColumns);
   const [dragOverCol, setDragOverCol] = useState(null);
   const { openClient } = useClientDrawer();
@@ -43,8 +47,8 @@ export default function ProactiveBoard({ initialColumns }) {
 
       if (!sourceColumn || sourceColumn === targetColumn) return;
 
-      // Only allow dragging from 'overdue' and 'today' to 'confirmed'
-      if ((sourceColumn === 'overdue' || sourceColumn === 'today') && targetColumn === 'confirmed') {
+      // Only allow dragging from 'today' to 'confirmed'
+      if (sourceColumn === 'today' && targetColumn === 'confirmed') {
         const sourceCards = columns[sourceColumn];
         const card = sourceCards.find(c => c.id === cardId);
         if (!card) return;
@@ -64,8 +68,8 @@ export default function ProactiveBoard({ initialColumns }) {
           confirmed: [...prev.confirmed, updatedCard]
         }));
       }
-      // Dragging from 'confirmed' back to 'overdue' or 'today'
-      else if (sourceColumn === 'confirmed' && (targetColumn === 'overdue' || targetColumn === 'today')) {
+      // Dragging from 'confirmed' back to 'today'
+      else if (sourceColumn === 'confirmed' && targetColumn === 'today') {
         const sourceCards = columns.confirmed;
         const card = sourceCards.find(c => c.id === cardId);
         if (!card) return;
@@ -74,14 +78,9 @@ export default function ProactiveBoard({ initialColumns }) {
         const { deliveryDate, ...cleanedCard } = card;
 
         setColumns(prev => {
+          // Restore the biggest-first order
           const targetList = [...(prev[targetColumn] || []), cleanedCard];
-          if (targetColumn === 'overdue') {
-            // Restore overdue sorting: daysUntilExpected ascending
-            targetList.sort((a, b) => a.daysUntilExpected - b.daysUntilExpected);
-          } else if (targetColumn === 'today') {
-            // Restore today sorting: pitchVolume descending
-            targetList.sort((a, b) => b.pitchVolume - a.pitchVolume);
-          }
+          targetList.sort((a, b) => b.avgKg - a.avgKg);
 
           return {
             ...prev,
@@ -102,8 +101,39 @@ export default function ProactiveBoard({ initialColumns }) {
     }));
   };
 
+  const renderFacts = (dealer) => (
+    <>
+      <div className={styles.statRow}>
+        <span className={styles.statLabel}>Usual gap:</span>
+        <span className={styles.statValue}>Every {fmtDays(dealer.x)}</span>
+      </div>
+      <div className={styles.statRow}>
+        <span className={styles.statLabel}>Since last order:</span>
+        <span className={styles.statValue}>{dealer.d} days</span>
+      </div>
+      <div className={styles.statRow}>
+        <span className={styles.statLabel}>Last Order:</span>
+        <span className={styles.statValue}>{fmtDate(dealer.lastOrder)}</span>
+      </div>
+      <div className={styles.statRow}>
+        <span className={styles.statLabel}>Due:</span>
+        <span className={styles.statValue}>{fmtDate(dealer.dueDate)}</span>
+      </div>
+      <div className={styles.statRow}>
+        <span className={styles.statLabel}>At Risk from:</span>
+        <span className={styles.statValue}>{fmtDate(dealer.atRiskDate)}</span>
+      </div>
+      {dealer.declining && (
+        <div className={styles.statRow}>
+          <span className={styles.statLabel} style={{ color: 'var(--red)' }}>Orders:</span>
+          <span className={styles.statValue} style={{ color: 'var(--red)' }}>Declining</span>
+        </div>
+      )}
+    </>
+  );
+
   const renderCard = (dealer, columnKey) => {
-    const isDraggable = columnKey === 'overdue' || columnKey === 'today';
+    const isDraggable = columnKey === 'today';
 
     return (
       <div
@@ -119,30 +149,10 @@ export default function ProactiveBoard({ initialColumns }) {
       >
         <div className={styles.dealerName}>{dealer.name}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div className={styles.statRow}>
-            <span className={styles.statLabel}>Frequency:</span>
-            <span className={styles.statValue}>Every {dealer.avgDays} days</span>
-          </div>
-          <div className={styles.statRow}>
-            <span className={styles.statLabel}>Last Order:</span>
-            <span className={styles.statValue}>{dealer.lastOrder}</span>
-          </div>
-          {dealer.daysUntilExpected < 0 && (
-            <div className={styles.statRow}>
-              <span className={styles.statLabel} style={{ color: 'var(--red)' }}>Status:</span>
-              <span className={styles.statValue} style={{ color: 'var(--red)' }}>{Math.abs(dealer.daysUntilExpected)} Days Overdue</span>
-            </div>
-          )}
-          {dealer.daysUntilExpected > 0 && (
-            <div className={styles.statRow}>
-              <span className={styles.statLabel}>Expected:</span>
-              <span className={styles.statValue}>In {dealer.daysUntilExpected} days</span>
-            </div>
-          )}
-
+          {renderFacts(dealer)}
           <div className={styles.pitchBox}>
-            <div className={styles.pitchLabel}>Suggested Pitch Volume</div>
-            <div className={styles.pitchValue}>{dealer.pitchVolume.toLocaleString()} KGs</div>
+            <div className={styles.pitchLabel}>Average per Order</div>
+            <div className={styles.pitchValue}>{dealer.avgKg.toLocaleString()} KGs</div>
           </div>
         </div>
       </div>
@@ -164,18 +174,11 @@ export default function ProactiveBoard({ initialColumns }) {
       >
         <div className={styles.dealerName}>{dealer.name}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div className={styles.statRow}>
-            <span className={styles.statLabel}>Frequency:</span>
-            <span className={styles.statValue}>Every {dealer.avgDays} days</span>
-          </div>
-          <div className={styles.statRow}>
-            <span className={styles.statLabel}>Last Order:</span>
-            <span className={styles.statValue}>{dealer.lastOrder}</span>
-          </div>
+          {renderFacts(dealer)}
 
           <div className={styles.pitchBox}>
-            <div className={styles.pitchLabel}>Suggested Pitch Volume</div>
-            <div className={styles.pitchValue}>{dealer.pitchVolume.toLocaleString()} KGs</div>
+            <div className={styles.pitchLabel}>Average per Order</div>
+            <div className={styles.pitchValue}>{dealer.avgKg.toLocaleString()} KGs</div>
           </div>
 
           <div style={{ marginTop: '8px', borderTop: '1px solid var(--line)', paddingTop: '8px' }}>
@@ -198,53 +201,38 @@ export default function ProactiveBoard({ initialColumns }) {
 
   const handleExportCSV = () => {
     const columnLabels = {
-      overdue: 'Overdue',
       today: 'Call Today',
-      confirmed: 'Confirmed Delivery',
-      thisWeek: 'Upcoming (1-7 Days)',
-      future: 'Recently Ordered'
+      confirmed: 'Confirmed Delivery'
     };
 
     const headers = [
       'Status / Column',
       'Account Name',
-      'Frequency (Days)',
+      'Usual Gap (Days)',
+      'Days Since Last Order',
       'Last Order Date',
-      'Expected Order Date',
-      'Days Overdue / Until Expected',
-      'Suggested Pitch Volume (kgs)',
+      'Due Date',
+      'At Risk Date',
+      'Declining',
+      'Average Kg per Order',
       'Confirmed Delivery Date'
     ];
 
     const rows = [];
-    const columnKeys = ['overdue', 'today', 'confirmed', 'thisWeek', 'future'];
-
-    for (const key of columnKeys) {
-      const colCards = columns[key] || [];
-      const colLabel = columnLabels[key];
-
-      for (const card of colCards) {
-        let statusStr = '';
-        if (card.daysUntilExpected < 0) {
-          statusStr = `${Math.abs(card.daysUntilExpected)} Days Overdue`;
-        } else if (card.daysUntilExpected === 0) {
-          statusStr = 'Due Today';
-        } else {
-          statusStr = `In ${card.daysUntilExpected} Days`;
-        }
-
-        const row = [
-          `"${colLabel}"`,
+    for (const key of ['today', 'confirmed']) {
+      for (const card of columns[key] || []) {
+        rows.push([
+          `"${columnLabels[key]}"`,
           `"${(card.name || '').replace(/"/g, '""')}"`,
-          card.avgDays || 0,
+          card.x,
+          card.d,
           `"${card.lastOrder || ''}"`,
-          `"${card.expectedDate || ''}"`,
-          `"${statusStr}"`,
-          Math.round(card.pitchVolume || 0),
+          `"${card.dueDate || ''}"`,
+          `"${card.atRiskDate || ''}"`,
+          card.declining ? 'Yes' : 'No',
+          card.avgKg || 0,
           `"${card.deliveryDate || ''}"`
-        ];
-
-        rows.push(row.join(','));
+        ].join(','));
       }
     }
 
@@ -265,7 +253,7 @@ export default function ProactiveBoard({ initialColumns }) {
       <header className={styles.header}>
         <div>
           <h1>Proactive Calling Kanban</h1>
-          <p>Stay ahead of order cycles. Action accounts before they miss their historical purchasing windows.</p>
+          <p>Accounts inside their usual order window. Call them before they turn overdue.</p>
         </div>
         <button className={styles.exportBtn} onClick={handleExportCSV}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -277,29 +265,13 @@ export default function ProactiveBoard({ initialColumns }) {
         </button>
       </header>
 
-      <ExpandableKanban className={styles.kanbanBoard}>
-      {/* 1. Overdue */}
-      <div
-        className={`${styles.column} ${styles.colOverdue} ${dragOverCol === 'overdue' ? styles.dragOver : ''}`}
-        onDragOver={handleDragOver}
-        onDragEnter={(e) => handleDragEnter(e, 'overdue')}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, 'overdue')}
-      >
-        <div className={styles.columnHeader}>
-          <div className={styles.columnTitle}>Overdue</div>
-          <div className={styles.countBadge}>{columns.overdue.length}</div>
-        </div>
-        <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
-          {columns.overdue.map(d => renderCard(d, 'overdue'))}
-          {columns.overdue.length === 0 && (
-            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
-              No overdue accounts
-            </div>
-          )}
-        </div>
-      </div>
+      {loadError && (
+        <p style={{ color: 'var(--danger-color, #ef4444)', fontSize: '15px', lineHeight: '22px', marginBottom: '16px' }}>
+          Could not load sales data, so no accounts are shown. The query failed: {loadError}
+        </p>
+      )}
 
+      <ExpandableKanban className={styles.kanbanBoard}>
       {/* 2. Call Today */}
       <div
         className={`${styles.column} ${styles.colToday} ${dragOverCol === 'today' ? styles.dragOver : ''}`}
@@ -316,7 +288,7 @@ export default function ProactiveBoard({ initialColumns }) {
           {columns.today.map(d => renderCard(d, 'today'))}
           {columns.today.length === 0 && (
             <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
-              No calls scheduled for today
+              {loadError ? 'No data loaded' : 'No account is due for a call today.'}
             </div>
           )}
         </div>
@@ -344,37 +316,6 @@ export default function ProactiveBoard({ initialColumns }) {
         </div>
       </div>
 
-      {/* 4. Upcoming */}
-      <div className={`${styles.column} ${styles.colThisWeek}`}>
-        <div className={styles.columnHeader}>
-          <div className={styles.columnTitle}>Upcoming (1-7 Days)</div>
-          <div className={styles.countBadge}>{columns.thisWeek.length}</div>
-        </div>
-        <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
-          {columns.thisWeek.map(d => renderCard(d, 'thisWeek'))}
-          {columns.thisWeek.length === 0 && (
-            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
-              No upcoming calls
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 5. Recently Ordered */}
-      <div className={`${styles.column} ${styles.colFuture}`}>
-        <div className={styles.columnHeader}>
-          <div className={styles.columnTitle}>Recently Ordered</div>
-          <div className={styles.countBadge}>{columns.future.length}</div>
-        </div>
-        <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
-          {columns.future.map(d => renderCard(d, 'future'))}
-          {columns.future.length === 0 && (
-            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
-              No recent orders
-            </div>
-          )}
-        </div>
-      </div>
     </ExpandableKanban>
   </>
   );

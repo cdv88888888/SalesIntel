@@ -1,17 +1,32 @@
 import styles from "./page.module.css";
 export const dynamic = 'force-dynamic';
 
-import { getDealerAggregates, getAvailableMonths } from "../lib/bigquery";
+import { getDealerAggregates, getAvailableMonths, getAccountCadence } from "../lib/bigquery";
 import { normalizeSegment } from "../lib/segments";
 import { getSettings } from "../lib/settings";
-import { targetFor, TARGET_BASIS_LABEL } from "../lib/targets";
-
-// An account averaging less than this a month is skipped by the escalation
-// list: one order more or less swings it by half, so "% of target" is noise.
-const MIN_ESCALATION_BASELINE_KGS = 1000;
+import { STATUS } from "../lib/cadence";
 import ClientClickWrapper from "../components/ClientClickWrapper";
 import CrmUpdatesStream from "./intelligence/CrmUpdatesStreamWrapper";
 import { cookies } from "next/headers";
+
+const fmtDate = (iso) =>
+  iso ? new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : '-';
+const fmtKg = (n) => `${Math.round(n || 0).toLocaleString()} kg`;
+const fmtDays = (n) => `${n % 1 ? n : Math.round(n)} days`;
+
+const DecliningBadge = () => (
+  <span style={{ color: 'var(--red)', fontSize: '13px', fontWeight: 600 }}>Declining</span>
+);
+
+const Facts = ({ a, due }) => {
+  const c = a.cadence;
+  return (
+    <div className={styles.alertBody}>
+      <p>{c.d} days since last order (usually every {fmtDays(c.x)}). Last order {fmtDate(c.lastOrderDate)}. Averages {fmtKg(c.avgKgPerOrder)} per order.</p>
+      {due && <p>Due {fmtDate(c.dueDate)}. Becomes At Risk {fmtDate(c.atRiskDate)}.</p>}
+    </div>
+  );
+};
 
 const ActivityRing = ({ radius, stroke, progress, color, bg }) => {
   const circumference = 2 * Math.PI * radius;
@@ -41,8 +56,8 @@ export default async function Dashboard({ searchParams }) {
 
   const settings = await getSettings(null, segment);
   const MONTHLY_SALES_TARGET = settings.globalTarget || 150000;
-  const dealerTargets = settings.dealerTargets || {};
-  let atRiskDealers = [];
+  let atRisk = [];
+  let callToday = [];
   let totalKgsMonth = 0;
   let loadError = null;
 
@@ -58,37 +73,20 @@ export default async function Dashboard({ searchParams }) {
       const currentPeriod = `${latest.year}-${String(latest.month).padStart(2, '0')}`;
       const dealers = await getDealerAggregates(currentPeriod, currentPeriod, [], segment);
 
-      for (const d of dealers) {
-        totalKgsMonth += (d.kgsSold || 0);
-
-        // Same target rule as every other page: saved, else 3-month average
-        // plus 15%. Accounts too small for a percentage to mean anything are
-        // left out of the escalation list.
-        const target = targetFor(d, dealerTargets, latest);
-        if (target.baselineKgs > MIN_ESCALATION_BASELINE_KGS && target.kgs > 0) {
-          const progress = ((d.kgsSold || 0) / target.kgs) * 100;
-
-          // Define "Needs Attention" as less than 90% of target
-          if (progress < 90) {
-            atRiskDealers.push({
-              ...d,
-              id: d.id,
-              name: d.name || "Unknown Dealer",
-              kgsSold: d.kgsSold || 0,
-              target: Math.round(target.kgs),
-              progress: Math.min(100, Math.max(0, Math.round(progress))),
-              pctDiff: progress - 100
-            });
-          }
-        }
-      }
-
-      // Sort so the worst performers are at the top
-      atRiskDealers.sort((a, b) => a.progress - b.progress);
+      for (const d of dealers) totalKgsMonth += (d.kgsSold || 0);
     }
   } catch (error) {
     console.error("Failed to load BigQuery data for dashboard:", error);
     loadError = error?.message || String(error);
+  }
+
+  try {
+    const accounts = await getAccountCadence(segment);
+    atRisk = accounts.filter(a => a.cadence.status === STATUS.AT_RISK);
+    callToday = accounts.filter(a => a.cadence.status === STATUS.PROACTIVE);
+  } catch (error) {
+    console.error("Failed to load account cadence for dashboard:", error);
+    loadError = loadError || error?.message || String(error);
   }
 
   // Calculate Monthly Target Progress
@@ -148,93 +146,91 @@ export default async function Dashboard({ searchParams }) {
           </div>
         </section>
 
-        {/* Feature 3: Predictive Order Forecasting & Anomaly Alerts */}
+        {/* Accounts overdue by order timing */}
         <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
-            ⚠️ Active Escalations ({atRiskDealers.length})
+            ⚠️ At Risk ({atRisk.length})
           </h2>
-          
+
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {loadError && (
               <p style={{ color: 'var(--danger-color, #ef4444)', fontSize: '15px', lineHeight: '22px' }}>
-                Could not load sales data, so no escalations are shown. The query failed: {loadError}
+                Could not load sales data, so no accounts are shown. The query failed: {loadError}
               </p>
             )}
-            {!loadError && atRiskDealers.length === 0 && (
+            {!loadError && atRisk.length === 0 && (
               <p style={{ color: 'var(--muted, var(--text-secondary))', fontSize: '15px', lineHeight: '22px' }}>
-                No account is below 90% of its target this month.
+                No account is overdue.
               </p>
             )}
-            {atRiskDealers.map(dealer => (
-              <ClientClickWrapper key={dealer.id} dealerId={dealer.id} className={styles.alertCard}>
+            {atRisk.map(a => (
+              <ClientClickWrapper key={a.id} dealerId={a.id} className={styles.alertCard}>
                 <div className={styles.alertHeader}>
-                  <span>REVENUE AT RISK ALERT: {dealer.name}</span>
-                  <span>Needs Attention</span>
+                  <span>{a.name || "Unknown Dealer"}</span>
+                  {a.cadence.declining && <DecliningBadge />}
                 </div>
-                <div className={styles.alertBody}>
-                  <p>Volume collapsed below minimum established benchmark. Current volume is only {dealer.progress}% of the baseline target.</p>
-                </div>
-                <button className={styles.button} style={{ width: '100%', pointerEvents: 'none' }}>View Data & Playbook</button>
+                <Facts a={a} />
               </ClientClickWrapper>
             ))}
           </div>
         </section>
 
-        {/* Feature 1: Smart Rebate & Discount Calculator */}
+        {/* Accounts due for a call */}
         <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
-            📊 Dealer Performance (At-Risk Segment)
+            📞 Call Today ({callToday.length})
           </h2>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            {atRiskDealers.map(dealer => (
-              <div key={`perf-${dealer.id}`}>
-                <ClientClickWrapper dealerId={dealer.id}>
-                  <h3 style={{ fontSize: "17px", lineHeight: "22px", fontWeight: 600, marginBottom: "8px", color: 'var(--blue)', cursor: 'pointer' }}>
-                    {dealer.name}
-                  </h3>
-                </ClientClickWrapper>
-                <div className={styles.trackerStats} style={{ marginBottom: "8px" }}>
-                  <div>
-                    <div className={styles.statLabel}>Current Volume (Total KGS)</div>
-                    <div className={styles.statValue} style={{ fontSize: "17px" }}>{dealer.kgsSold.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div className={styles.statLabel}>Target ({TARGET_BASIS_LABEL})</div>
-                    <div className={styles.statValue} style={{ fontSize: "17px" }}>{dealer.target.toLocaleString()} kg</div>
-                  </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {loadError && (
+              <p style={{ color: 'var(--danger-color, #ef4444)', fontSize: '15px', lineHeight: '22px' }}>
+                Could not load sales data, so no accounts are shown. The query failed: {loadError}
+              </p>
+            )}
+            {!loadError && callToday.length === 0 && (
+              <p style={{ color: 'var(--muted, var(--text-secondary))', fontSize: '15px', lineHeight: '22px' }}>
+                No account is due for a call today.
+              </p>
+            )}
+            {callToday.map(a => (
+              <ClientClickWrapper key={a.id} dealerId={a.id} className={styles.alertCard}>
+                <div className={styles.alertHeader} style={{ color: 'var(--text)' }}>
+                  <span>{a.name || "Unknown Dealer"}</span>
+                  {a.cadence.declining && <DecliningBadge />}
                 </div>
-                
-                <div className={styles.progressBarContainer}>
-                  <div 
-                    className={styles.progressBar} 
-                    style={{ width: `${dealer.progress}%`, background: dealer.progress < 80 ? 'var(--red)' : 'var(--blue)' }}
-                  ></div>
-                </div>
-                <div className={styles.statLabel} style={{ textAlign: "center", marginBottom: "16px", marginTop: "8px" }}>
-                  {dealer.progress}% of localized sales target baseline reached
-                </div>
-                
-                <button className={styles.button} style={{ width: "auto", fontSize: "13px", minHeight: "36px", padding: "0 16px" }}>Generate Volume Rebate Promo</button>
-              </div>
+                <Facts a={a} due />
+              </ClientClickWrapper>
             ))}
           </div>
         </section>
 
-        {/* Feature 2: Claude AI Pattern Recognition Engine */}
+        {/* One action card per overdue account, built from its real numbers */}
         <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
             🧠 Strategic Action Cards
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {atRiskDealers.map(dealer => (
-              <ClientClickWrapper key={`ai-${dealer.id}`} dealerId={dealer.id} className={styles.actionCard}>
-                <div className={styles.actionHeader}>
-                  ✨ Claude AI Insight
-                </div>
-                <p>{dealer.name}&apos;s ordering cadence has slowed down significantly relative to their normal baseline. Suggest deploying a pre-approved volume promotion immediately to shield this account from rival poaching.</p>
-              </ClientClickWrapper>
-            ))}
+            {!loadError && atRisk.length === 0 && (
+              <p style={{ color: 'var(--muted, var(--text-secondary))', fontSize: '15px', lineHeight: '22px' }}>
+                No account is overdue.
+              </p>
+            )}
+            {atRisk.map(a => {
+              const c = a.cadence;
+              const lostDay = 4 * c.x;
+              return (
+                <ClientClickWrapper key={`ai-${a.id}`} dealerId={a.id} className={styles.actionCard}>
+                  <div className={styles.actionHeader}>
+                    ✨ {a.name || "Unknown Dealer"}
+                  </div>
+                  <p>
+                    Usually orders every {fmtDays(c.x)}, last order {c.d} days ago.
+                    Call before day {lostDay % 1 ? lostDay : Math.round(lostDay)}, when the account counts as lost.
+                    {c.declining ? ` Recent orders are smaller: ${fmtKg(c.recentAvgKgPerOrder)} per order against ${fmtKg(c.avgKgPerOrder)} usually.` : ''}
+                  </p>
+                </ClientClickWrapper>
+              );
+            })}
           </div>
         </section>
 
