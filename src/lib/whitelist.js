@@ -1,14 +1,4 @@
-import { db } from './firebase.js';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  deleteDoc, 
-  writeBatch, 
-  serverTimestamp 
-} from 'firebase/firestore';
+import { getAdminDb, FieldValue, withTimeout } from './firebase-admin.js';
 import { 
   getWhitelist as getMockWhitelist, 
   getUserRole as getMockUserRole, 
@@ -41,16 +31,7 @@ const DEFAULT_VIEWERS = [
   'beatriz.maayo@masaganagas.com'
 ];
 
-/**
- * Helper to enforce a tight timeout on Firestore client promises.
- */
-function withTimeout(promise, timeoutMs = 500) {
-  let timer;
-  const timeoutPromise = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error('Firestore operation timeout')), timeoutMs);
-  });
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
-}
+const usersCol = () => getAdminDb().collection(COLLECTION_NAME);
 
 /**
  * Returns initial default users list combining default admins and env/static viewers.
@@ -92,8 +73,7 @@ export function getDefaultUsers() {
  */
 export async function autoSeedWhitelistIfNeeded() {
   try {
-    const colRef = collection(db, COLLECTION_NAME);
-    const snapshot = await withTimeout(getDocs(colRef), 10000);
+    const snapshot = await withTimeout(usersCol().get(), 10000);
 
     if (!snapshot.empty) {
       return snapshot.docs.map(d => ({
@@ -105,15 +85,15 @@ export async function autoSeedWhitelistIfNeeded() {
 
     // Collection is empty: perform batch insert
     const defaults = getDefaultUsers();
-    const batch = writeBatch(db);
+    const batch = getAdminDb().batch();
 
     defaults.forEach(user => {
       const cleanEmail = user.email.trim().toLowerCase();
-      const docRef = doc(db, COLLECTION_NAME, cleanEmail);
+      const docRef = usersCol().doc(cleanEmail);
       batch.set(docRef, {
         email: cleanEmail,
         role: user.role,
-        timestamp: serverTimestamp()
+        timestamp: FieldValue.serverTimestamp()
       });
       // Also ensure mockStore stays in sync
       addToMockWhitelist(cleanEmail, user.role);
@@ -134,8 +114,7 @@ export async function autoSeedWhitelistIfNeeded() {
  */
 export async function getWhitelistedUsersFromFirestore() {
   try {
-    const colRef = collection(db, COLLECTION_NAME);
-    const snapshot = await withTimeout(getDocs(colRef), 10000);
+    const snapshot = await withTimeout(usersCol().get(), 10000);
 
     if (snapshot.empty) {
       return await autoSeedWhitelistIfNeeded();
@@ -173,10 +152,10 @@ export async function getUserRoleFromFirestore(email) {
   const defaultAdmin = DEFAULT_ADMINS.find(a => a.email.toLowerCase() === cleanEmail);
 
   try {
-    const docRef = doc(db, COLLECTION_NAME, cleanEmail);
-    const docSnap = await withTimeout(getDoc(docRef), 10000);
+    const docRef = usersCol().doc(cleanEmail);
+    const docSnap = await withTimeout(docRef.get(), 10000);
 
-    if (docSnap.exists()) {
+    if (docSnap.exists) {
       return docSnap.data().role || (defaultAdmin ? defaultAdmin.role : 'viewer');
     }
 
@@ -185,8 +164,7 @@ export async function getUserRoleFromFirestore(email) {
     }
 
     // If not found in Firestore doc, check if collection is empty and seed
-    const colRef = collection(db, COLLECTION_NAME);
-    const colSnap = await withTimeout(getDocs(colRef), 10000);
+    const colSnap = await withTimeout(usersCol().limit(1).get(), 10000);
     if (colSnap.empty) {
       const seeded = await autoSeedWhitelistIfNeeded();
       const user = seeded.find(u => u.email === cleanEmail);
@@ -216,11 +194,11 @@ export async function addWhitelistedUserToFirestore(email, role = 'viewer') {
 
   let success = false;
   try {
-    const docRef = doc(db, COLLECTION_NAME, cleanEmail);
-    await withTimeout(setDoc(docRef, {
+    const docRef = usersCol().doc(cleanEmail);
+    await withTimeout(docRef.set({
       email: cleanEmail,
       role: validRole,
-      timestamp: serverTimestamp()
+      timestamp: FieldValue.serverTimestamp()
     }, { merge: true }), 10000);
     success = true;
   } catch (err) {
@@ -247,8 +225,8 @@ export async function removeWhitelistedUserFromFirestore(email) {
 
   let success = false;
   try {
-    const docRef = doc(db, COLLECTION_NAME, cleanEmail);
-    await withTimeout(deleteDoc(docRef), 10000);
+    const docRef = usersCol().doc(cleanEmail);
+    await withTimeout(docRef.delete(), 10000);
     success = true;
   } catch (err) {
     console.error(`[WHITELIST_REMOVE_ERROR] Failed deleting ${cleanEmail} from Firestore:`, err.message);

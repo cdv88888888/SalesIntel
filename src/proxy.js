@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from './lib/session';
 import { isPermanentAdmin } from './lib/admins';
+import { getAdminDb, FieldValue, withTimeout } from './lib/firebase-admin';
 
 const PROTECTED_PREFIXES = ['/intelligence', '/account-sync', '/alerts', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/gemini-ai', '/api/chat', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
 
-// Module-level in-memory cache for Firestore REST API whitelist (15s TTL)
+// Module-level in-memory cache for the Firestore whitelist (15s TTL)
 let cachedWhitelist = null;
 let lastCacheTime = 0;
 const CACHE_TTL_MS = 15000;
@@ -42,43 +43,35 @@ function getStaticFallbackWhitelist() {
   return DEFAULT_WHITELIST;
 }
 
-async function fetchWhitelistedUsersFromFirestoreREST() {
+async function fetchWhitelistedUsers() {
   const now = Date.now();
   if (cachedWhitelist !== null && (now - lastCacheTime) < CACHE_TTL_MS) {
     return cachedWhitelist;
   }
 
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 
-                    process.env.FIREBASE_PROJECT_ID || 
-                    process.env.GCP_PROJECT || 
-                    'sales-intel-cdv-2026';
-
-  const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/whitelisted_users`;
-
+  // Read through the Admin SDK: firestore.rules denies unauthenticated
+  // requests, so the public REST endpoint no longer answers.
   try {
-    const res = await fetch(restUrl, { signal: AbortSignal.timeout(3000) });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && Array.isArray(data.documents) && data.documents.length > 0) {
-        const parsed = data.documents.map(doc => {
-          const fields = doc.fields || {};
-          const email = fields.email?.stringValue || doc.name.split('/').pop();
-          const role = fields.role?.stringValue || 'viewer';
-          return { email: email.toLowerCase(), role };
-        });
-        const fallback = getStaticFallbackWhitelist();
-        fallback.forEach(item => {
-          if (!parsed.some(p => p.email === item.email)) {
-            parsed.push(item);
-          }
-        });
-        cachedWhitelist = parsed;
-        lastCacheTime = Date.now();
-        return parsed;
-      }
+    const snapshot = await withTimeout(getAdminDb().collection('whitelisted_users').get(), 3000);
+    if (!snapshot.empty) {
+      const parsed = snapshot.docs.map(doc => {
+        const data = doc.data() || {};
+        const email = typeof data.email === 'string' && data.email ? data.email : doc.id;
+        const role = typeof data.role === 'string' && data.role ? data.role : 'viewer';
+        return { email: email.toLowerCase(), role };
+      });
+      const fallback = getStaticFallbackWhitelist();
+      fallback.forEach(item => {
+        if (!parsed.some(p => p.email === item.email)) {
+          parsed.push(item);
+        }
+      });
+      cachedWhitelist = parsed;
+      lastCacheTime = Date.now();
+      return parsed;
     }
   } catch (err) {
-    console.error('[PROXY_FIRESTORE_REST_ERROR] Failed querying Firestore REST API, using fallback:', err);
+    console.error('[PROXY_FIRESTORE_ERROR] Failed reading the whitelist from Firestore, using fallback:', err?.message || err);
   }
 
   const fallback = getStaticFallbackWhitelist();
@@ -90,35 +83,18 @@ async function fetchWhitelistedUsersFromFirestoreREST() {
 async function logAccess(request, email, path, isAllowed, reason = '') {
   const ip = request.headers.get('x-forwarded-for') || request.ip || '127.0.0.1';
 
-  // Write the access event straight to Firestore via the REST API (the edge
-  // runtime cannot use the Firebase client SDK). This replaces the previous
-  // fire-and-forget self-POST to /api/admin/logs, which depended on internal
-  // URL resolution + a shared secret and silently dropped events when either
-  // failed. Awaited and wrapped so logging can never break navigation.
+  // Write the access event straight to Firestore with the Admin SDK (Proxy
+  // runs on the Node.js runtime). Awaited and wrapped so logging can never
+  // break navigation.
   try {
-    const projectId =
-      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-      process.env.FIREBASE_PROJECT_ID ||
-      process.env.GCP_PROJECT ||
-      'sales-intel-cdv-2026';
-
-    const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/access_logs`;
-
-    await fetch(restUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          email: { stringValue: String(email || 'unknown').trim().toLowerCase() },
-          action: { stringValue: `Access ${path}${reason ? ` (${reason})` : ''}` },
-          type: { stringValue: 'access' },
-          status: { stringValue: isAllowed ? 'Allowed' : 'Denied' },
-          ip: { stringValue: ip || 'unknown' },
-          timestamp: { timestampValue: new Date().toISOString() },
-        },
-      }),
-      signal: AbortSignal.timeout(3000),
-    });
+    await withTimeout(getAdminDb().collection('access_logs').add({
+      email: String(email || 'unknown').trim().toLowerCase(),
+      action: `Access ${path}${reason ? ` (${reason})` : ''}`,
+      type: 'access',
+      status: isAllowed ? 'Allowed' : 'Denied',
+      ip: ip || 'unknown',
+      timestamp: FieldValue.serverTimestamp(),
+    }), 3000);
   } catch (err) {
     console.error('[PROXY_ACCESS_LOG_ERROR] Failed to write access log:', err?.message || err);
   }
@@ -145,9 +121,9 @@ export async function proxy(request) {
 
   console.log(`[PROXY_DEBUG] cleanPath: ${cleanPath}`);
 
-  // Fetch mock state during development/testing, but query Firestore REST first
+  // Fetch mock state during development/testing, but query Firestore first
   let mockConfig = { mode: 'correct', brokenType: null };
-  let whitelist = await fetchWhitelistedUsersFromFirestoreREST();
+  let whitelist = await fetchWhitelistedUsers();
   let activeSessions = [];
   
   if (process.env.NODE_ENV !== 'production' || process.env.TESTING_MODE === 'true') {

@@ -1,6 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 
 // Define Firebase configuration with environment variables and fallback defaults
 const firebaseConfig = {
@@ -16,6 +15,7 @@ const firebaseConfig = {
 // Initialize Firebase App safely
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-export { app, auth, db };
+// Firestore is deliberately not exposed here: firestore.rules denies all
+// client access, and server code uses the Admin SDK (./firebase-admin.js).
+export { app, auth };
