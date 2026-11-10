@@ -103,7 +103,7 @@ export async function runAgents({ force = false } = {}) {
   const flagged = agents
     .flatMap(a => a.alerts)
     .map(account => ({ ...account, dataThrough }))
-    .sort((a, b) => b.alert.kgsBelow30 - a.alert.kgsBelow30);
+    .sort((a, b) => b.alert.kgsBelow - a.alert.kgsBelow);
   const flaggedIds = new Set(flagged.map(a => a.id));
 
   // Open / still open / recovered.

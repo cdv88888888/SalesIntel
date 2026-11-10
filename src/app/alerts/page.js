@@ -7,7 +7,9 @@ import {
   buildAgents,
   daysStale,
   asIsoDate,
+  periodLabels,
   DECLINE_THRESHOLD,
+  MTD_START_DAY,
   STALE_AFTER_DAYS,
 } from "../../lib/declineAlerts";
 import { getAssignments, getLastRun, getAlertState } from "../../lib/alertAgents";
@@ -39,9 +41,22 @@ const formatKgs = (n) => {
 
 const REASON_LABELS = {
   stopped: { label: 'Stopped ordering', tone: 'danger' },
-  volume: { label: 'Volume down', tone: 'warn' },
+  mtd: { label: 'This month behind', tone: 'warn' },
+  mom: { label: 'Last month down', tone: 'warn' },
   overdue: { label: 'Order overdue', tone: 'danger' },
 };
+
+// A percentage against the average, red once it crosses the threshold. Shows
+// nothing when the comparison was not made (too early in the month, or too
+// little history).
+function ChangeTag({ change }) {
+  if (change === null || change === undefined) return <div className={styles.sub}>not judged</div>;
+  return (
+    <div className={change <= DECLINE_THRESHOLD ? styles.danger : styles.muted}>
+      {change > 0 ? '+' : ''}{Math.round(change * 100)}%
+    </div>
+  );
+}
 
 export default async function VolumeAlerts({ searchParams }) {
   const params = await searchParams;
@@ -69,6 +84,10 @@ export default async function VolumeAlerts({ searchParams }) {
   const dataThrough = rows.length > 0 ? asIsoDate(rows[0].dataThrough) : null;
   const stale = daysStale(dataThrough);
   const isStale = stale !== null && stale > STALE_AFTER_DAYS;
+  const labels = periodLabels(dataThrough);
+  const dayOfMonth = dataThrough ? Number(dataThrough.split('-')[2]) : null;
+  const mtdActive = dayOfMonth !== null && dayOfMonth >= MTD_START_DAY;
+  const threshold = Math.round(Math.abs(DECLINE_THRESHOLD) * 100);
 
   const agents = buildAgents(rows)
     .filter(a => segment === ALL_SEGMENT || a.segment === segment);
@@ -76,17 +95,25 @@ export default async function VolumeAlerts({ searchParams }) {
   const watched = agents.reduce((sum, a) => sum + a.accounts, 0);
   const alertCount = agents.reduce((sum, a) => sum + a.alerts.length, 0);
   const kgsAtStake = agents.reduce(
-    (sum, a) => sum + a.alerts.reduce((s, acc) => s + acc.alert.kgsBelow30, 0), 0);
+    (sum, a) => sum + a.alerts.reduce((s, acc) => s + acc.alert.kgsBelow, 0), 0);
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className="gradient-text">Volume Alerts</h1>
         <p>
-          Accounts running at least {Math.round(Math.abs(DECLINE_THRESHOLD) * 100)}% below
-          their own normal pace, or clearly overdue to order. Each agent watches{' '}
-          {WATCH_BATCH_SIZE} accounts, ranked by volume — Agent 1 holds the largest.
+          Measured by calendar month. An account is flagged when this month to date is{' '}
+          {threshold}% below its 6-month average for the same days, when last month was{' '}
+          {threshold}% below the average of the three months before, or when it is clearly
+          overdue to order. Each agent watches {WATCH_BATCH_SIZE} accounts, ranked by
+          volume — Agent 1 holds the largest.
         </p>
+        {dataThrough && !mtdActive && (
+          <p className={styles.runLine}>
+            The this-month check starts on the {MTD_START_DAY}th; until then only last
+            month is judged.
+          </p>
+        )}
         {lastRun && (
           <p className={styles.runLine}>
             Agents last ran {formatDateTime(lastRun.checkedAt || lastRun.ranAt)}: {lastRun.newCount} new,{' '}
@@ -123,7 +150,7 @@ export default async function VolumeAlerts({ searchParams }) {
           <span className={`${styles.tileValue} ${styles.danger}`}>{alertCount.toLocaleString('en-US')}</span>
         </div>
         <div className={styles.tile}>
-          <span className={styles.tileLabel}>Below normal, per 30 days</span>
+          <span className={styles.tileLabel}>Below average, per month</span>
           <span className={`${styles.tileValue} ${styles.warn}`}>{formatKgs(kgsAtStake)} kg</span>
         </div>
         <div className={styles.tile}>
@@ -165,9 +192,8 @@ export default async function VolumeAlerts({ searchParams }) {
                   <tr>
                     <th>Account</th>
                     <th>Warning</th>
-                    <th className={styles.num}>Normal / 30d</th>
-                    <th className={styles.num}>Now / 30d</th>
-                    <th className={styles.num}>Change</th>
+                    <th className={styles.num}>{labels.toDate}</th>
+                    <th className={styles.num}>{labels.lastMonth}</th>
                     <th>Last order</th>
                     <th className={styles.num}>Orders every</th>
                   </tr>
@@ -195,12 +221,15 @@ export default async function VolumeAlerts({ searchParams }) {
                         <div className={styles.sub}>{acc.alert.summary}</div>
                         <ExplainButton accountId={acc.id} />
                       </td>
-                      <td className={styles.num}>{formatKgs(acc.base30)} kg</td>
-                      <td className={styles.num}>{formatKgs(acc.recent30)} kg</td>
                       <td className={styles.num}>
-                        <span className={acc.change <= DECLINE_THRESHOLD ? styles.danger : styles.muted}>
-                          {acc.change > 0 ? '+' : ''}{Math.round(acc.change * 100)}%
-                        </span>
+                        {formatKgs(acc.mtdKgs)} kg
+                        <div className={styles.sub}>usual {formatKgs(acc.mtdUsual)}</div>
+                        <ChangeTag change={acc.mtdChange} />
+                      </td>
+                      <td className={styles.num}>
+                        {formatKgs(acc.lastMonthKgs)} kg
+                        <div className={styles.sub}>3-mo avg {formatKgs(acc.prev3Avg)}</div>
+                        <ChangeTag change={acc.momChange} />
                       </td>
                       <td>
                         {formatDate(acc.lastOrderDate)}

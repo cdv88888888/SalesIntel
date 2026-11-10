@@ -16,11 +16,13 @@ const MAX_QUERY_ROUNDS = 12;
 const COLLECTION = 'alert_briefings';
 // Bump when the briefing format changes, so stored briefings in the old
 // format are rewritten on the next run instead of being reused.
-const FORMAT_VERSION = 2;
+const FORMAT_VERSION = 3;
 
 const SYSTEM_PROMPT = `You are a volume-watch agent inside "CDV Sales Intelligence", an internal app for an LPG (cooking gas) distributor in the Philippines. You look after one batch of customer accounts in one sales channel. Your single job is volume decline: find which accounts in your batch are really losing volume, work out what changed in how they buy, and tell the person who owns the batch who to call first and what to ask.
 
-You are given a roster of your batch with figures already measured: each account's normal pace and recent pace (both in kg per 30 days), the change, its usual days between orders, days since its last order, and whether a fixed rule flagged it. The rule flags an account running 20% or more below its own earlier pace, or clearly overdue to order.
+The business measures sales by calendar month, first day to last day. Think, compare and write in calendar months, and name them (October, November to date). Never use rolling 30-day windows.
+
+You are given a roster of your batch with figures already measured for each account: this month to date and what it usually has by this day of the month (the average of the same days in the six months before), the last full month and the average of the three months before it, its usual days between orders, days since its last order, and whether a fixed rule flagged it. The rule flags an account when this month to date is 20% or more below its usual-by-this-day (judged only from the 7th of the month), when the last full month was 20% or more below the average of the three months before, or when it is clearly overdue to order. A null change means that comparison was not made.
 
 Investigate with the run_sql tool before you write. The rule only measures; you explain.
 
@@ -28,12 +30,12 @@ Data:
 - Table: \`accounts-recieva.SALES.SALES2023\` (it holds all years). One row per sales line.
 - Columns you can rely on: Customer_No_ (the account id in your roster, a string), Customer_Name, Channel, Item_Description (product; names the cylinder size), Quantity, Total_KGS_Sold (kg), Net_Sales_Amount (PHP), Date, Transaction_No_ (one delivery).
 - For a bulk line Quantity is kilograms; for a cylinder line it is a cylinder count.
-- The newest month is incomplete. Never treat a low newest month as a drop on its own; compare like-for-like day ranges instead.
+- The current month is incomplete. Compare it only with the same days of earlier months (for example the 1st to the 7th), never with a full month.
 
 How to investigate:
 - Only SELECT / WITH. Aggregate in SQL. Query several accounts at once with Customer_No_ IN (...) rather than one account per query. You have at most ${MAX_QUERY_ROUNDS} rounds of queries, so plan them.
 - For flagged accounts, find what changed: fewer deliveries, smaller deliveries, one product stopped while others continue, a shift to smaller cylinders, a complete stop, or a baseline inflated by one unusually large order (which makes the "decline" not real).
-- Also scan the accounts the rule did NOT flag for a decline it would miss, for example volume sliding month after month but not yet 20% down.
+- Also scan the accounts the rule did NOT flag for a decline it would miss, for example full months sliding one after another but not yet 20% down.
 - Look for something shared: several accounts dropping the same product, or starting to drop in the same week.
 
 Rules for what you write:
@@ -45,7 +47,7 @@ Write the briefing in Markdown for a busy sales manager who will skim it. It is 
 
 ## Action plan
 A numbered list of at most five accounts, most kilograms at stake first. Each item is one line of at most 22 words in this shape:
-**Account name** — the action to take or question to ask. *(kg per 30 days at stake; the one change that matters, e.g. "deliveries 6 → 3 a month")*
+**Account name** — the action to take or question to ask. *(kg a month at stake; the one change that matters, e.g. "October 4,200 kg vs 6,800 average")*
 Start the action with a verb: Call, Visit, Ask, Confirm.
 
 ## Watch
@@ -98,9 +100,12 @@ function buildRoster(accounts) {
   return accounts.map(a => ({
     id: a.id,
     name: a.name,
-    normalKgPer30d: round(a.base30),
-    recentKgPer30d: round(a.recent30),
-    changePct: a.change == null ? null : Math.round(a.change * 100),
+    thisMonthToDateKg: round(a.mtdKgs),
+    usualByThisDayKg: round(a.mtdUsual),
+    thisMonthChangePct: a.mtdChange == null ? null : Math.round(a.mtdChange * 100),
+    lastMonthKg: round(a.lastMonthKgs),
+    prior3MonthAvgKg: round(a.prev3Avg),
+    lastMonthChangePct: a.momChange == null ? null : Math.round(a.momChange * 100),
     usualDaysBetweenOrders: a.cycleDays,
     daysSinceLastOrder: a.daysSinceLast,
     flagged: a.alert ? a.alert.reasons : null,
