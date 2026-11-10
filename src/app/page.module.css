@@ -25,23 +25,31 @@
 }
 
 .header h1 {
-  font-size: 2rem;
+  font-size: 28px;
+  line-height: 32px;
   font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: 8px;
 }
 
 .header p {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .section {
-  padding: 24px;
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-group);
+  padding: 16px;
 }
 
 .sectionTitle {
-  font-size: 1.25rem;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
@@ -50,9 +58,9 @@
 
 /* Alert Component Styles */
 .alertCard {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 12px;
+  background: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -62,29 +70,35 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  color: var(--danger-color);
+  color: var(--red);
   font-weight: 600;
 }
 
 .alertBody {
-  font-size: 0.95rem;
-  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text);
 }
 
 .button {
-  background: var(--primary-accent);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  border: 0;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--r-pill);
   font-weight: 600;
   margin-top: 16px;
-  transition: all 0.2s ease;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 100%;
 }
 
 .button:hover {
-  background: #2563eb;
-  box-shadow: 0 0 15px var(--primary-glow);
+  opacity: 0.88;
+}
+
+.button:disabled {
+  opacity: 0.4;
 }
 
 /* Volume Tracker Styles */
@@ -95,36 +109,39 @@
 }
 
 .statLabel {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .statValue {
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
 }
 
 .progressBarContainer {
-  height: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  height: 6px;
+  background: var(--trk);
+  border-radius: var(--r-pill);
   overflow: hidden;
   margin-bottom: 12px;
 }
 
 .progressBar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-accent), #8b5cf6);
-  border-radius: 6px;
+  background: var(--blue);
+  border-radius: var(--r-pill);
   width: 78%; /* Mock value */
   transition: width 1s ease-in-out;
 }
 
 /* Action Card Styles */
 .actionCard {
-  background: rgba(167, 139, 250, 0.1);
-  border: 1px solid rgba(167, 139, 250, 0.2);
-  border-radius: 12px;
+  background: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -133,7 +150,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #c4b5fd;
+  color: var(--text);
   font-weight: 600;
   margin-bottom: 8px;
 }
@@ -141,22 +158,24 @@
 /* Field Logger Styles */
 .inputField {
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border-color);
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
+  background: var(--s2);
+  border: 0;
+  color: var(--text);
+  min-height: 44px;
+  padding: 12px 14px;
+  border-radius: 12px;
   margin-bottom: 16px;
   font-family: inherit;
+  font-size: 15px;
 }
 
 .inputField:focus {
-  outline: none;
-  border-color: var(--primary-accent);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .monthlyGoalCard {
-  border-color: var(--primary-accent) !important;
+  border: 0 !important;
   display: flex;
   align-items: center;
   gap: 32px;
@@ -171,13 +190,13 @@
 
 @media (max-width: 768px) {
   .header h1 {
-    font-size: 1.5rem;
+    font-size: 22px;
   }
   .header p {
-    font-size: 0.95rem;
+    font-size: 15px;
   }
   .sectionTitle {
-    font-size: 1.1rem;
+    font-size: 17px;
   }
   .monthlyGoalCard {
     flex-direction: column;

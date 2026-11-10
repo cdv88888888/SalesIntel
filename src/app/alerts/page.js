@@ -84,7 +84,7 @@ export default async function VolumeAlerts({ searchParams }) {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className="gradient-text">Volume Alerts</h1>
+        <h1>Volume Alerts</h1>
         <p>
           Accounts running at least {Math.round(Math.abs(DECLINE_THRESHOLD) * 100)}% below
           their own normal pace, or clearly overdue to order. Each agent watches{' '}

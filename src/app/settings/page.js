@@ -352,17 +352,17 @@ function SettingsContent() {
       <header className={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 className="gradient-text">Target Allocation Settings</h1>
+            <h1>Target Allocation Settings</h1>
             <p>Set global monthly goals and distribute them across {segment} customers.</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <label style={{ fontWeight: 600 }}>Target Month:</label>
+            <label style={{ fontWeight: 600, color: 'var(--text)' }}>Target Month:</label>
             <input 
               type="month" 
               className={styles.inputField}
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--input-text)' }}
+              style={{ padding: '0 14px' }}
             />
           </div>
         </div>
@@ -393,16 +393,16 @@ function SettingsContent() {
           </div>
         </div>
 
-        <div className={styles.formGroup} style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+        <div className={styles.formGroup} style={{ marginTop: '24px', borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
           <label>Theme Preference</label>
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button
               onClick={() => handleThemeChange('light')}
               className={styles.button}
               style={{
-                background: currentTheme === 'light' ? 'var(--primary-accent)' : 'var(--surface-hover)',
-                color: currentTheme === 'light' ? '#fff' : 'var(--text-primary)',
-                border: '1px solid var(--border-color)',
+                background: currentTheme === 'light' ? 'var(--blue)' : 'var(--s2)',
+                color: currentTheme === 'light' ? '#fff' : 'var(--text)',
+                border: 0,
                 width: 'auto',
                 margin: 0
               }}
@@ -413,9 +413,9 @@ function SettingsContent() {
               onClick={() => handleThemeChange('dark')}
               className={styles.button}
               style={{
-                background: currentTheme === 'dark' ? 'var(--primary-accent)' : 'var(--surface-hover)',
-                color: currentTheme === 'dark' ? '#fff' : 'var(--text-primary)',
-                border: '1px solid var(--border-color)',
+                background: currentTheme === 'dark' ? 'var(--blue)' : 'var(--s2)',
+                color: currentTheme === 'dark' ? '#fff' : 'var(--text)',
+                border: 0,
                 width: 'auto',
                 margin: 0
               }}
@@ -429,7 +429,7 @@ function SettingsContent() {
       {dealersList.length > 0 && (
         <section className={`${styles.section} glass-panel`}>
           <h2 className={styles.sectionTitle}>{segment.charAt(0).toUpperCase() + segment.slice(1)} Allocation</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+          <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
             Review the suggested targets. You can manually adjust the target for any {segment}.
           </p>
 
@@ -459,7 +459,7 @@ function SettingsContent() {
                   <tr key={dealer.id}>
                     <td>
                       <div style={{ fontWeight: 500 }}>{dealer.name || dealer.id}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>ID: {dealer.id}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)' }}>ID: {dealer.id}</div>
                     </td>
                     <td>{dealer.avgMonthKgs ? dealer.avgMonthKgs.toLocaleString() : 'N/A'}</td>
                     <td>{dealer.lowestMonthKgs !== null && dealer.lowestMonthKgs !== undefined ? dealer.lowestMonthKgs.toLocaleString() : 'N/A'}</td>
@@ -493,7 +493,7 @@ function SettingsContent() {
       {canManageUsers && (
         <section className={`${styles.section} glass-panel`} style={{ marginTop: '32px' }}>
           <h2 className={styles.sectionTitle}>Onboarded Users</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+          <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
             Users authorized to access the system.
           </p>
           
@@ -520,7 +520,7 @@ function SettingsContent() {
               const emailStr = user.email || user;
               const isProtected = isPermanentAdmin(emailStr);
               return (
-                <div key={emailStr} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '0.9rem' }}>
+                <div key={emailStr} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'var(--s2)', border: 0, borderRadius: 'var(--r-card)', fontSize: '15px' }}>
                   <span style={{ minWidth: '200px' }}>{emailStr}</span>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     {/* Say why the controls are greyed out, rather than leaving
@@ -528,7 +528,7 @@ function SettingsContent() {
                     {isProtected && (
                       <span
                         title="Permanent administrator: cannot be demoted or removed, so the app is never locked out of its own user management."
-                        style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}
+                        style={{ fontSize: '13px', color: 'var(--muted)', whiteSpace: 'nowrap' }}
                       >
                         Locked
                       </span>
@@ -537,15 +537,15 @@ function SettingsContent() {
                       value={isProtected ? 'admin' : (user.role || 'viewer')} 
                       onChange={(e) => updateUserRole(emailStr, e.target.value)}
                       disabled={isManagingUsers || isProtected}
-                      style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '4px 8px', outline: 'none' }}
+                      style={{ background: 'var(--s2)', color: 'var(--text)', border: 0, borderRadius: '12px', minHeight: '44px', padding: '0 14px', fontFamily: 'inherit', fontSize: '15px' }}
                     >
-                      <option value="admin" style={{ color: '#000' }}>Admin</option>
-                      <option value="viewer" style={{ color: '#000' }}>Viewer</option>
+                      <option value="admin" style={{ color: 'var(--text)', background: 'var(--s2)' }}>Admin</option>
+                      <option value="viewer" style={{ color: 'var(--text)', background: 'var(--s2)' }}>Viewer</option>
                     </select>
                     <button 
                       onClick={() => removeUser(emailStr)}
                       disabled={isManagingUsers || isProtected}
-                      style={{ background: 'transparent', border: '1px solid var(--danger-color)', color: 'var(--danger-color)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', opacity: (isManagingUsers || isProtected) ? 0.5 : 1 }}
+                      style={{ background: 'var(--red-tint)', border: 0, color: 'var(--red)', fontWeight: 600, minHeight: '44px', padding: '0 20px', borderRadius: 'var(--r-pill)', cursor: 'pointer', opacity: (isManagingUsers || isProtected) ? 0.4 : 1 }}
                     >
                       Remove
                     </button>
@@ -553,7 +553,7 @@ function SettingsContent() {
                 </div>
               );
             })}
-            {whitelist.length === 0 && <div style={{ color: 'var(--text-secondary)' }}>No users found.</div>}
+            {whitelist.length === 0 && <div style={{ color: 'var(--muted)' }}>No users found.</div>}
           </div>
         </section>
       )}

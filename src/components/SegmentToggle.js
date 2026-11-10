@@ -56,15 +56,14 @@ export default function SegmentToggle({ pageHref = '/', segments = SEGMENTS.map(
     gap: '4px',
     padding: '3px 9px',
     borderRadius: '999px',
-    border: `1px solid ${isActive ? 'var(--primary-accent)' : 'var(--border-color)'}`,
-    background: isActive ? 'var(--primary-accent)' : 'transparent',
-    color: isActive ? '#fff' : 'var(--text-secondary)',
+    border: 0,
+    background: isActive ? 'var(--blue)' : 'var(--s2)',
+    color: isActive ? '#fff' : 'var(--muted)',
     fontWeight: isActive ? 600 : 400,
     fontSize: '0.72rem',
     lineHeight: 1.3,
     whiteSpace: 'nowrap',
     cursor: isPending ? 'wait' : 'pointer',
-    transition: 'all 0.2s ease',
     opacity: isPending ? 0.7 : 1,
   });
 
@@ -78,18 +77,18 @@ export default function SegmentToggle({ pageHref = '/', segments = SEGMENTS.map(
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.32)',
+          backdropFilter: 'blur(8px)',
           zIndex: 9999,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          color: 'white',
+          color: '#fff',
         }}>
-          <Loader2 size={48} className="animate-spin" style={{ color: 'var(--primary-accent)', marginBottom: '16px' }} />
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Loading Data...</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>
+          <Loader2 size={48} className="animate-spin" style={{ color: 'var(--blue)', marginBottom: '16px' }} />
+          <h2 style={{ fontSize: '17px', fontWeight: 600 }}>Loading Data...</h2>
+          <p style={{ color: 'rgba(255,255,255,.75)', fontSize: '13px', marginTop: '8px' }}>
             {pendingSegment === 'all'
               ? 'Fetching real-time aggregates for all segments.'
               : `Fetching real-time aggregates for ${segmentLabel(pendingSegment).toLowerCase()}s.`}
@@ -110,14 +109,14 @@ export default function SegmentToggle({ pageHref = '/', segments = SEGMENTS.map(
               aria-pressed={isActive}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.backgroundColor = 'var(--surface-hover)';
-                  e.currentTarget.style.color = 'var(--text-primary)';
+                  e.currentTarget.style.backgroundColor = 'var(--trk)';
+                  e.currentTarget.style.color = 'var(--text)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = 'var(--text-secondary)';
+                  e.currentTarget.style.backgroundColor = 'var(--s2)';
+                  e.currentTarget.style.color = 'var(--muted)';
                 }
               }}
             >

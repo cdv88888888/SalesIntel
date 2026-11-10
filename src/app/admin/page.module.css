@@ -18,14 +18,17 @@
 }
 
 .headerTitleContainer h1 {
-  font-size: 2rem;
+  font-size: 28px;
+  line-height: 32px;
+  letter-spacing: -0.02em;
   font-weight: 700;
   margin-bottom: 8px;
 }
 
 .headerTitleContainer p {
-  color: var(--text-secondary);
-  font-size: 1rem;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .headerActions {
@@ -35,52 +38,53 @@
 }
 
 .button {
-  background: var(--primary-accent);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--r-pill);
   font-weight: 600;
-  transition: all 0.2s ease;
-  border: none;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
 }
 
 .button:hover:not(:disabled) {
-  background: #2563eb;
-  box-shadow: 0 0 15px var(--primary-glow);
+  opacity: 0.88;
 }
 
 .button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .iconButton {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
+  background: var(--trk);
+  border: 0;
+  color: var(--text);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .iconButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--text-secondary);
+  opacity: 0.8;
 }
 
 .errorAlert {
-  background: rgba(239, 68, 68, 0.1);
-  color: #fca5a5;
-  padding: 16px 24px;
-  border-radius: 12px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: var(--red-tint);
+  color: var(--text);
+  padding: 16px;
+  border-radius: var(--r-group);
+  border: 0;
   margin-bottom: 32px;
   display: flex;
   align-items: flex-start;
@@ -88,21 +92,23 @@
 }
 
 .errorIcon {
-  color: var(--danger-color);
+  color: var(--red);
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .errorAlert h3 {
-  font-size: 1.05rem;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.01em;
   font-weight: 600;
   margin-bottom: 4px;
-  color: white;
+  color: var(--text);
 }
 
 .errorAlert p {
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 22px;
 }
 
 /* Metrics Dashboard Grid */
@@ -114,16 +120,10 @@
 }
 
 .metricCard {
-  padding: 20px 24px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.metricCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .metricHeader {
@@ -134,22 +134,26 @@
 }
 
 .metricLabel {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .metricValue {
-  font-size: 2rem;
+  font-size: 28px;
+  line-height: 32px;
+  letter-spacing: -0.02em;
   font-weight: 700;
-  color: white;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Filters Component */
 .filtersContainer {
-  padding: 24px;
+  padding: 16px;
   margin-bottom: 32px;
 }
 
@@ -158,19 +162,23 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--line);
   padding-bottom: 12px;
 }
 
 .filtersHeader h2 {
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.01em;
   font-weight: 600;
   flex-grow: 1;
 }
 
 .clearBtn {
-  font-size: 0.85rem;
-  color: var(--primary-accent);
+  font-size: 13px;
+  color: var(--blue);
+  min-height: 44px;
+  padding: 0 12px;
   cursor: pointer;
   font-weight: 500;
   background: none;
@@ -194,27 +202,30 @@
 }
 
 .filterGroup label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--muted);
 }
 
 .filterGroup select,
 .filterGroup input {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-color);
-  color: white;
-  padding: 10px 14px;
-  border-radius: 8px;
+  background: var(--s2);
+  border: 0;
+  color: var(--text);
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 15px;
   outline: none;
   width: 100%;
 }
 
 .filterGroup select:focus,
 .filterGroup input:focus {
-  border-color: var(--primary-accent);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .searchWrapper {
@@ -226,7 +237,7 @@
 .searchIcon {
   position: absolute;
   left: 12px;
-  color: var(--text-secondary);
+  color: var(--muted);
   pointer-events: none;
 }
 
@@ -236,7 +247,7 @@
 
 /* Activity Table Section */
 .tableSection {
-  padding: 24px;
+  padding: 16px;
   margin-bottom: 32px;
 }
 
@@ -248,14 +259,18 @@
 }
 
 .tableHeader h2 {
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.01em;
   font-weight: 600;
   flex-grow: 1;
 }
 
 .recordCount {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .loadingContainer,
@@ -270,51 +285,55 @@
 
 .loadingContainer p,
 .emptyContainer p {
-  color: var(--text-secondary);
+  color: var(--muted);
   margin-top: 16px;
 }
 
 .emptyContainer h3 {
-  font-size: 1.2rem;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.01em;
   font-weight: 600;
   margin-bottom: 6px;
 }
 
 .tableWrapper {
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--surface);
+  border-radius: var(--r-group);
+  border: 0;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 15px;
+  line-height: 22px;
   text-align: left;
+  font-variant-numeric: tabular-nums;
 }
 
 .table th,
 .table td {
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
 }
 
 .table th {
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
   user-select: none;
 }
 
 .table tbody tr {
-  transition: background-color 0.15s ease;
+  min-height: 44px;
 }
 
 .table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--trk);
 }
 
 .table tbody tr:last-child td {
@@ -325,49 +344,45 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .loginBadge {
-  background: rgba(16, 185, 129, 0.1);
-  color: #a7f3d0;
+  background: var(--trk);
+  color: var(--text);
 }
 
 .accessBadge {
-  background: rgba(96, 165, 250, 0.1);
-  color: #bfdbfe;
+  background: var(--trk);
+  color: var(--text);
 }
 
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
   font-weight: 500;
 }
 
 .statusSuccess {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: var(--green);
+  color: #000;
 }
 
 .statusDanger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: var(--red);
+  color: #fff;
 }
 
 /* Specific Cell formatting */
 .timestampTd {
-  font-family: monospace;
-  color: var(--text-secondary);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .emailTd {
@@ -375,12 +390,12 @@
 }
 
 .actionTd {
-  color: #e2e8f0;
+  color: var(--text);
 }
 
 .ipTd {
-  font-family: monospace;
-  color: var(--text-secondary);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Utility Animations */

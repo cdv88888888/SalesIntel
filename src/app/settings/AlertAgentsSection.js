@@ -53,14 +53,14 @@ export default function AlertAgentsSection() {
   return (
     <section className={`${styles.section} glass-panel`} style={{ marginTop: '32px' }}>
       <h2 className={styles.sectionTitle}>Volume Alert Agents</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+      <p style={{ color: 'var(--muted)', marginBottom: '16px' }}>
         Each agent watches 50 accounts in one channel, ranked by volume. Pick the person
         who receives each agent&apos;s warnings. Membership is re-ranked at the start of
         each month.
       </p>
 
       {lastRun && (
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.85rem' }}>
+        <p style={{ color: 'var(--muted)', marginBottom: '16px', fontSize: '13px' }}>
           Last run {formatWhen(lastRun.checkedAt || lastRun.ranAt)} on sales data through{' '}
           {lastRun.dataThrough}: {lastRun.flagged} flagged, {lastRun.newCount} new,{' '}
           {lastRun.resolvedCount} recovered.
@@ -69,17 +69,17 @@ export default function AlertAgentsSection() {
       )}
 
       {error && <div className={styles.alertError}>{error}</div>}
-      {!data && !error && <div style={{ color: 'var(--text-secondary)' }}>Loading agents…</div>}
+      {!data && !error && <div style={{ color: 'var(--muted)' }}>Loading agents…</div>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {(data?.agents || []).map(agent => (
           <div
             key={agent.key}
-            style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '0.9rem' }}
+            style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: 'var(--s2)', border: 0, borderRadius: 'var(--r-card)', fontSize: '15px' }}
           >
             <span style={{ minWidth: '260px' }}>
               <strong>{segmentLabel(agent.segment)} · Agent {agent.batch}</strong>
-              <span style={{ color: 'var(--text-secondary)', marginLeft: '10px', fontSize: '0.8rem' }}>
+              <span style={{ color: 'var(--muted)', marginLeft: '10px', fontSize: '13px' }}>
                 ranks {agent.firstRank}–{agent.lastRank} · {agent.flagged} flagged
               </span>
             </span>
@@ -87,11 +87,11 @@ export default function AlertAgentsSection() {
               value={data.assignments?.[agent.key] || ''}
               onChange={(e) => assign(agent.key, e.target.value)}
               disabled={savingKey === agent.key}
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'inherit', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', padding: '4px 8px', outline: 'none', minWidth: '260px' }}
+              style={{ background: 'var(--surface)', color: 'var(--text)', border: 0, borderRadius: '12px', minHeight: '44px', padding: '0 14px', fontFamily: 'inherit', fontSize: '15px', minWidth: '260px' }}
             >
-              <option value="" style={{ color: '#000' }}>Unassigned</option>
+              <option value="" style={{ color: 'var(--text)', background: 'var(--s2)' }}>Unassigned</option>
               {(data.users || []).map(email => (
-                <option key={email} value={email} style={{ color: '#000' }}>{email}</option>
+                <option key={email} value={email} style={{ color: 'var(--text)', background: 'var(--s2)' }}>{email}</option>
               ))}
             </select>
           </div>

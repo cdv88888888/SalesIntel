@@ -67,21 +67,21 @@ export default function GeminiChatWidget() {
           right: '20px',
           zIndex: 9999,
           borderRadius: '50%',
-          width: '64px',
-          height: '64px',
+          width: '60px',
+          height: '60px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(30, 64, 175, 0.8))',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+          background: 'var(--blue)',
+          border: 0,
+          boxShadow: '0 24px 60px rgba(0,0,0,.35)',
+          transition: 'transform 0.3s cubic-bezier(.2,.8,.2,1)'
         }}
         onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
         onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
       >
-        <Bot size={32} color="white" />
+        <Bot size={28} color="#fff" />
       </button>
     );
   }
@@ -99,13 +99,11 @@ export default function GeminiChatWidget() {
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: '16px',
+        borderRadius: 'var(--r-group)',
         overflow: 'hidden',
-        boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        background: 'rgba(15, 23, 42, 0.85)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        boxShadow: '0 24px 60px rgba(0,0,0,.35)',
+        border: 0,
+        background: 'var(--surface)',
       }}
     >
       {/* Header */}
@@ -114,30 +112,30 @@ export default function GeminiChatWidget() {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '16px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        background: 'rgba(0, 0, 0, 0.2)'
+        borderBottom: '1px solid var(--line)',
+        background: 'transparent'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ 
-            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', 
+ background: 'var(--blue)', 
             padding: '6px', 
-            borderRadius: '8px' 
+            borderRadius: '50%' 
           }}>
-            <Bot size={20} color="white" />
+            <Bot size={20} color="#fff" />
           </div>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600, color: 'white' }}>Claude Intelligence</h3>
+          <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 600, letterSpacing: '-.01em', color: 'var(--text)' }}>Claude Intelligence</h3>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button 
             onClick={handleExpand}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)' }}
+            style={{ background: 'var(--trk)', border: 0, cursor: 'pointer', color: 'var(--text)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             title="Full Screen"
           >
             <Maximize2 size={18} />
           </button>
           <button 
             onClick={() => setIsOpen(false)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)' }}
+            style={{ background: 'var(--trk)', border: 0, cursor: 'pointer', color: 'var(--text)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             title="Close"
           >
             <X size={18} />
@@ -170,14 +168,14 @@ export default function GeminiChatWidget() {
               style={{
                 maxWidth: '85%',
                 padding: '12px 16px',
-                borderRadius: '12px',
-                background: msg.role === 'user' ? 'var(--primary-accent)' : 'rgba(255, 255, 255, 0.05)',
-                color: 'white',
-                border: msg.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                borderBottomRightRadius: msg.role === 'user' ? '4px' : '12px',
-                borderBottomLeftRadius: msg.role === 'model' ? '4px' : '12px',
-                fontSize: '0.95rem',
-                lineHeight: '1.5'
+                borderRadius: 'var(--r-card)',
+                background: msg.role === 'user' ? 'var(--blue)' : 'var(--s2)',
+                color: msg.role === 'user' ? '#fff' : 'var(--text)',
+                border: 0,
+                borderBottomRightRadius: msg.role === 'user' ? '4px' : 'var(--r-card)',
+                borderBottomLeftRadius: msg.role === 'model' ? '4px' : 'var(--r-card)',
+                fontSize: '15px',
+                lineHeight: '22px'
               }}
             >
               <ReactMarkdown 
@@ -196,9 +194,9 @@ export default function GeminiChatWidget() {
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <div style={{
               padding: '12px 16px',
-              borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 'var(--r-card)',
+              background: 'var(--s2)',
+              border: 0,
               display: 'flex',
               gap: '6px',
               alignItems: 'center'
@@ -217,8 +215,8 @@ export default function GeminiChatWidget() {
         onSubmit={handleSubmit}
         style={{
           padding: '16px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          background: 'rgba(0, 0, 0, 0.2)',
+          borderTop: '1px solid var(--line)',
+          background: 'transparent',
           display: 'flex',
           gap: '12px'
         }}
@@ -231,30 +229,31 @@ export default function GeminiChatWidget() {
           disabled={isLoading}
           style={{
             flex: 1,
-            background: 'rgba(0, 0, 0, 0.3)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '24px',
-            padding: '12px 16px',
-            color: 'white',
+            background: 'var(--s2)',
+            border: 0,
+            borderRadius: '999px',
+            minHeight: '44px',
+            padding: '0 16px',
+            color: 'var(--text)',
             outline: 'none',
-            fontSize: '0.95rem'
+            fontSize: '15px'
           }}
         />
         <button 
           type="submit"
           disabled={isLoading || !input.trim()}
           style={{
-            background: 'var(--primary-accent)',
-            border: 'none',
-            borderRadius: '50%',
+            background: 'var(--blue)',
+            border: 0,
+            borderRadius: '999px',
             width: '44px',
             height: '44px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: (isLoading || !input.trim()) ? 'not-allowed' : 'pointer',
-            opacity: (isLoading || !input.trim()) ? 0.5 : 1,
-            color: 'white'
+            opacity: (isLoading || !input.trim()) ? 0.4 : 1,
+            color: '#fff'
           }}
         >
           <Send size={18} />

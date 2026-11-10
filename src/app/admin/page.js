@@ -267,7 +267,7 @@ export default function AdminLogsPage() {
       <header className={styles.header}>
         <div className={styles.headerTitleContainer}>
           <div>
-            <h1 className="gradient-text">Admin Logs Dashboard</h1>
+            <h1>Admin Logs Dashboard</h1>
             <p>Monitor system activity, user logins, and whitelisted routing access in real time.</p>
           </div>
           <div className={styles.headerActions}>
@@ -278,7 +278,7 @@ export default function AdminLogsPage() {
               className={styles.button} 
               onClick={handlePurgeTestLogs} 
               disabled={isPurging}
-              style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#f87171' }}
+              style={{ background: 'var(--red-tint)', color: 'var(--red)' }}
               title="Purge security test payload logs from Firestore"
             >
               {isPurging ? 'Purging...' : 'Purge Test Logs'}
@@ -310,30 +310,30 @@ export default function AdminLogsPage() {
         <div className={`${styles.metricCard} glass-panel`}>
           <div className={styles.metricHeader}>
             <span className={styles.metricLabel}>Total Events</span>
-            <Layers size={20} style={{ color: 'var(--primary-accent)' }} />
+            <Layers size={20} style={{ color: 'var(--muted)' }} />
           </div>
           <span className={styles.metricValue}>{totalLogs.toLocaleString()}</span>
         </div>
         <div className={`${styles.metricCard} glass-panel`}>
           <div className={styles.metricHeader}>
             <span className={styles.metricLabel}>User Logins</span>
-            <Layers size={20} style={{ color: 'var(--success-color)' }} />
+            <Layers size={20} style={{ color: 'var(--green)' }} />
           </div>
           <span className={styles.metricValue}>{totalLogins.toLocaleString()}</span>
         </div>
         <div className={`${styles.metricCard} glass-panel`}>
           <div className={styles.metricHeader}>
             <span className={styles.metricLabel}>Page Accesses</span>
-            <Layers size={20} style={{ color: 'rgba(96, 165, 250, 0.8)' }} />
+            <Layers size={20} style={{ color: 'var(--muted)' }} />
           </div>
           <span className={styles.metricValue}>{totalAccess.toLocaleString()}</span>
         </div>
         <div className={`${styles.metricCard} glass-panel`}>
           <div className={styles.metricHeader}>
             <span className={styles.metricLabel}>Blocked / Denied</span>
-            <Layers size={20} style={{ color: 'var(--danger-color)' }} />
+            <Layers size={20} style={{ color: 'var(--red)' }} />
           </div>
-          <span className={styles.metricValue} style={{ color: totalBlocked > 0 ? 'var(--danger-color)' : 'inherit' }}>
+          <span className={styles.metricValue} style={{ color: totalBlocked > 0 ? 'var(--red)' : 'inherit' }}>
             {totalBlocked.toLocaleString()}
           </span>
         </div>
@@ -370,12 +370,12 @@ export default function AdminLogsPage() {
           </div>
         ) : usersLoading ? (
           <div className={styles.loadingContainer}>
-            <RefreshCw size={28} className={styles.spin} style={{ color: 'var(--primary-accent)' }} />
+            <RefreshCw size={28} className={styles.spin} style={{ color: 'var(--blue)' }} />
             <p>Loading registered users…</p>
           </div>
         ) : registeredUsers.length === 0 ? (
           <div className={styles.emptyContainer}>
-            <Users size={40} style={{ color: 'var(--text-secondary)', marginBottom: '12px', opacity: 0.5 }} />
+            <Users size={40} style={{ color: 'var(--muted)', marginBottom: '12px', opacity: 0.5 }} />
             <h3>No registered users found</h3>
           </div>
         ) : (
@@ -539,12 +539,12 @@ export default function AdminLogsPage() {
 
         {isLoading ? (
           <div className={styles.loadingContainer}>
-            <RefreshCw size={32} className={styles.spin} style={{ color: 'var(--primary-accent)' }} />
+            <RefreshCw size={32} className={styles.spin} style={{ color: 'var(--blue)' }} />
             <p>Loading activity logs from Firestore...</p>
           </div>
         ) : filteredLogs.length === 0 ? (
           <div className={styles.emptyContainer}>
-            <Layers size={48} style={{ color: 'var(--text-secondary)', marginBottom: '16px', opacity: 0.5 }} />
+            <Layers size={48} style={{ color: 'var(--muted)', marginBottom: '16px', opacity: 0.5 }} />
             <h3>No logs found</h3>
             <p>Try adjusting your search filters or check back later.</p>
           </div>

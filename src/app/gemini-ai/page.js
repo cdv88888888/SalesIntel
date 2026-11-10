@@ -54,17 +54,17 @@ export default function GeminiAIPage() {
     <div style={{ 
       height: '100vh', 
       display: 'flex', 
-      background: 'var(--background-dark)',
-      color: 'var(--text-primary)',
+      background: 'var(--bg)',
+      color: 'var(--text)',
       overflow: 'hidden'
     }}>
       {/* History Sidebar */}
       <div style={{
         width: sidebarOpen ? '280px' : '0px',
         minWidth: sidebarOpen ? '280px' : '0px',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        background: 'rgba(15, 23, 42, 0.95)',
-        borderRight: sidebarOpen ? '1px solid var(--border-color)' : 'none',
+        transition: 'width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), min-width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+        background: 'var(--bg)',
+        borderRight: sidebarOpen ? '1px solid var(--line)' : 'none',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -72,28 +72,30 @@ export default function GeminiAIPage() {
       }}>
         {/* Sidebar Header */}
         <div style={{
-          padding: '20px',
-          borderBottom: '1px solid var(--border-color)',
+          padding: '16px',
+          borderBottom: '1px solid var(--line)',
           display: 'flex',
           flexDirection: 'column',
           gap: '16px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <History size={20} color="#3b82f6" />
-              <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#f8fafc' }}>Chat History</span>
+              <History size={20} color="var(--blue)" />
+              <span style={{ fontWeight: 600, fontSize: '17px', lineHeight: '22px', letterSpacing: '-0.01em', color: 'var(--text)' }}>Chat History</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
               style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#94a3b8',
+                background: 'var(--trk)',
+                border: 0,
+                color: 'var(--muted)',
                 cursor: 'pointer',
-                padding: '4px',
-                borderRadius: '6px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
                 display: 'flex',
-                alignItems: 'center'
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
               title="Close Sidebar"
             >
@@ -104,20 +106,20 @@ export default function GeminiAIPage() {
           <button
             onClick={createNewChat}
             style={{
-              background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              padding: '12px 16px',
+              background: 'var(--blue)',
+              color: '#fff',
+              border: 0,
+              borderRadius: 'var(--r-pill)',
+              minHeight: '44px',
+              padding: '0 20px',
               fontWeight: 600,
-              fontSize: '0.95rem',
+              fontSize: '15px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-              transition: 'transform 0.15s ease'
+              transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
             }}
             onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'}
             onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
@@ -150,23 +152,24 @@ export default function GeminiAIPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
+                  minHeight: '44px',
+                  padding: '0 14px',
+                  borderRadius: '12px',
                   cursor: 'pointer',
                   background: isActive 
-                    ? 'rgba(59, 130, 246, 0.15)' 
+                    ? 'var(--blue-tint)' 
                     : isHovered 
-                    ? 'rgba(255, 255, 255, 0.05)' 
+                    ? 'var(--trk)' 
                     : 'transparent',
-                  border: isActive ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid transparent',
-                  color: isActive ? '#f8fafc' : '#94a3b8',
-                  transition: 'all 0.15s ease'
+                  border: 0,
+                  color: isActive ? 'var(--blue)' : 'var(--muted)',
+                  transition: 'background 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
-                  <MessageSquare size={16} color={isActive ? '#3b82f6' : '#64748b'} style={{ flexShrink: 0 }} />
+                  <MessageSquare size={16} color={isActive ? 'var(--blue)' : 'var(--muted)'} style={{ flexShrink: 0 }} />
                   <span style={{
-                    fontSize: '0.9rem',
+                    fontSize: '15px',
                     fontWeight: isActive ? 600 : 400,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -185,11 +188,11 @@ export default function GeminiAIPage() {
                     title="Delete Chat"
                     style={{
                       background: 'transparent',
-                      border: 'none',
-                      color: '#ef4444',
+                      border: 0,
+                      color: 'var(--red)',
                       cursor: 'pointer',
                       padding: '4px',
-                      borderRadius: '4px',
+                      borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       opacity: 0.8
@@ -208,8 +211,7 @@ export default function GeminiAIPage() {
         {/* Sidebar Footer */}
         <div style={{
           padding: '16px',
-          borderTop: '1px solid var(--border-color)',
-          background: 'rgba(0, 0, 0, 0.2)'
+          borderTop: '1px solid var(--line)'
         }}>
           <button
             onClick={() => {
@@ -219,22 +221,23 @@ export default function GeminiAIPage() {
             }}
             style={{
               width: '100%',
-              background: 'rgba(239, 68, 68, 0.1)',
-              color: '#ef4444',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              padding: '10px 14px',
-              borderRadius: '10px',
+              background: 'var(--red-tint)',
+              color: 'var(--red)',
+              border: 0,
+              minHeight: '44px',
+              padding: '0 20px',
+              borderRadius: 'var(--r-pill)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              transition: 'background 0.2s'
+              fontSize: '13px',
+              fontWeight: 600,
+              transition: 'opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
             }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
-            onMouseOut={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+            onMouseOver={e => e.currentTarget.style.opacity = 0.8}
+            onMouseOut={e => e.currentTarget.style.opacity = 1}
           >
             <Trash2 size={14} />
             Clear All History
@@ -252,9 +255,9 @@ export default function GeminiAIPage() {
       }}>
         {/* Header */}
         <div style={{
-          padding: '16px 24px',
-          borderBottom: '1px solid var(--border-color)',
-          background: 'var(--modal-bg)',
+          padding: '16px',
+          borderBottom: '1px solid var(--line)',
+          background: 'var(--bg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -265,36 +268,37 @@ export default function GeminiAIPage() {
               <button
                 onClick={() => setSidebarOpen(true)}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-color)',
-                  color: 'white',
-                  padding: '8px 12px',
-                  borderRadius: '10px',
+                  background: 'var(--trk)',
+                  border: 0,
+                  color: 'var(--text)',
+                  minHeight: '44px',
+                  padding: '0 16px',
+                  borderRadius: 'var(--r-pill)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  fontSize: '0.9rem'
+                  fontSize: '15px'
                 }}
                 title="Open Sidebar"
               >
-                <PanelLeft size={18} color="#3b82f6" />
+                <PanelLeft size={18} color="var(--blue)" />
                 <span>History</span>
               </button>
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ 
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', 
+                background: 'var(--blue)', 
                 padding: '10px', 
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                borderRadius: '50%',
+                display: 'flex'
               }}>
-                <Bot size={24} color="white" />
+                <Bot size={24} color="#fff" />
               </div>
               <div>
-                <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc' }}>Claude Intelligence</h1>
-                <p style={{ margin: '2px 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>AI Sales Assistant</p>
+                <h1 style={{ margin: 0, fontSize: '22px', lineHeight: '28px', letterSpacing: '-0.02em', fontWeight: 700, color: 'var(--text)' }}>Claude Intelligence</h1>
+                <p style={{ margin: '2px 0 0 0', color: 'var(--muted)', fontSize: '13px', lineHeight: '18px' }}>AI Sales Assistant</p>
               </div>
             </div>
           </div>
@@ -303,17 +307,18 @@ export default function GeminiAIPage() {
             <button
               onClick={createNewChat}
               style={{
-                background: 'rgba(59, 130, 246, 0.1)',
-                color: '#3b82f6',
-                border: '1px solid rgba(59, 130, 246, 0.25)',
-                padding: '8px 14px',
-                borderRadius: '8px',
+                background: 'var(--blue-tint)',
+                color: 'var(--blue)',
+                border: 0,
+                minHeight: '44px',
+                padding: '0 20px',
+                borderRadius: 'var(--r-pill)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '0.88rem',
-                fontWeight: 500
+                fontSize: '15px',
+                fontWeight: 600
               }}
             >
               <Plus size={16} />
@@ -328,10 +333,10 @@ export default function GeminiAIPage() {
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '32px',
+            padding: '24px 16px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '24px',
+            gap: '16px',
             maxWidth: '1200px',
             margin: '0 auto',
             width: '100%'
@@ -356,30 +361,27 @@ export default function GeminiAIPage() {
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  background: msg.role === 'user' ? 'var(--surface-dark)' : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                  background: msg.role === 'user' ? 'var(--s2)' : 'var(--blue)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  border: msg.role === 'user' ? '1px solid var(--border-color)' : 'none'
+                  color: 'var(--text)'
                 }}>
-                  {msg.role === 'user' ? <span style={{fontSize:'1rem', fontWeight: 600}}>U</span> : <Bot size={20} color="white" />}
+                  {msg.role === 'user' ? <span style={{fontSize:'1rem', fontWeight: 600}}>U</span> : <Bot size={20} color="#fff" />}
                 </div>
 
                 {/* Message Bubble */}
                 <div 
                   className="chat-bubble markdown-body"
                   style={{
-                    padding: '16px 24px',
-                    borderRadius: '16px',
-                    background: msg.role === 'user' ? 'var(--primary-accent)' : 'var(--box-bg)',
-                    color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
-                    border: msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
-                    borderTopRightRadius: msg.role === 'user' ? '4px' : '16px',
-                    borderTopLeftRadius: msg.role === 'model' ? '4px' : '16px',
-                    fontSize: '1.05rem',
-                    lineHeight: '1.6',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    padding: '12px 16px',
+                    borderRadius: '18px',
+                    background: msg.role === 'user' ? 'var(--blue)' : 'var(--s2)',
+                    color: msg.role === 'user' ? '#fff' : 'var(--text)',
+                    border: 0,
+                    fontSize: '15px',
+                    lineHeight: '22px'
                   }}
                 >
                   <ReactMarkdown 
@@ -398,10 +400,10 @@ export default function GeminiAIPage() {
           {isLoading && (
             <div style={{ display: 'flex', justifyContent: 'flex-start', marginLeft: '52px' }}>
               <div style={{
-                padding: '16px 24px',
-                borderRadius: '16px',
-                background: 'var(--box-bg)',
-                border: '1px solid var(--border-color)',
+                padding: '16px 20px',
+                borderRadius: '18px',
+                background: 'var(--s2)',
+                border: 0,
                 display: 'flex',
                 gap: '8px',
                 alignItems: 'center'
@@ -417,16 +419,15 @@ export default function GeminiAIPage() {
 
         {/* Input Area */}
         <div style={{
-          padding: '24px 32px',
-          borderTop: '1px solid var(--border-color)',
-          background: 'var(--modal-bg)',
-          backdropFilter: 'blur(12px)'
+          padding: '16px',
+          borderTop: '1px solid var(--line)',
+          background: 'var(--bg)'
         }}>
           <form 
             onSubmit={handleSubmit}
             style={{
               display: 'flex',
-              gap: '16px',
+              gap: '12px',
               maxWidth: '1200px',
               margin: '0 auto',
               position: 'relative'
@@ -440,15 +441,14 @@ export default function GeminiAIPage() {
               disabled={isLoading}
               style={{
                 flex: 1,
-                background: 'var(--input-bg)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '32px',
-                padding: '18px 24px',
-                paddingRight: '64px',
-                color: 'var(--input-text)',
-                outline: 'none',
-                fontSize: '1.1rem',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+                background: 'var(--s2)',
+                border: 0,
+                borderRadius: '24px',
+                minHeight: '48px',
+                padding: '0 56px 0 20px',
+                color: 'var(--text)',
+                fontFamily: 'inherit',
+                fontSize: '15px'
               }}
             />
             <button 
@@ -456,24 +456,23 @@ export default function GeminiAIPage() {
               disabled={isLoading || !input.trim()}
               style={{
                 position: 'absolute',
-                right: '8px',
+                right: '6px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                background: 'var(--primary-accent)',
-                border: 'none',
+                background: 'var(--blue)',
+                border: 0,
                 borderRadius: '50%',
-                width: '44px',
-                height: '44px',
+                width: '36px',
+                height: '36px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: (isLoading || !input.trim()) ? 'not-allowed' : 'pointer',
-                opacity: (isLoading || !input.trim()) ? 0.5 : 1,
-                color: 'white',
-                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
+                opacity: (isLoading || !input.trim()) ? 0.4 : 1,
+                color: '#fff'
               }}
             >
-              <Send size={20} />
+              <Send size={18} />
             </button>
           </form>
         </div>

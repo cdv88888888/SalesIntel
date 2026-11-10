@@ -12,23 +12,23 @@ export default function AccessDeniedPage() {
   }, []);
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--background-dark)', color: 'var(--text-primary)' }}>
-      <div style={{ backgroundColor: 'var(--surface-dark)', padding: '32px', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', textAlign: 'center', width: '380px' }}>
-        <h1 style={{ marginBottom: '16px', fontSize: '1.8rem', fontWeight: 'bold', color: '#ef4444' }}>Access Denied</h1>
-        <div id="denied-container" style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem', lineHeight: '1.5' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text)', padding: '16px' }}>
+      <div style={{ backgroundColor: 'var(--surface)', padding: '32px', borderRadius: 'var(--r-group)', textAlign: 'center', width: '100%', maxWidth: '380px' }}>
+        <h1 style={{ marginBottom: '16px', fontSize: '28px', lineHeight: '32px', fontWeight: 700, letterSpacing: '-.02em', color: 'var(--red)' }}>Access Denied</h1>
+        <div id="denied-container" style={{ color: 'var(--muted)', marginBottom: '24px', fontSize: '15px', lineHeight: '22px' }}>
           You do not have permission to view this page. Your account is not whitelisted.
         </div>
         <a 
           href="/login"
           style={{
             display: 'inline-block',
-            padding: '10px 20px',
-            backgroundColor: '#3b82f6',
+            padding: '12px 20px',
+            minHeight: '44px',
+            backgroundColor: 'var(--blue)',
             color: '#fff',
             textDecoration: 'none',
-            borderRadius: '4px',
-            fontWeight: '600',
-            transition: 'background-color 0.2s',
+            borderRadius: '999px',
+            fontWeight: 600,
           }}
         >
           Return to Sign In

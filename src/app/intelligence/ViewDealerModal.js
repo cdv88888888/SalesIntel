@@ -143,7 +143,7 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
   if (isOpen && isGlobal && (context?.isLoading || !dealer)) {
     return (
       <div className={styles.modalOverlay} onClick={closeModal}>
-        <div className={`${styles.modalContent} glass-panel`} onClick={(e) => e.stopPropagation()}>
+        <div className={`${styles.modalContent}`} onClick={(e) => e.stopPropagation()}>
           <div className={styles.modalHeader}>
             <div>
               <h3 className={styles.modalTitle} style={{ marginBottom: '4px' }}>Loading Details...</h3>
@@ -154,7 +154,7 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60%', gap: '16px' }}>
             <div className={styles.loadingSpinner} style={{ width: '48px', height: '48px' }}></div>
-            <span style={{ color: 'var(--text-secondary)' }}>Syncing with BigQuery & Monday.com...</span>
+            <span style={{ color: 'var(--muted)', fontSize: '13px' }}>Syncing with BigQuery & Monday.com...</span>
           </div>
         </div>
       </div>
@@ -212,13 +212,13 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
 
     if (isBelowTarget) {
       return (
-        <span style={{ color: 'var(--danger-color)', fontWeight: 500 }}>
+        <span style={{ color: 'var(--red)', fontWeight: 500 }}>
           At Risk ({percentOfTarget}% of target) - Volume trending downwards
         </span>
       );
     } else {
       return (
-        <span style={{ color: 'var(--success-color)', fontWeight: 500 }}>
+        <span style={{ color: 'var(--green)', fontWeight: 500 }}>
           Healthy ({percentOfTarget}% of target) - Consistently meeting targets
         </span>
       );
@@ -248,21 +248,21 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
 
       {isOpen && (
         <div className={styles.modalOverlay} onClick={closeModal}>
-          <div className={`${styles.modalContent} glass-panel`} onClick={(e) => e.stopPropagation()}>
+          <div className={`${styles.modalContent}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <div>
                 <h3 className={styles.modalTitle} style={{ marginBottom: '4px' }}>{dealer?.name || "Dealer"} - Intelligence</h3>
-                <span style={{ fontFamily: "monospace", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Dealer Code: {dealer?.id || "N/A"}</span>
+                <span style={{ color: "var(--muted)", fontSize: "13px", fontVariantNumeric: "tabular-nums" }}>Dealer Code: {dealer?.id || "N/A"}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', background: 'rgba(99, 102, 241, 0.05)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--primary-accent)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', background: 'var(--s2)', padding: '6px 12px', borderRadius: 'var(--r-card)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', lineHeight: '16px', color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
                     </svg>
                     Gemini Intelligence
                   </div>
-                  <div style={{ fontSize: '0.85rem' }}>
+                  <div style={{ fontSize: '13px' }}>
                     {getAIRecommendation()}
                   </div>
                 </div>
@@ -283,41 +283,41 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '24px', marginTop: '16px' }}>
                       
                       {/* Activity Rings for Multi-Metric Performance */}
-                      <div style={{ flex: '1 1 380px', display: 'flex', alignItems: 'center', gap: '24px', background: 'rgba(255, 255, 255, 0.02)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                        <div style={{ width: '160px', height: '160px', flexShrink: 0, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
+                      <div style={{ flex: '1 1 380px', display: 'flex', alignItems: 'center', gap: '24px', background: 'var(--s2)', padding: '16px', borderRadius: 'var(--r-card)' }}>
+                        <div style={{ width: '160px', height: '160px', flexShrink: 0 }}>
                           <svg width="100%" height="100%" viewBox="0 0 100 100">
-                             {/* Target - Red/Pink (#FA114F) */}
-                             <ActivityRing radius={40} stroke={9} progress={percentOfTarget} color="#FA114F" bg="rgba(250, 17, 79, 0.35)" />
-                             {/* Growth - Green/Lime (#A6FE00) */}
-                             <ActivityRing radius={29} stroke={9} progress={prev > 0 ? Math.round((current / prev) * 100) : (current > 0 ? 100 : 0)} color="#A6FE00" bg="rgba(166, 254, 0, 0.3)" />
-                             {/* Consistency - Cyan (#00E5FF) */}
-                             <ActivityRing radius={18} stroke={9} progress={dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : (current > 0 ? 100 : 0)} color="#00E5FF" bg="rgba(0, 229, 255, 0.3)" />
+                             {/* Target - blue */}
+                             <ActivityRing radius={40} stroke={9} progress={percentOfTarget} color="var(--blue)" bg="var(--trk)" />
+                             {/* Growth - green */}
+                             <ActivityRing radius={29} stroke={9} progress={prev > 0 ? Math.round((current / prev) * 100) : (current > 0 ? 100 : 0)} color="var(--green)" bg="var(--trk)" />
+                             {/* Consistency - teal */}
+                             <ActivityRing radius={18} stroke={9} progress={dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : (current > 0 ? 100 : 0)} color="var(--teal)" bg="var(--trk)" />
                           </svg>
                         </div>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flexGrow: 1, minWidth: '180px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#FA114F', boxShadow: '0 0 8px rgba(250,17,79,0.5)', flexShrink: 0 }}></div>
-                              <span style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Target <span style={{fontSize: '1rem', color: 'var(--text-primary)', fontWeight: 'bold'}}>({formatKgs(target)} kg)</span></span>
+                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--blue)', flexShrink: 0 }}></div>
+                              <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap' }}>Target <span style={{fontSize: '15px', color: 'var(--text)', fontWeight: 600}}>({formatKgs(target)} kg)</span></span>
                             </div>
-                            <span style={{ fontWeight: 'bold', color: '#FA114F', fontSize: '1.1rem' }}>{percentOfTarget}%</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '17px', fontVariantNumeric: 'tabular-nums' }}>{percentOfTarget}%</span>
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#A6FE00', boxShadow: '0 0 8px rgba(166,254,0,0.5)', flexShrink: 0 }}></div>
-                              <span style={{ fontSize: '1.05rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Prev Period (YoY) <span style={{fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 'bold'}}>({formatKgs(prev)} kg)</span></span>
+                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }}></div>
+                              <span style={{ fontSize: '15px', color: 'var(--text)', whiteSpace: 'nowrap' }}>Prev Period (YoY) <span style={{fontSize: '15px', color: 'var(--text)', fontWeight: 600}}>({formatKgs(prev)} kg)</span></span>
                             </div>
-                             <span style={{ fontWeight: 'bold', color: '#A6FE00', fontSize: '1.1rem' }}>{prev > 0 ? Math.round((current / prev) * 100) : (current > 0 ? 100 : 0)}%</span>
+                             <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '17px', fontVariantNumeric: 'tabular-nums' }}>{prev > 0 ? Math.round((current / prev) * 100) : (current > 0 ? 100 : 0)}%</span>
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#00E5FF', boxShadow: '0 0 8px rgba(0,229,255,0.5)', flexShrink: 0 }}></div>
-                              <span style={{ fontSize: '1.05rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>Historical Average <span style={{fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 'bold'}}>({formatKgs(dealer?.avgMonthKgs)} kg)</span></span>
+                              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--teal)', flexShrink: 0 }}></div>
+                              <span style={{ fontSize: '15px', color: 'var(--text)', whiteSpace: 'nowrap' }}>Historical Average <span style={{fontSize: '15px', color: 'var(--text)', fontWeight: 600}}>({formatKgs(dealer?.avgMonthKgs)} kg)</span></span>
                             </div>
-                             <span style={{ fontWeight: 'bold', color: '#00E5FF', fontSize: '1.1rem' }}>{dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : (current > 0 ? 100 : 0)}%</span>
+                             <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '17px', fontVariantNumeric: 'tabular-nums' }}>{dealer?.avgMonthKgs > 0 ? Math.round((current / dealer.avgMonthKgs) * 100) : (current > 0 ? 100 : 0)}%</span>
                           </div>
                         </div>
                       </div>
@@ -340,14 +340,14 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                           </div>
                           <div className={styles.historyStatBox}>
                             <span className={styles.historyStatLabel}>Classification</span>
-                            <span className={styles.historyStatValue} style={{ fontSize: '1.25rem' }}>{dealer?.classification || "Standard"}</span>
+                            <span className={styles.historyStatValue} style={{ fontSize: '17px' }}>{dealer?.classification || "Standard"}</span>
                           </div>
                         </div>
 
                         <div className={styles.historyStats} style={{ marginTop: 0 }}>
                           <div className={styles.historyStatBox}>
                             <span className={styles.historyStatLabel}>
-                              Lowest Month {dealer?.lowestYear && <span style={{fontSize: "0.85em", color: "var(--text-secondary)", marginLeft: "4px"}}>{formatMonthYear(dealer.lowestYear, dealer.lowestMonth)}</span>}
+                              Lowest Month {dealer?.lowestYear && <span style={{fontSize: "13px", color: "var(--muted)", marginLeft: "4px"}}>{formatMonthYear(dealer.lowestYear, dealer.lowestMonth)}</span>}
                             </span>
                             <span className={styles.historyStatValue}>{formatKgs(dealer?.lowestMonthKgs)} kg</span>
                           </div>
@@ -357,7 +357,7 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                           </div>
                           <div className={styles.historyStatBox}>
                             <span className={styles.historyStatLabel}>
-                              Highest Month {dealer?.highestYear && <span style={{fontSize: "0.85em", color: "var(--text-secondary)", marginLeft: "4px"}}>{formatMonthYear(dealer.highestYear, dealer.highestMonth)}</span>}
+                              Highest Month {dealer?.highestYear && <span style={{fontSize: "13px", color: "var(--muted)", marginLeft: "4px"}}>{formatMonthYear(dealer.highestYear, dealer.highestMonth)}</span>}
                             </span>
                             <span className={styles.historyStatValue}>{formatKgs(dealer?.highestMonthKgs)} kg</span>
                           </div>
@@ -369,7 +369,7 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                     {historyData.length > 0 && (
                       <div className={styles.historyChartSection}>
                         <div className={styles.timeframeHeader}>
-                          <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Volume Trend</h5>
+                          <h5 style={{ margin: 0, fontSize: '13px', color: 'var(--muted)', fontWeight: 500 }}>Volume Trend</h5>
                           <div className={styles.timeframeToggles}>
                             {[6, 12, 24, 36].map(t => (
                               <button 
@@ -393,12 +393,11 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
 
                               let barStyle = { height: `${heightPct}%` };
                               if (isHighest) {
-                                barStyle.background = 'var(--success-color)';
-                                barStyle.boxShadow = '0 0 10px rgba(16, 185, 129, 0.4)';
+                                barStyle.background = 'var(--green)';
                                 barStyle.opacity = 1;
                               } else if (isLowest) {
-                                barStyle.background = 'var(--danger-color)';
-                                barStyle.opacity = 0.9;
+                                barStyle.background = 'var(--red)';
+                                barStyle.opacity = 1;
                               }
 
                               return (
@@ -410,8 +409,8 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                                     {/* Floated above the bar rather than stacked in the column:
                                         as a flex sibling the label shrank the very bars it marks,
                                         drawing the tallest month shorter than its neighbours. */}
-                                    {isHighest && <span className={styles.miniChartFlag} style={{color: 'var(--success-color)'}}>MAX</span>}
-                                    {isLowest && <span className={styles.miniChartFlag} style={{color: 'var(--danger-color)'}}>MIN</span>}
+                                    {isHighest && <span className={styles.miniChartFlag} style={{color: 'var(--green)'}}>MAX</span>}
+                                    {isLowest && <span className={styles.miniChartFlag} style={{color: 'var(--red)'}}>MIN</span>}
                                     <div className={styles.customTooltip}>
                                       {`${d.month}/${d.year.toString().slice(2)}: ${formatKgs(d.monthlyKgs)} kg`}
                                     </div>
@@ -426,15 +425,15 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                     )}
 
                     {historyData.length > 0 && (
-                      <div className={styles.tableContainer} style={{ marginTop: '24px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '16px' }}>
-                        <h5 style={{ margin: '0 0 16px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Year-over-Year Volume Matrix</h5>
+                      <div className={styles.tableContainer} style={{ marginTop: '24px', background: 'var(--s2)', borderRadius: 'var(--r-card)', padding: '16px' }}>
+                        <h5 style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--muted)', fontWeight: 500 }}>Year-over-Year Volume Matrix</h5>
                         <div style={{ overflowX: 'auto' }}>
                           <table className={styles.table}>
                             <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                               <tr>
-                                <th style={{ background: 'rgba(15, 23, 42, 1)' }}>Month</th>
+                                <th style={{ background: 'var(--s2)' }}>Month</th>
                                 {matrixYears.map(y => (
-                                  <th key={y} style={{ background: 'rgba(15, 23, 42, 1)', textAlign: 'right' }}>{y}</th>
+                                  <th key={y} className={styles.numCell} style={{ background: 'var(--s2)' }}>{y}</th>
                                 ))}
                               </tr>
                             </thead>
@@ -455,7 +454,7 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
 
                                   return (
                                     <tr key={m.val}>
-                                      <td style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{m.name}</td>
+                                      <td style={{ fontWeight: 500, color: 'var(--muted)' }}>{m.name}</td>
                                       {availableYears.map(y => {
                                         const dataPoint = historyData.find(d => d.year === y && d.month === m.val);
                                         
@@ -467,16 +466,16 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                                           isLowest = dataPoint.monthlyKgs === tableMin && tableMin < tableMax;
                                         }
 
-                                        let cellColor = dataPoint?.monthlyKgs ? 'var(--text-primary)' : 'rgba(255, 255, 255, 0.2)';
-                                        if (isHighest) cellColor = 'var(--success-color)';
-                                        if (isLowest) cellColor = 'var(--danger-color)';
+                                        let cellColor = dataPoint?.monthlyKgs ? 'var(--text)' : 'var(--muted)';
+                                        if (isHighest) cellColor = 'var(--green)';
+                                        if (isLowest) cellColor = 'var(--red)';
 
                                         return (
-                                          <td key={y} style={{ textAlign: 'right', color: cellColor, fontWeight: isHighest || isLowest ? 'bold' : 'normal' }}>
+                                          <td key={y} className={styles.numCell} style={{ color: cellColor, fontWeight: isHighest || isLowest ? 600 : 400 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                                              {isLowest && <span style={{fontSize: '0.65rem', padding: '2px 4px', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger-color)', lineHeight: 1}}>MIN</span>}
+                                              {isLowest && <span style={{fontSize: '11px', padding: '3px 8px', borderRadius: 'var(--r-pill)', background: 'var(--red-tint)', color: 'var(--red)', lineHeight: 1}}>MIN</span>}
                                               <span>{dataPoint?.monthlyKgs ? dataPoint.monthlyKgs.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) : '-'}</span>
-                                              {isHighest && <span style={{fontSize: '0.65rem', padding: '2px 4px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success-color)', lineHeight: 1}}>MAX</span>}
+                                              {isHighest && <span style={{fontSize: '11px', padding: '3px 8px', borderRadius: 'var(--r-pill)', background: 'var(--green-tint)', color: 'var(--green)', lineHeight: 1}}>MAX</span>}
                                             </div>
                                           </td>
                                         );
@@ -537,7 +536,7 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
                       <div className={styles.emptyState}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <strong>No updates yet</strong>
-                        <span style={{ fontSize: '0.85rem' }}>Updates for this account will appear here once posted on Monday.com.</span>
+                        <span style={{ fontSize: '13px' }}>Updates for this account will appear here once posted on Monday.com.</span>
                       </div>
                     ) : (
                       updates.map((update) => (
