@@ -70,7 +70,7 @@ seconds means a referenced secret is missing or unreadable; a failure in
   as the `CRON_SECRET` repository secret on GitHub, where the
   `.github/workflows/volume-alerts.yml` workflow calls the endpoint every two
   days. Without it the endpoint answers 503 and no scheduled run happens. The
-  run also needs `ANTHROPIC_API_KEY` to write explanations.
+  run also needs `ANTHROPIC_API_KEY` for the agent briefings.
 
 Vercel hosted this app until September 2026 and is being decommissioned. If
 anything in the repo still refers to Vercel as production, it is stale.

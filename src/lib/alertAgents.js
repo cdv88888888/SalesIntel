@@ -1,17 +1,11 @@
 // The volume-watch agents: who each batch reports to, which alerts are open,
 // and the scheduled run that keeps both up to date. Server-only.
 import { getAdminDb, withTimeout } from './firebase-admin';
-import { getVolumeWatch, getAccountOrderDetail } from './bigquery';
+import { getVolumeWatch } from './bigquery';
 import { buildAgents, asIsoDate, daysStale } from './declineAlerts';
-import { explainAccount, getStoredExplanations } from './alertExplanations';
 
 const CONFIG = 'alert_config';
 const STATE = 'alert_state';
-
-// Cost and time guards for one scheduled run.
-const MAX_EXPLANATIONS_PER_RUN = 150;
-const EXPLAIN_CONCURRENCY = 4;
-const EXPLAIN_TIME_BUDGET_MS = 200000;
 
 const AGENT_KEY = /^(dealer|commercial|bulk)-\d+$/;
 export const isAgentKey = (key) => typeof key === 'string' && AGENT_KEY.test(key);
@@ -86,22 +80,9 @@ async function writeState(records) {
   }
 }
 
-// Run `worker` over `items`, a few at a time, stopping once `deadline` passes.
-async function runPool(items, worker, concurrency, deadline) {
-  let next = 0;
-  const lanes = Array.from({ length: concurrency }, async () => {
-    while (next < items.length && Date.now() < deadline) {
-      const item = items[next++];
-      await worker(item);
-    }
-  });
-  await Promise.all(lanes);
-  return next;
-}
-
-// One scheduled pass of every agent: work out which accounts are flagged, mark
-// new and recovered ones, and write an explanation for each flagged account
-// that does not have one on the current data.
+// One scheduled pass of every agent: work out which accounts are flagged and
+// mark new and recovered ones. Per-account explanations are not written here;
+// they are produced only when someone asks for one on the Alerts page.
 export async function runAgents({ force = false } = {}) {
   const startedAt = Date.now();
   const ranAt = new Date(startedAt).toISOString();
@@ -112,7 +93,7 @@ export async function runAgents({ force = false } = {}) {
 
   // Nothing new has been sold since the last pass: judging the same data
   // again would only repeat the same warnings.
-  if (!force && dataThrough && lastRun?.dataThrough === dataThrough && !lastRun?.incomplete) {
+  if (!force && dataThrough && lastRun?.dataThrough === dataThrough) {
     const summary = { ...lastRun, checkedAt: ranAt, skipped: 'Sales data has not changed since the last run.' };
     await withTimeout(configDoc('lastRun').set(summary));
     return summary;
@@ -153,26 +134,6 @@ export async function runAgents({ force = false } = {}) {
   }
   await writeState(records);
 
-  // Explanations, biggest loss first, for accounts not yet explained on this data.
-  const stored = await getStoredExplanations();
-  const toExplain = process.env.ANTHROPIC_API_KEY
-    ? flagged
-        .filter(a => stored[a.id]?.dataThrough !== dataThrough)
-        .slice(0, MAX_EXPLANATIONS_PER_RUN)
-    : [];
-  let explained = 0;
-  let explainErrors = 0;
-  const started = await runPool(toExplain, async (account) => {
-    try {
-      const detail = await getAccountOrderDetail(account.id);
-      await explainAccount(account, detail);
-      explained += 1;
-    } catch (err) {
-      explainErrors += 1;
-      console.error(`[alerts] Could not explain ${account.id}:`, err.message);
-    }
-  }, EXPLAIN_CONCURRENCY, startedAt + EXPLAIN_TIME_BUDGET_MS);
-
   const summary = {
     ranAt,
     dataThrough,
@@ -184,11 +145,6 @@ export async function runAgents({ force = false } = {}) {
     flagged: flagged.length,
     newCount,
     resolvedCount,
-    explained,
-    explainErrors,
-    // True when the time budget ran out before every account was explained;
-    // the next run picks up the rest even if the data has not moved.
-    incomplete: started < toExplain.length,
     seconds: Math.round((Date.now() - startedAt) / 1000),
   };
   await withTimeout(configDoc('lastRun').set(summary));
