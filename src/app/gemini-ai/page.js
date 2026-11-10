@@ -293,7 +293,7 @@ export default function GeminiAIPage() {
                 <Bot size={24} color="white" />
               </div>
               <div>
-                <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc' }}>Gemini Intelligence</h1>
+                <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc' }}>Claude Intelligence</h1>
                 <p style={{ margin: '2px 0 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>AI Sales Assistant</p>
               </div>
             </div>

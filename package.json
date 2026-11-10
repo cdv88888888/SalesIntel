@@ -14,8 +14,8 @@
     "test:e2e": "node tests/run-e2e-real.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.7.0",
     "@google-cloud/bigquery": "^8.3.1",
-    "@google/genai": "^2.10.0",
     "esbuild": "^0.19.2",
     "firebase": "^12.15.0",
     "html2canvas": "^1.4.1",
