@@ -129,8 +129,8 @@ export default function ProactiveBoard({ initialColumns }) {
           </div>
           {dealer.daysUntilExpected < 0 && (
             <div className={styles.statRow}>
-              <span className={styles.statLabel} style={{ color: '#f87171' }}>Status:</span>
-              <span className={styles.statValue} style={{ color: '#f87171' }}>{Math.abs(dealer.daysUntilExpected)} Days Overdue</span>
+              <span className={styles.statLabel} style={{ color: 'var(--red)' }}>Status:</span>
+              <span className={styles.statValue} style={{ color: 'var(--red)' }}>{Math.abs(dealer.daysUntilExpected)} Days Overdue</span>
             </div>
           )}
           {dealer.daysUntilExpected > 0 && (
@@ -178,7 +178,7 @@ export default function ProactiveBoard({ initialColumns }) {
             <div className={styles.pitchValue}>{dealer.pitchVolume.toLocaleString()} KGs</div>
           </div>
 
-          <div style={{ marginTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
+          <div style={{ marginTop: '8px', borderTop: '1px solid var(--line)', paddingTop: '8px' }}>
             <div className={styles.dateLabel}>Delivery Date</div>
             <input
               type="date"
@@ -264,7 +264,7 @@ export default function ProactiveBoard({ initialColumns }) {
     <>
       <header className={styles.header}>
         <div>
-          <h1 className="gradient-text">Proactive Calling Kanban</h1>
+          <h1>Proactive Calling Kanban</h1>
           <p>Stay ahead of order cycles. Action accounts before they miss their historical purchasing windows.</p>
         </div>
         <button className={styles.exportBtn} onClick={handleExportCSV}>
@@ -293,7 +293,7 @@ export default function ProactiveBoard({ initialColumns }) {
         <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
           {columns.overdue.map(d => renderCard(d, 'overdue'))}
           {columns.overdue.length === 0 && (
-            <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
               No overdue accounts
             </div>
           )}
@@ -315,7 +315,7 @@ export default function ProactiveBoard({ initialColumns }) {
         <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
           {columns.today.map(d => renderCard(d, 'today'))}
           {columns.today.length === 0 && (
-            <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
               No calls scheduled for today
             </div>
           )}
@@ -337,7 +337,7 @@ export default function ProactiveBoard({ initialColumns }) {
         <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
           {columns.confirmed.map(renderConfirmedCard)}
           {columns.confirmed.length === 0 && (
-            <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
               Drag accounts here to confirm delivery
             </div>
           )}
@@ -353,7 +353,7 @@ export default function ProactiveBoard({ initialColumns }) {
         <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
           {columns.thisWeek.map(d => renderCard(d, 'thisWeek'))}
           {columns.thisWeek.length === 0 && (
-            <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
               No upcoming calls
             </div>
           )}
@@ -369,7 +369,7 @@ export default function ProactiveBoard({ initialColumns }) {
         <div className={styles.cardList} onClick={(e) => e.stopPropagation()}>
           {columns.future.map(d => renderCard(d, 'future'))}
           {columns.future.length === 0 && (
-            <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>
               No recent orders
             </div>
           )}

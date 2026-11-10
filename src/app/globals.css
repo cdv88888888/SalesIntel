@@ -1,58 +1,101 @@
 :root {
-  --background-dark: #0f172a;
-  --surface-dark: #1e293b;
-  --surface-hover: #334155;
-  --primary-accent: #3b82f6;
-  --primary-glow: rgba(59, 130, 246, 0.5);
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --danger-color: #ef4444;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --border-color: #334155;
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --box-bg: rgba(255, 255, 255, 0.03);
-  --box-border: rgba(255, 255, 255, 0.05);
-  --modal-bg: rgba(15, 23, 42, 0.95);
-  --input-bg: rgba(0, 0, 0, 0.2);
-  --input-text: #ffffff;
-  --metric-pink: #FA114F;
-  --metric-green: #A6FE00;
-  --metric-cyan: #00E5FF;
-  --metric-pink-bg: rgba(250, 17, 79, 0.35);
-  --metric-green-bg: rgba(166, 254, 0, 0.3);
-  --metric-cyan-bg: rgba(0, 229, 255, 0.3);
-  --chart-bar-inactive: rgba(255, 255, 255, 0.12);
+  --bg: #1C1C1E;
+  --surface: #000000;
+  --s2: #2C2C2E;
+  --line: #38383A;
+  --text: #F5F5F7;
+  --muted: #98989F;
+  --trk: rgba(245,245,247,.09);
+  --red: #EB534E;
+  --orange: #F09748;
+  --yellow: #F8D849;
+  --green: #68CE67;
+  --mint: #63D7C3;
+  --teal: #5FCFDD;
+  --cyan: #6DD0F9;
+  --blue: #3F8FF7;
+  --indigo: #707CF7;
+  --purple: #CA43EA;
+  --pink: #EB4B63;
+  --brown: #B08C6B;
+  --red-tint: rgba(235,83,78,.16);
+  --orange-tint: rgba(240,151,72,.16);
+  --yellow-tint: rgba(248,216,73,.16);
+  --green-tint: rgba(104,206,103,.16);
+  --mint-tint: rgba(99,215,195,.16);
+  --teal-tint: rgba(95,207,221,.16);
+  --cyan-tint: rgba(109,208,249,.16);
+  --blue-tint: rgba(63,143,247,.16);
+  --indigo-tint: rgba(112,124,247,.16);
+  --purple-tint: rgba(202,67,234,.16);
+  --pink-tint: rgba(235,75,99,.16);
+  --brown-tint: rgba(176,140,107,.16);
+
+  --r-group: 28px;
+  --r-card: 14px;
+  --r-pill: 999px;
+
+  /* legacy aliases */
+  --background-dark: var(--bg);
+  --surface-dark: var(--surface);
+  --surface-hover: var(--s2);
+  --primary-accent: var(--blue);
+  --primary-glow: var(--blue-tint);
+  --success-color: var(--green);
+  --warning-color: var(--orange);
+  --danger-color: var(--red);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --border-color: var(--line);
+  --glass-bg: var(--surface);
+  --glass-border: transparent;
+  --box-bg: var(--s2);
+  --box-border: transparent;
+  --modal-bg: var(--surface);
+  --input-bg: var(--s2);
+  --input-text: var(--text);
+  --metric-pink: var(--pink);
+  --metric-green: var(--green);
+  --metric-cyan: var(--cyan);
+  --metric-pink-bg: var(--pink-tint);
+  --metric-green-bg: var(--green-tint);
+  --metric-cyan-bg: var(--cyan-tint);
+  --chart-bar-inactive: var(--trk);
   color-scheme: dark;
 }
 
 [data-theme="light"] {
-  --background-dark: #f8fafc;
-  --surface-dark: #ffffff;
-  --surface-hover: #f1f5f9;
-  --primary-accent: #2563eb;
-  --primary-glow: rgba(37, 99, 235, 0.2);
-  --success-color: #10b981;
-  --warning-color: #d97706;
-  --danger-color: #dc2626;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --border-color: #e2e8f0;
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(15, 23, 42, 0.08);
-  --box-bg: rgba(15, 23, 42, 0.03);
-  --box-border: rgba(15, 23, 42, 0.05);
-  --modal-bg: rgba(255, 255, 255, 0.98);
-  --input-bg: rgba(255, 255, 255, 0.9);
-  --input-text: #0f172a;
-  --metric-pink: #d0003c;
-  --metric-green: #047857;
-  --metric-cyan: #0284c7;
-  --metric-pink-bg: rgba(208, 0, 60, 0.12);
-  --metric-green-bg: rgba(4, 120, 87, 0.12);
-  --metric-cyan-bg: rgba(2, 132, 199, 0.12);
-  --chart-bar-inactive: rgba(15, 23, 42, 0.1);
+  --bg: #F5F3F4;
+  --surface: #FFFFFF;
+  --s2: #EFEEEE;
+  --line: #E6E6E4;
+  --text: #0A084D;
+  --muted: #6E6E6B;
+  --trk: rgba(10,8,77,.09);
+  --red: #EB4C46;
+  --orange: #F09343;
+  --yellow: #F7CE46;
+  --green: #65C466;
+  --mint: #5AC5B3;
+  --teal: #58C0CE;
+  --cyan: #56BDE4;
+  --blue: #3B86F7;
+  --indigo: #5F55EC;
+  --purple: #BB3ED9;
+  --pink: #EB445A;
+  --brown: #A58163;
+  --red-tint: rgba(235,76,70,.16);
+  --orange-tint: rgba(240,147,67,.16);
+  --yellow-tint: rgba(247,206,70,.16);
+  --green-tint: rgba(101,196,102,.16);
+  --mint-tint: rgba(90,197,179,.16);
+  --teal-tint: rgba(88,192,206,.16);
+  --cyan-tint: rgba(86,189,228,.16);
+  --blue-tint: rgba(59,134,247,.16);
+  --indigo-tint: rgba(95,85,236,.16);
+  --purple-tint: rgba(187,62,217,.16);
+  --pink-tint: rgba(235,68,90,.16);
+  --brown-tint: rgba(165,129,99,.16);
   color-scheme: light;
 }
 
@@ -63,8 +106,8 @@
 }
 
 body {
-  background-color: var(--background-dark);
-  color: var(--text-primary);
+  background-color: var(--bg);
+  color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -85,18 +128,14 @@ button {
 }
 
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-group);
+  box-shadow: none;
 }
 
 .gradient-text {
-  background: linear-gradient(to right, #60a5fa, #a78bfa);
-  -webkit-background-clip: text;
-  color: transparent;
+  color: var(--text);
 }
 
 /* Gemini Chat Markdown Styles */
@@ -105,21 +144,28 @@ button {
   border-collapse: collapse;
   margin-top: 10px;
   margin-bottom: 10px;
-  font-size: 0.85rem;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 .markdown-body th {
-  background: var(--box-bg);
-  color: var(--text-primary);
+  background: var(--s2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
   text-align: left;
-  padding: 8px 12px;
-  border-bottom: 2px solid var(--border-color);
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
 }
 
 .markdown-body td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-secondary);
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+}
+
+.markdown-body tr:hover td {
+  background: var(--trk);
 }
 
 .markdown-body tr:last-child td {
@@ -142,11 +188,11 @@ button {
   background: transparent;
 }
 .gemini-chat-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--trk);
   border-radius: 10px;
 }
 .gemini-chat-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--muted);
 }
 
 /* Dot Pulse Animation */
@@ -155,19 +201,19 @@ button {
   width: 6px;
   height: 6px;
   border-radius: 5px;
-  background-color: rgba(255, 255, 255, 0.8);
-  color: rgba(255, 255, 255, 0.8);
+  background-color: var(--muted);
+  color: var(--muted);
   animation: dot-pulse 1.5s infinite linear;
 }
 
 @keyframes dot-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 0 var(--muted);
     opacity: 1;
   }
   50%,
   100% {
-    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 8px transparent;
     opacity: 0;
   }
 }
@@ -188,7 +234,7 @@ button {
 .main-content {
   flex: 1;
   overflow-y: auto;
-  background-color: var(--background-dark);
+  background-color: var(--bg);
 }
 
 @media (max-width: 768px) {

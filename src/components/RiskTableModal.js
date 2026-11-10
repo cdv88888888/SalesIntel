@@ -237,19 +237,17 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
       <button 
         onClick={handleOpen}
         style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          color: '#fff',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '0.75rem',
+          background: 'var(--blue-tint)',
+          border: 0,
+          color: 'var(--blue)',
+          padding: '0 14px',
+          minHeight: '32px',
+          borderRadius: '999px',
+          fontSize: '13px',
           cursor: 'pointer',
           fontWeight: 600,
-          transition: 'background 0.2s',
           marginTop: '-4px'
         }}
-        onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-        onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
       >
         Open in Table
       </button>
@@ -260,76 +258,80 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
           style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
+            backgroundColor: 'rgba(0,0,0,.32)',
             zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backdropFilter: 'blur(4px)'
+            backdropFilter: 'blur(8px)'
           }}
         >
           <div 
             ref={pdfRef}
             onClick={e => e.stopPropagation()}
             style={{
-              background: '#1a1f2e',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '12px',
+              background: 'var(--surface)',
+              color: 'var(--text)',
+              border: 0,
+              borderRadius: '28px',
               padding: '24px',
               width: '90%',
               maxWidth: '1200px',
               maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+              boxShadow: '0 24px 60px rgba(0,0,0,.35)'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{title} - Monthly Sales ({yearPrefix}) <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>(Figures in KGs)</span></h2>
-              <div className="pdf-hide" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700, letterSpacing: '-.02em' }}>{title} - Monthly Sales ({yearPrefix}) <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--muted)', letterSpacing: 0 }}>(Figures in KGs)</span></h2>
+              <div className="pdf-hide" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <button 
                   onClick={handleExportPDF}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    padding: '6px 12px',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
+                    background: 'var(--blue-tint)',
+                    border: 0,
+                    color: 'var(--blue)',
+                    padding: '0 20px',
+                    minHeight: '44px',
+                    borderRadius: '999px',
+                    fontSize: '15px',
                     cursor: 'pointer',
                     fontWeight: 600,
-                    transition: 'background 0.2s',
                   }}
-                  onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-                  onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
                 >
                   Export PDF
                 </button>
                 <button 
                   onClick={handleExportCSV}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: '#fff',
-                    padding: '6px 12px',
-                    borderRadius: '4px',
-                    fontSize: '0.85rem',
+                    background: 'var(--blue-tint)',
+                    border: 0,
+                    color: 'var(--blue)',
+                    padding: '0 20px',
+                    minHeight: '44px',
+                    borderRadius: '999px',
+                    fontSize: '15px',
                     cursor: 'pointer',
                     fontWeight: 600,
-                    transition: 'background 0.2s',
                   }}
-                  onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-                  onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
                 >
                   Export CSV
                 </button>
                 <button 
                   onClick={handleClose}
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#fff',
-                    fontSize: '1.5rem',
+                    background: 'var(--trk)',
+                    border: 0,
+                    color: 'var(--text)',
+                    fontSize: '20px',
+                    lineHeight: 1,
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     cursor: 'pointer'
                   }}
                 >
@@ -340,30 +342,30 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
 
             <div className="table-container" style={{ overflow: 'auto', flexGrow: 1 }}>
               {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>
                   Loading monthly data...
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                      <th onClick={() => requestSort('name')} style={{ padding: '12px', position: 'sticky', top: 0, background: '#1a1f2e', zIndex: 1, cursor: 'pointer', userSelect: 'none' }}>
+                    <tr style={{ borderBottom: '1px solid var(--line)' }}>
+                      <th onClick={() => requestSort('name')} style={{ padding: '12px', position: 'sticky', top: 0, background: 'var(--surface)', color: 'var(--muted)', fontSize: '13px', fontWeight: 500, zIndex: 1, cursor: 'pointer', userSelect: 'none' }}>
                         Customer Name{renderSortIndicator('name')}
                       </th>
                       {title === 'Volume Decline' && (
-                        <th onClick={() => requestSort('declineRate')} style={{ padding: '12px', position: 'sticky', top: 0, background: '#1a1f2e', zIndex: 1, cursor: 'pointer', userSelect: 'none', color: '#ef4444' }}>
+                        <th onClick={() => requestSort('declineRate')} style={{ padding: '12px', position: 'sticky', top: 0, background: 'var(--surface)', color: 'var(--muted)', fontSize: '13px', fontWeight: 500, zIndex: 1, cursor: 'pointer', userSelect: 'none', color: 'var(--red)' }}>
                           Decline Rate{renderSortIndicator('declineRate')}
                         </th>
                       )}
                       {monthNames.map((m, i) => {
                         const monthNum = String(i + 1).padStart(2, '0');
                         return (
-                          <th key={m} onClick={() => requestSort(monthNum)} style={{ padding: '12px', position: 'sticky', top: 0, background: '#1a1f2e', zIndex: 1, cursor: 'pointer', userSelect: 'none' }}>
+                          <th key={m} onClick={() => requestSort(monthNum)} style={{ padding: '12px', position: 'sticky', top: 0, background: 'var(--surface)', color: 'var(--muted)', fontSize: '13px', fontWeight: 500, zIndex: 1, cursor: 'pointer', userSelect: 'none' }}>
                             {m}{renderSortIndicator(monthNum)}
                           </th>
                         );
                       })}
-                      <th onClick={() => requestSort('ytd')} style={{ padding: '12px', position: 'sticky', top: 0, background: '#1a1f2e', zIndex: 1, cursor: 'pointer', userSelect: 'none' }}>
+                      <th onClick={() => requestSort('ytd')} style={{ padding: '12px', position: 'sticky', top: 0, background: 'var(--surface)', color: 'var(--muted)', fontSize: '13px', fontWeight: 500, zIndex: 1, cursor: 'pointer', userSelect: 'none' }}>
                         YTD Total{renderSortIndicator('ytd')}
                       </th>
                     </tr>
@@ -373,8 +375,8 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
                       return (
                         <tr 
                           key={dealer.id} 
-                          style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
-                          onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                          style={{ borderBottom: '1px solid var(--line)', cursor: 'pointer' }}
+                          onMouseOver={e => e.currentTarget.style.background = 'var(--trk)'}
                           onMouseOut={e => e.currentTarget.style.background = 'transparent'}
                           onClick={() => handleRowClick(dealer.id)}
                         >
@@ -382,7 +384,7 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
                             {dealer.name}
                           </td>
                           {title === 'Volume Decline' && (
-                            <td style={{ padding: '12px', color: '#ef4444', fontWeight: '500', minWidth: '100px' }}>
+                            <td style={{ padding: '12px', color: 'var(--red)', fontWeight: '500', fontVariantNumeric: 'tabular-nums', minWidth: '100px' }}>
                               {dealer.declineRate ? `-${dealer.declineRate.toFixed(1)}%` : '-'}
                             </td>
                           )}
@@ -394,16 +396,16 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
                             let backgroundColor = 'transparent';
                             if (val > 0 && dealer.maxVolume > 0) {
                                const intensity = Math.max(0.15, val / dealer.maxVolume);
-                               backgroundColor = `rgba(59, 130, 246, ${intensity})`; // Blue tint
+                               backgroundColor = intensity >= 0.75 ? 'var(--blue)' : 'var(--blue-tint)'; // Blue heat tiers
                             }
 
                             return (
-                              <td key={m} style={{ padding: '12px', color: val > 0 ? '#fff' : 'rgba(255,255,255,0.3)', backgroundColor }}>
+                              <td key={m} style={{ padding: '12px', color: val > 0 ? (backgroundColor === 'var(--blue)' ? '#fff' : 'var(--text)') : 'var(--muted)', backgroundColor, fontVariantNumeric: 'tabular-nums' }}>
                                 {val > 0 ? Math.round(val).toLocaleString() : '-'}
                               </td>
                             );
                           })}
-                          <td style={{ padding: '12px', fontWeight: 'bold', color: 'var(--primary-accent)' }}>
+                          <td style={{ padding: '12px', fontWeight: 600, color: 'var(--blue)', fontVariantNumeric: 'tabular-nums' }}>
                             {Math.round(dealer.ytdTotal).toLocaleString()}
                           </td>
                         </tr>
@@ -411,7 +413,7 @@ export default function RiskTableModal({ title, dealers, segment = 'dealer' }) {
                     })}
                     {processedDealers.length === 0 && (
                       <tr>
-                        <td colSpan={14} style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                        <td colSpan={14} style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)' }}>
                           No accounts found.
                         </td>
                       </tr>

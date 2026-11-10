@@ -100,7 +100,7 @@ export default async function VolumeAlerts({ searchParams }) {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className="gradient-text">Volume Alerts</h1>
+        <h1>Volume Alerts</h1>
         <p>
           Measured by calendar month. An account is flagged when this month to date is{' '}
           {threshold}% below its 6-month average for the same days, when last month was{' '}

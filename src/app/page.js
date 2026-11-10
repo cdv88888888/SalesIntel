@@ -100,19 +100,19 @@ export default async function Dashboard({ searchParams }) {
     <div className={styles.dashboard}>
       <main className={styles.mainColumn}>
         <header className={styles.header}>
-          <h1 className="gradient-text">CDV-sales-intelligence</h1>
+          <h1>MGC Sales Intelligence</h1>
           <p>Smart Relationship Management & Operational Automation</p>
         </header>
 
         {/* New Feature: Monthly Target Tracker */}
-        <section className={`${styles.section} glass-panel ${styles.monthlyGoalCard}`}>
+        <section className={`${styles.section} ${styles.monthlyGoalCard}`}>
           
-          <div style={{ width: '140px', height: '140px', flexShrink: 0, position: 'relative', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
+          <div style={{ width: '140px', height: '140px', flexShrink: 0, position: 'relative' }}>
             <svg width="100%" height="100%" viewBox="0 0 100 100">
-              <ActivityRing radius={42} stroke={10} progress={targetProgressPct} color="var(--primary-accent)" bg="rgba(59, 130, 246, 0.2)" />
+              <ActivityRing radius={42} stroke={10} progress={targetProgressPct} color="var(--blue)" bg="var(--trk)" />
             </svg>
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{targetProgressPct}%</span>
+              <span style={{ fontSize: '22px', lineHeight: '28px', fontWeight: 700, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>{targetProgressPct}%</span>
             </div>
           </div>
 
@@ -124,7 +124,7 @@ export default async function Dashboard({ searchParams }) {
             <div className={styles.trackerStats} style={{ display: 'flex', gap: '48px', marginBottom: 0 }}>
               <div>
                 <div className={styles.statLabel}>Total Volume Sold</div>
-                <div className={styles.statValue} style={{ color: 'var(--text-primary)' }}>{totalKgsMonth.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</div>
+                <div className={styles.statValue} style={{ color: 'var(--text)' }}>{totalKgsMonth.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</div>
               </div>
               <div>
                 <div className={styles.statLabel}>Monthly Target</div>
@@ -132,16 +132,16 @@ export default async function Dashboard({ searchParams }) {
               </div>
             </div>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingTop: '16px', borderTop: '1px solid var(--line)', fontVariantNumeric: 'tabular-nums' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Remaining KGs to Close:</span>
-                <strong style={{ color: kgsRemaining > 0 ? 'var(--danger-color)' : 'var(--success-color, #4ade80)' }}>
+                <span style={{ color: 'var(--muted)' }}>Remaining KGs to Close:</span>
+                <strong style={{ color: kgsRemaining > 0 ? 'var(--red)' : 'var(--green)' }}>
                   {kgsRemaining > 0 ? `${kgsRemaining.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg` : 'Goal Reached!'}
                 </strong>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Days Left in Month:</span>
-                <strong style={{ color: remainingDays < 7 ? 'var(--danger-color)' : 'var(--text-primary)' }}>
+                <span style={{ color: 'var(--muted)' }}>Days Left in Month:</span>
+                <strong style={{ color: remainingDays < 7 ? 'var(--red)' : 'var(--text)' }}>
                   {remainingDays} Days
                 </strong>
               </div>
@@ -150,7 +150,7 @@ export default async function Dashboard({ searchParams }) {
         </section>
 
         {/* Feature 3: Predictive Order Forecasting & Anomaly Alerts */}
-        <section className={`${styles.section} glass-panel`}>
+        <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
             ⚠️ Active Escalations ({atRiskDealers.length})
           </h2>
@@ -172,7 +172,7 @@ export default async function Dashboard({ searchParams }) {
         </section>
 
         {/* Feature 1: Smart Rebate & Discount Calculator */}
-        <section className={`${styles.section} glass-panel`}>
+        <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
             📊 Dealer Performance (At-Risk Segment)
           </h2>
@@ -181,39 +181,39 @@ export default async function Dashboard({ searchParams }) {
             {atRiskDealers.map(dealer => (
               <div key={`perf-${dealer.id}`}>
                 <ClientClickWrapper dealerId={dealer.id}>
-                  <h3 style={{ fontSize: "1rem", marginBottom: "8px", color: 'var(--primary-accent)', textDecoration: 'underline', cursor: 'pointer' }}>
+                  <h3 style={{ fontSize: "17px", lineHeight: "22px", fontWeight: 600, marginBottom: "8px", color: 'var(--blue)', cursor: 'pointer' }}>
                     {dealer.name}
                   </h3>
                 </ClientClickWrapper>
                 <div className={styles.trackerStats} style={{ marginBottom: "8px" }}>
                   <div>
                     <div className={styles.statLabel}>Current Volume (Total KGS)</div>
-                    <div className={styles.statValue} style={{ fontSize: "1.2rem" }}>{dealer.kgsSold.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</div>
+                    <div className={styles.statValue} style={{ fontSize: "17px" }}>{dealer.kgsSold.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div className={styles.statLabel}>Target (Avg + 15%)</div>
-                    <div className={styles.statValue} style={{ fontSize: "1.2rem" }}>{dealer.target.toLocaleString()} kg</div>
+                    <div className={styles.statValue} style={{ fontSize: "17px" }}>{dealer.target.toLocaleString()} kg</div>
                   </div>
                 </div>
                 
                 <div className={styles.progressBarContainer}>
                   <div 
                     className={styles.progressBar} 
-                    style={{ width: `${dealer.progress}%`, background: dealer.progress < 80 ? 'var(--danger-color)' : 'var(--primary-accent)' }}
+                    style={{ width: `${dealer.progress}%`, background: dealer.progress < 80 ? 'var(--red)' : 'var(--blue)' }}
                   ></div>
                 </div>
                 <div className={styles.statLabel} style={{ textAlign: "center", marginBottom: "16px", marginTop: "8px" }}>
                   {dealer.progress}% of localized sales target baseline reached
                 </div>
                 
-                <button className={styles.button} style={{ width: "auto", fontSize: "0.85rem", padding: "6px 12px" }}>Generate Volume Rebate Promo</button>
+                <button className={styles.button} style={{ width: "auto", fontSize: "13px", minHeight: "36px", padding: "0 16px" }}>Generate Volume Rebate Promo</button>
               </div>
             ))}
           </div>
         </section>
 
         {/* Feature 2: Gemini AI Pattern Recognition Engine */}
-        <section className={`${styles.section} glass-panel`}>
+        <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
             🧠 Strategic Action Cards
           </h2>
@@ -233,11 +233,11 @@ export default async function Dashboard({ searchParams }) {
 
       <aside className={styles.sideColumn}>
         {/* Feature 4: Field Intelligence Logger */}
-        <section className={`${styles.section} glass-panel`}>
+        <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
             🛡️ Field Intelligence Logger
           </h2>
-          <p style={{ color: "var(--text-secondary)", marginBottom: "16px", fontSize: "0.9rem" }}>
+          <p style={{ color: "var(--muted)", marginBottom: "16px", fontSize: "13px", lineHeight: "18px" }}>
             Log localized competitive actions to unlock contextual discounting structures.
           </p>
           <textarea 
@@ -249,7 +249,7 @@ export default async function Dashboard({ searchParams }) {
         </section>
 
         {/* Feature 5 & 6: Live CRM Updates Stream (Monday.com Integration) */}
-        <div className="glass-panel" style={{ padding: "24px" }}>
+        <div style={{ background: "var(--surface)", borderRadius: "var(--r-group)", padding: "16px" }}>
           <CrmUpdatesStream />
         </div>
       </aside>

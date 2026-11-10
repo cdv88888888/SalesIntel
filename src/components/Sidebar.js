@@ -127,8 +127,8 @@ export default function Sidebar() {
     <>
       {/* Mobile Header */}
       <div className={styles.mobileHeader}>
-        <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>AGY</div>
-        <button onClick={() => setIsMobileOpen(true)} style={{ color: '#fff', padding: '8px' }}>
+        <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>MGC</div>
+        <button onClick={() => setIsMobileOpen(true)} style={{ color: 'var(--text)', padding: '8px' }}>
           <Menu size={24} />
         </button>
       </div>
@@ -143,9 +143,9 @@ export default function Sidebar() {
         {/* Header / Brand */}
         <div className={styles.headerBrand} style={{ padding: isOpen ? '0 24px' : '0 0', justifyContent: isOpen ? 'flex-start' : 'center' }}>
           {isOpen ? (
-            <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Antigravity AGY</div>
+            <div className="gradient-text" style={{ fontSize: '17px', fontWeight: 'bold', letterSpacing: '-.01em', whiteSpace: 'nowrap' }}>MGC Sales Intelligence</div>
           ) : (
-            <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>AGY</div>
+            <div className="gradient-text" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>MGC</div>
           )}
         </div>
 
@@ -168,26 +168,26 @@ export default function Sidebar() {
                   href={hrefFor(item)}
                   className={styles.navLink}
                   style={{
-                    color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    backgroundColor: isActive ? 'var(--surface-hover)' : 'transparent',
+                    color: isActive ? 'var(--blue)' : 'var(--muted)',
+                    backgroundColor: isActive ? 'var(--blue-tint)' : 'transparent',
                     justifyContent: isOpen ? 'flex-start' : 'center',
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.backgroundColor = 'var(--surface-hover)';
-                      e.currentTarget.style.color = 'var(--text-primary)';
+                      e.currentTarget.style.backgroundColor = 'var(--trk)';
+                      e.currentTarget.style.color = 'var(--text)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = 'var(--text-secondary)';
+                      e.currentTarget.style.color = 'var(--muted)';
                     }
                   }}
                   onClick={() => setIsMobileOpen(false)}
                 >
                   <Icon size={20} style={{ minWidth: '20px' }} />
-                  {isOpen && <span style={{ fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>}
+                  {isOpen && <span style={{ fontSize: '15px', fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>}
                 </Link>
                 {isOpen && item.segments && (
                   <SegmentToggle pageHref={item.href} segments={item.segments} onNavigate={() => setIsMobileOpen(false)} />
@@ -201,18 +201,18 @@ export default function Sidebar() {
         <div className={styles.userInfo} style={{ justifyContent: isOpen ? 'space-between' : 'center', flexDirection: isOpen ? 'row' : 'column', gap: isOpen ? '0' : '16px' }}>
           {isOpen ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <UserIcon size={16} color="#fff" />
               </div>
               <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '120px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '120px' }}>
                   {userEmail || 'Loading...'}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Authorized User</div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Authorized User</div>
               </div>
             </div>
           ) : (
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <UserIcon size={16} color="#fff" />
             </div>
           )}
@@ -225,21 +225,21 @@ export default function Sidebar() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: 'var(--text-secondary)',
+                color: 'var(--muted)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '8px',
-                borderRadius: '8px',
-                transition: 'background-color 0.2s, color 0.2s',
+                borderRadius: '12px',
+                transition: 'opacity 0.3s cubic-bezier(.2,.8,.2,1)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--surface-hover)';
-                e.currentTarget.style.color = 'var(--text-primary)';
+                e.currentTarget.style.backgroundColor = 'var(--trk)';
+                e.currentTarget.style.color = 'var(--text)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = 'var(--text-secondary)';
+                e.currentTarget.style.color = 'var(--muted)';
               }}
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -252,15 +252,14 @@ export default function Sidebar() {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#ef4444',
+                color: 'var(--red)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '8px',
-                borderRadius: '8px',
-                transition: 'background-color 0.2s',
+                borderRadius: '12px',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.15)'}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--red-tint)'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <LogOut size={18} />

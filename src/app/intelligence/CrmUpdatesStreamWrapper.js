@@ -10,11 +10,11 @@ const CrmUpdatesStream = dynamic(() => import('./CrmUpdatesStream'), {
         width: "32px",
         height: "32px",
         borderRadius: "50%",
-        border: "3px solid rgba(255, 255, 255, 0.1)",
-        borderTopColor: "var(--primary-accent)",
+        border: "3px solid var(--trk)",
+        borderTopColor: "var(--blue)",
         animation: "spin 1s linear infinite"
       }}></div>
-      <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Loading feed...</span>
+      <span style={{ color: "var(--muted)", fontSize: "13px" }}>Loading feed...</span>
       <style jsx global>{`
         @keyframes spin {
           to { transform: rotate(360deg); }

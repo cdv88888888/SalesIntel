@@ -17,37 +17,38 @@
 }
 
 .header h1 {
-  font-size: 2.5rem;
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: 8px;
 }
 
 .header p {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .exportBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: rgba(138, 43, 226, 0.15);
-  border: 1px solid rgba(138, 43, 226, 0.4);
-  color: #d8b4fe;
-  border-radius: 10px;
+  min-height: 44px;
+  padding: 0 20px;
+  background: var(--blue-tint);
+  border: 0;
+  color: var(--blue);
+  border-radius: var(--r-pill);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 15px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   white-space: nowrap;
 }
 
 .exportBtn:hover {
-  background: rgba(138, 43, 226, 0.3);
-  border-color: rgba(168, 85, 247, 0.6);
-  color: #ffffff;
-  box-shadow: 0 0 16px rgba(168, 85, 247, 0.3);
-  transform: translateY(-1px);
+  opacity: 0.8;
 }
 
 .kanbanBoard {
@@ -63,41 +64,42 @@
   flex: 0 0 350px;
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 16px;
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--surface);
+  border-radius: var(--r-group);
+  padding: 14px;
+  border: 0;
 }
 
 .columnHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 12px;
+  padding: 0 2px;
 }
 
 .columnTitle {
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .countBadge {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  background: var(--trk);
+  color: var(--text);
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .cardList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   overflow-y: auto;
   padding-right: 8px; /* Room for scrollbar */
 }
@@ -107,99 +109,90 @@
   width: 6px;
 }
 .cardList::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.1);
-  border-radius: 4px;
+  background: transparent;
+  border-radius: var(--r-pill);
 }
 .cardList::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
-  border-radius: 4px;
+  background: var(--trk);
+  border-radius: var(--r-pill);
 }
 
 .card {
   padding: 16px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-card);
+  background: var(--s2);
+  border: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .dealerName {
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
-  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  color: var(--text);
   word-break: break-word;
 }
 
 .statRow {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
 }
 
 .statLabel {
-  color: var(--text-secondary);
+  color: var(--muted);
 }
 
 .statValue {
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .pitchBox {
   margin-top: 4px;
   padding: 12px;
-  background: rgba(138, 43, 226, 0.1);
-  border-radius: 8px;
-  border-left: 3px solid var(--primary-accent);
+  background: var(--trk);
+  border-radius: 12px;
+  border: 0;
 }
 
 .pitchLabel {
-  font-size: 0.75rem;
+  font-size: 11px;
+  line-height: 16px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--primary-accent);
+  letter-spacing: 0.06em;
+  color: var(--muted);
   margin-bottom: 4px;
   font-weight: 600;
 }
 
 .pitchValue {
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
-/* Column Specific Styles */
-.colOverdue {
-  border-top: 4px solid #f87171;
-}
-.colOverdue .columnTitle { color: #f87171; }
-.colOverdue .card { border-left: 3px solid #f87171; }
+/* Column Specific Styles: meaning lives in the status dot colour of the title only */
+.colOverdue .columnTitle { color: var(--red); }
 
-.colToday {
-  border-top: 4px solid var(--primary-accent);
-}
-.colToday .columnTitle { color: var(--primary-accent); }
-.colToday .card { border-left: 3px solid var(--primary-accent); }
+.colToday .columnTitle { color: var(--blue); }
 
-.colThisWeek {
-  border-top: 4px solid #facc15;
-}
-.colThisWeek .columnTitle { color: #facc15; }
+.colThisWeek .columnTitle { color: var(--orange); }
 
-.colFuture {
-  border-top: 4px solid #4ade80;
-  opacity: 0.8;
-}
-.colFuture .columnTitle { color: #4ade80; }
+.colFuture .columnTitle { color: var(--green); }
 
 /* Drag and Drop & Confirmed Column styling */
 .draggableCard {
@@ -209,49 +202,46 @@
   cursor: grabbing;
 }
 
-.colConfirmed {
-  border-top: 4px solid #60a5fa;
-}
 .colConfirmed .columnTitle {
-  color: #60a5fa;
+  color: var(--blue);
 }
 .colConfirmed .card {
-  border-left: 3px solid #60a5fa;
   cursor: default; /* Clicks don't expand, normal cursor */
 }
 
 .dragOver {
-  background: rgba(96, 165, 250, 0.08) !important;
-  border: 1px dashed rgba(96, 165, 250, 0.4) !important;
+  background: var(--blue-tint) !important;
+  outline: 2px dashed var(--blue);
+  outline-offset: -2px;
 }
 
 .dateLabel {
-  font-size: 0.75rem;
+  font-size: 11px;
+  line-height: 16px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #60a5fa;
+  letter-spacing: 0.06em;
+  color: var(--muted);
   font-weight: 600;
   margin-bottom: 4px;
 }
 
 .dateInput {
-  color-scheme: dark;
   width: 100%;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 0;
+  color: var(--text);
   font-family: inherit;
-  font-size: 0.9rem;
-  outline: none;
+  font-size: 15px;
   margin-top: 4px;
   box-sizing: border-box;
 }
 
 .dateInput:focus {
-  border-color: #60a5fa;
-  background: rgba(255, 255, 255, 0.1);
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 @media (max-width: 768px) {

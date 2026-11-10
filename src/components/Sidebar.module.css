@@ -1,13 +1,13 @@
 .sidebar {
   height: 100vh;
-  background-color: var(--background-dark);
-  border-right: 1px solid var(--border-color);
-  transition: width 0.3s ease, transform 0.3s ease;
+  background-color: var(--bg);
+  border-right: 1px solid var(--line);
+  transition: width 0.3s cubic-bezier(.2, .8, .2, 1), transform 0.3s cubic-bezier(.2, .8, .2, 1);
   display: flex;
   flex-direction: column;
   position: relative;
   flex-shrink: 0;
-  color: var(--text-primary);
+  color: var(--text);
   z-index: 100;
 }
 
@@ -29,14 +29,14 @@
   top: 28px;
   width: 24px;
   height: 24px;
-  background-color: var(--surface-dark);
-  border: 1px solid var(--border-color);
+  background-color: var(--s2);
+  border: 0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--muted);
   z-index: 50;
 }
 
@@ -44,7 +44,7 @@
   height: 80px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--line);
   overflow: hidden;
 }
 
@@ -62,14 +62,14 @@
   align-items: center;
   gap: 16px;
   padding: 12px;
-  border-radius: 8px;
+  min-height: 44px;
+  border-radius: 12px;
   text-decoration: none;
-  transition: all 0.2s;
 }
 
 .userInfo {
   padding: 16px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--line);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -93,8 +93,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    background-color: var(--background-dark);
-    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--line);
     position: fixed;
     top: 0;
     left: 0;
@@ -110,7 +110,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 90;
   }
   

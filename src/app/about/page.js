@@ -3,7 +3,7 @@ import Link from 'next/link';
 import styles from './about.module.css';
 
 export const metadata = {
-  title: 'CDV Sales Intelligence | About',
+  title: 'MGC Sales Intelligence | About',
   description: 'Stop Reacting. Start Predicting. AI-powered sales intelligence platform.',
 };
 
@@ -12,7 +12,7 @@ export default function AboutPage() {
     <div className={styles.container}>
       {/* Hero Section */}
       <section className={styles.hero}>
-        <h1 className={`${styles.title} gradient-text`}>Stop Reacting. Start Predicting.</h1>
+        <h1 className={`${styles.title}`}>Stop Reacting. Start Predicting.</h1>
         <p className={styles.subtitle}>
           The AI-powered sales intelligence platform that identifies at-risk accounts before they churn, turning raw data into immediate strategic action.
         </p>
@@ -23,7 +23,7 @@ export default function AboutPage() {
         <div className={styles.mockupContainer}>
           <Image 
             src="/landing-mockup.jpg" 
-            alt="CDV Sales Intelligence Dashboard Mockup" 
+            alt="MGC Sales Intelligence Dashboard Mockup" 
             width={1200} 
             height={800} 
             layout="responsive"
@@ -79,7 +79,7 @@ export default function AboutPage() {
 
       {/* Footer CTA */}
       <footer className={styles.footer}>
-        <h2 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Ready to shift from order-taking to proactive account management?</h2>
+        <h2 style={{ fontSize: '22px', lineHeight: '28px', letterSpacing: '-0.02em', marginBottom: '24px' }}>Ready to shift from order-taking to proactive account management?</h2>
         <Link href="/login">
           <button className={styles.ctaButton}>Secure Your Revenue Today</button>
         </Link>

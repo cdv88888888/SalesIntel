@@ -189,7 +189,7 @@ export default async function PredictiveAI({ searchParams }) {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className="gradient-text">Predictive AI Forecast</h1>
+        <h1>Predictive AI Forecast</h1>
         <p>Mathematical modeling of end-of-month volume based on historical run-rates</p>
       </header>
 
@@ -198,9 +198,8 @@ export default async function PredictiveAI({ searchParams }) {
           <ClientClickWrapper 
             key={dealer.id} 
             dealerId={dealer.id}
-            className={`${styles.card} glass-panel`} 
+            className={styles.card} 
             style={{ 
-              borderColor: dealer.status === 'DANGER' ? 'rgba(248, 113, 113, 0.3)' : dealer.status === 'WARNING' ? 'rgba(250, 204, 21, 0.3)' : dealer.status === 'ACHIEVED' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.05)',
               cursor: 'pointer'
             }}
           >
@@ -240,7 +239,7 @@ export default async function PredictiveAI({ searchParams }) {
                   className={styles.progressBar} 
                   style={{ 
                     width: `${dealer.projectedProgressPct}%`,
-                    background: dealer.status === 'DANGER' ? '#f87171' : dealer.status === 'WARNING' ? '#facc15' : dealer.status === 'ACHIEVED' ? '#a855f7' : '#4ade80'
+                    background: dealer.status === 'DANGER' ? 'var(--red)' : dealer.status === 'WARNING' ? 'var(--orange)' : 'var(--green)'
                   }}
                 ></div>
               </div>

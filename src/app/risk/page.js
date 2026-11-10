@@ -106,7 +106,6 @@ export default async function RiskAndChurn({ searchParams }) {
       key={dealer.id} 
       dealerId={dealer.id}
       className={styles.card} 
-      style={{ borderLeft: type === 'lost' ? '4px solid #ef4444' : (type === 'no_orders' ? '4px solid #f59e0b' : (type === 'new' ? '4px solid #10b981' : '4px solid #3b82f6')) }}
     >
       <div className={styles.dealerName}>{dealer.name}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -128,36 +127,36 @@ export default async function RiskAndChurn({ searchParams }) {
         )}
         
         {type === 'new' && (
-          <div className={styles.pitchBox} style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+          <div className={styles.pitchBox}>
             <div className={styles.pitchLabel}>New Account</div>
-            <div className={styles.pitchValue} style={{ color: '#34d399', fontSize: '0.9rem' }}>
+            <div className={styles.pitchValue}>
               Acquired {dealer.daysSinceFirstOrder} days ago
             </div>
           </div>
         )}
         
         {type === 'decline' && (
-          <div className={styles.pitchBox} style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+          <div className={styles.pitchBox}>
             <div className={styles.pitchLabel}>Volume Drop</div>
-            <div className={styles.pitchValue} style={{ color: '#60a5fa' }}>
+            <div className={styles.pitchValue}>
               {dealer.prevMonthVol.toLocaleString()} KGs → {dealer.currentMonthVol.toLocaleString()} KGs
             </div>
           </div>
         )}
         
         {type === 'no_orders' && (
-          <div className={styles.pitchBox} style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+          <div className={styles.pitchBox}>
             <div className={styles.pitchLabel}>Zero Orders This Month</div>
-            <div className={styles.pitchValue} style={{ color: '#fbbf24', fontSize: '1rem' }}>
+            <div className={styles.pitchValue}>
               Prev Month: {dealer.prevMonthVol.toLocaleString()} KGs
             </div>
           </div>
         )}
 
         {type === 'lost' && (
-          <div className={styles.pitchBox} style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+          <div className={styles.pitchBox}>
             <div className={styles.pitchLabel}>Lost Account Risk</div>
-            <div className={styles.pitchValue} style={{ color: '#f87171', fontSize: '0.9rem' }}>
+            <div className={styles.pitchValue}>
               Inactive for {(dealer.daysSinceLastOrder / dealer.avgDays).toFixed(1)}x their normal frequency.
             </div>
           </div>
@@ -169,7 +168,7 @@ export default async function RiskAndChurn({ searchParams }) {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className="gradient-text">Risk & Churn Analysis</h1>
+        <h1>Risk & Churn Analysis</h1>
         <p>Identify accounts that are dropping off or have completely stopped ordering.</p>
       </header>
 
@@ -182,7 +181,7 @@ export default async function RiskAndChurn({ searchParams }) {
       <ExpandableKanban className={styles.kanbanBoard} isGrid={true}>
         <div className={`${styles.column}`}>
           <div className={styles.columnHeader}>
-            <div className={styles.columnTitle} style={{ color: '#34d399' }}>New Accounts</div>
+            <div className={styles.columnTitle} style={{ color: 'var(--green)' }}>New Accounts</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <RiskTableModal title="New Accounts" dealers={riskColumns.newAccounts} segment={segment} />
               <div className={styles.countBadge}>{riskColumns.newAccounts.length}</div>
@@ -190,13 +189,13 @@ export default async function RiskAndChurn({ searchParams }) {
           </div>
           <div className={styles.cardList}>
             {riskColumns.newAccounts.map(dealer => renderRiskCard(dealer, 'new'))}
-            {riskColumns.newAccounts.length === 0 && <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>No new accounts</div>}
+            {riskColumns.newAccounts.length === 0 && <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>No new accounts</div>}
           </div>
         </div>
 
         <div className={`${styles.column}`}>
           <div className={styles.columnHeader}>
-            <div className={styles.columnTitle} style={{ color: '#60a5fa' }}>Volume Decline</div>
+            <div className={styles.columnTitle} style={{ color: 'var(--orange)' }}>Volume Decline</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <RiskTableModal title="Volume Decline" dealers={riskColumns.volumeDecline} segment={segment} />
               <div className={styles.countBadge}>{riskColumns.volumeDecline.length}</div>
@@ -204,13 +203,13 @@ export default async function RiskAndChurn({ searchParams }) {
           </div>
           <div className={styles.cardList}>
             {riskColumns.volumeDecline.map(dealer => renderRiskCard(dealer, 'decline'))}
-            {riskColumns.volumeDecline.length === 0 && <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>No volume declines</div>}
+            {riskColumns.volumeDecline.length === 0 && <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>No volume declines</div>}
           </div>
         </div>
 
         <div className={`${styles.column}`}>
           <div className={styles.columnHeader}>
-            <div className={styles.columnTitle} style={{ color: '#fbbf24' }}>No Orders This Month</div>
+            <div className={styles.columnTitle} style={{ color: 'var(--orange)' }}>No Orders This Month</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <RiskTableModal title="No Orders This Month" dealers={riskColumns.noOrders} segment={segment} />
               <div className={styles.countBadge}>{riskColumns.noOrders.length}</div>
@@ -218,13 +217,13 @@ export default async function RiskAndChurn({ searchParams }) {
           </div>
           <div className={styles.cardList}>
             {riskColumns.noOrders.map(dealer => renderRiskCard(dealer, 'no_orders'))}
-            {riskColumns.noOrders.length === 0 && <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>No accounts missing</div>}
+            {riskColumns.noOrders.length === 0 && <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>No accounts missing</div>}
           </div>
         </div>
 
         <div className={`${styles.column}`}>
           <div className={styles.columnHeader}>
-            <div className={styles.columnTitle} style={{ color: '#f87171' }}>Lost Accounts</div>
+            <div className={styles.columnTitle} style={{ color: 'var(--red)' }}>Lost Accounts</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <RiskTableModal title="Lost Accounts" dealers={riskColumns.lost} segment={segment} />
               <div className={styles.countBadge}>{riskColumns.lost.length}</div>
@@ -232,7 +231,7 @@ export default async function RiskAndChurn({ searchParams }) {
           </div>
           <div className={styles.cardList}>
             {riskColumns.lost.map(dealer => renderRiskCard(dealer, 'lost'))}
-            {riskColumns.lost.length === 0 && <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>No lost accounts</div>}
+            {riskColumns.lost.length === 0 && <div style={{ color: 'var(--muted)', textAlign: 'center', marginTop: '20px' }}>No lost accounts</div>}
           </div>
         </div>
       </ExpandableKanban>

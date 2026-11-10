@@ -127,9 +127,9 @@ export default async function BusinessIntelligence({ searchParams }) {
     <div className={styles.page}>
       {loadError && (
         <div style={{
-          margin: '0 0 16px 0', padding: '12px 16px', borderRadius: '8px',
-          background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.35)',
-          color: 'var(--danger-color)', fontSize: '0.9rem'
+          margin: '0 0 16px 0', padding: '12px 16px', borderRadius: 'var(--r-card)',
+          background: 'var(--red-tint)', border: 0,
+          color: 'var(--red)', fontSize: '15px', lineHeight: '22px'
         }}>
           <strong>Could not load sales data.</strong> The figures below are not
           zero sales - the query failed: {loadError}
@@ -138,33 +138,33 @@ export default async function BusinessIntelligence({ searchParams }) {
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <div>
-            <h1 className="gradient-text">Volume Analytics</h1>
+            <h1>Volume Analytics</h1>
             <p>Real-time Sales in KGs & Performance Tracking</p>
           </div>
           <form method="GET" className={styles.filterForm}>
             <input type="hidden" name="segment" value={segment} />
             {selectedCustomers.length > 0 && <input type="hidden" name="customer" value={selectedCustomers.join(',')} />}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label style={{ color: "var(--text-secondary)", fontWeight: 500 }}>Start:</label>
+              <label style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>Start:</label>
               <input 
                 type="month"
                 name="start"
                 defaultValue={startPeriod || ""}
-                style={{ background: 'var(--surface-dark)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '8px 12px', borderRadius: '8px', fontSize: '1rem', colorScheme: 'dark' }}
+                style={{ background: 'var(--s2)', color: 'var(--text)', border: 0, padding: '0 14px', minHeight: '44px', borderRadius: '12px', fontSize: '15px' }}
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label style={{ color: "var(--text-secondary)", fontWeight: 500 }}>End:</label>
+              <label style={{ color: "var(--muted)", fontSize: "13px", fontWeight: 500 }}>End:</label>
               <input 
                 type="month"
                 name="end"
                 defaultValue={endPeriod || ""}
-                style={{ background: 'var(--surface-dark)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '8px 12px', borderRadius: '8px', fontSize: '1rem', colorScheme: 'dark' }}
+                style={{ background: 'var(--s2)', color: 'var(--text)', border: 0, padding: '0 14px', minHeight: '44px', borderRadius: '12px', fontSize: '15px' }}
               />
             </div>
-            <button type="submit" className={styles.button} style={{ marginTop: 0, padding: "8px 16px", width: "auto" }}>Apply</button>
+            <button type="submit" className={styles.button} style={{ marginTop: 0, padding: "0 20px", minHeight: "44px", width: "auto", background: "var(--blue)", color: "#fff", fontWeight: 600, border: 0, borderRadius: "var(--r-pill)", cursor: "pointer" }}>Apply</button>
             {selectedCustomers.length > 0 && (
-              <Link href={`?start=${startPeriod}&end=${endPeriod}&segment=${segment}`} style={{ color: "var(--danger-color)", fontSize: "0.9rem", marginLeft: "12px" }}>
+              <Link href={`?start=${startPeriod}&end=${endPeriod}&segment=${segment}`} style={{ color: "var(--red)", fontSize: "13px", fontWeight: 500, marginLeft: "12px" }}>
                 Clear Filter
               </Link>
             )}
@@ -174,18 +174,18 @@ export default async function BusinessIntelligence({ searchParams }) {
 
       {/* KPI Section */}
       <div className={styles.dashboardGrid}>
-        <div className={`${styles.kpiCard} glass-panel`}>
+        <div className={`${styles.kpiCard}`}>
           <span className={styles.kpiLabel}>Total KGs Sold ({startPeriod === endPeriod ? startPeriod : `${startPeriod} to ${endPeriod}`})</span>
           <span className={styles.kpiValue}>{totalKgs.toLocaleString()} kg</span>
           <span className={`${styles.kpiTrend} ${styles.trendUp}`}>Live BigQuery Data</span>
         </div>
-        <div className={`${styles.kpiCard} glass-panel`}>
+        <div className={`${styles.kpiCard}`}>
           <span className={styles.kpiLabel}>Active Dealers</span>
           <span className={styles.kpiValue}>{activeDealers}</span>
           <span className={`${styles.kpiTrend} ${styles.trendUp}`}>Live BigQuery Data</span>
         </div>
         {/* Multi-Select Customer Filter */}
-        <div className={`${styles.kpiCard} glass-panel`} style={{ overflow: 'visible', zIndex: 10 }}>
+        <div className={`${styles.kpiCard}`} style={{ overflow: 'visible', zIndex: 10 }}>
           <h3 className={styles.kpiTitle}>Customer Filter</h3>
           <div style={{ marginTop: '12px' }}>
             <CustomerMultiSelect 
@@ -197,8 +197,8 @@ export default async function BusinessIntelligence({ searchParams }) {
       </div>
 
       {/* MoM Trend Chart */}
-      <section className={`${styles.tableContainer} glass-panel`} style={{ marginBottom: "24px", padding: "24px" }}>
-        <h2 className={styles.chartTitle} style={{ marginBottom: "24px", fontSize: '1.1rem' }}>
+      <section className={`${styles.tableContainer}`} style={{ marginBottom: "16px", padding: "24px" }}>
+        <h2 className={styles.chartTitle} style={{ marginBottom: "24px" }}>
           {(() => {
             if (!startPeriod || !endPeriod) return "Month on month Trend";
             const startY = startPeriod.split('-')[0];
@@ -206,7 +206,7 @@ export default async function BusinessIntelligence({ searchParams }) {
             return startY === endY ? `${startY} Month on month` : `${startY} to ${endY} Month on month`;
           })()}
         </h2>
-        <div style={{ display: 'flex', alignItems: 'flex-end', height: '160px', gap: '12px', padding: '0 8px 8px 8px', borderBottom: '1px solid rgba(255,255,255,0.1)', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', height: '160px', gap: '12px', padding: '0 8px 8px 8px', borderBottom: '1px solid var(--line)', overflowX: 'auto' }}>
           {(() => {
             if (!startPeriod || !endPeriod) return null;
             const startY = parseInt(startPeriod.split('-')[0]);
@@ -240,20 +240,14 @@ export default async function BusinessIntelligence({ searchParams }) {
               const isHighest = val === chartMax && chartMax > 0;
               const isLowest = val === chartMin && chartMin < chartMax && val > 0;
               
-              let bgColor = 'var(--chart-bar-inactive)';
-              let glow = 'none';
-              let borderColor = '1px solid transparent';
+              let bgColor = 'var(--trk)';
               
               if (isHighest) {
-                bgColor = 'var(--success-color)';
-                glow = '0 0 16px rgba(16, 185, 129, 0.4)';
+                bgColor = 'var(--green)';
               } else if (isLowest) {
-                bgColor = 'var(--danger-color)';
-                glow = '0 0 16px rgba(239, 68, 68, 0.4)';
+                bgColor = 'var(--red)';
               } else if (isSelected) {
-                bgColor = 'var(--primary-accent)';
-                glow = '0 0 16px rgba(99, 102, 241, 0.3)';
-                borderColor = '1px solid rgba(255,255,255,0.2)';
+                bgColor = 'var(--blue)';
               }
               
               const isFirstOfMonthOrYear = month === 1 || (year === startY && month === startM);
@@ -261,9 +255,9 @@ export default async function BusinessIntelligence({ searchParams }) {
               return (
                 <div key={`${year}-${month}`} style={{ flex: '1 0 50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', height: '100%', minWidth: '50px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '32px', justifyContent: 'flex-end' }}>
-                    {isHighest && <span style={{fontSize: '0.65rem', color: 'var(--success-color)', fontWeight: 'bold', lineHeight: 1, marginBottom: '2px'}}>MAX</span>}
-                    {isLowest && <span style={{fontSize: '0.65rem', color: 'var(--danger-color)', fontWeight: 'bold', lineHeight: 1, marginBottom: '2px'}}>MIN</span>}
-                    <span style={{ fontSize: '0.75rem', color: isSelected || isHighest || isLowest ? 'var(--text-primary)' : 'var(--text-secondary)', opacity: val > 0 ? 1 : 0, fontWeight: isSelected || isHighest || isLowest ? 600 : 400, transition: 'opacity 0.2s', lineHeight: 1, whiteSpace: 'nowrap' }}>
+                    {isHighest && <span style={{fontSize: '11px', color: 'var(--green)', fontWeight: 600, lineHeight: 1, marginBottom: '2px'}}>MAX</span>}
+                    {isLowest && <span style={{fontSize: '11px', color: 'var(--red)', fontWeight: 600, lineHeight: 1, marginBottom: '2px'}}>MIN</span>}
+                    <span style={{ fontSize: '11px', fontVariantNumeric: 'tabular-nums', color: isSelected || isHighest || isLowest ? 'var(--text)' : 'var(--muted)', opacity: val > 0 ? 1 : 0, fontWeight: isSelected || isHighest || isLowest ? 600 : 400, transition: 'opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)', lineHeight: 1, whiteSpace: 'nowrap' }}>
                       {(val / 1000).toFixed(1)}k
                     </span>
                   </div>
@@ -273,16 +267,13 @@ export default async function BusinessIntelligence({ searchParams }) {
                     height: `${Math.max(heightPct, 2)}%`, 
                     background: bgColor, 
                     borderRadius: '6px 6px 0 0',
-                    transition: 'all 0.3s ease',
-                    boxShadow: glow,
-                    border: borderColor,
-                    borderBottom: 'none'
+                    transition: 'opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
                   }}></div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '4px' }}>
-                    <span style={{ fontSize: '0.85rem', color: isSelected || isHighest || isLowest ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: isSelected || isHighest || isLowest ? 'bold' : 'normal', lineHeight: 1 }}>
+                    <span style={{ fontSize: '13px', color: isSelected || isHighest || isLowest ? 'var(--text)' : 'var(--muted)', fontWeight: isSelected || isHighest || isLowest ? 600 : 400, lineHeight: 1 }}>
                       {months[month-1]}
                     </span>
-                    {isFirstOfMonthOrYear && <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: 1 }}>{year}</span>}
+                    {isFirstOfMonthOrYear && <span style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', lineHeight: 1 }}>{year}</span>}
                   </div>
                 </div>
               );
@@ -292,17 +283,17 @@ export default async function BusinessIntelligence({ searchParams }) {
       </section>
 
       {/* Dealer Data Table */}
-      <section className={`${styles.tableContainer} glass-panel`}>
+      <section className={`${styles.tableContainer}`}>
         <h2 className={styles.chartTitle} style={{ marginBottom: "16px" }}>Dealer Ledger (Live BigQuery Sync)</h2>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th style={{ padding: 0 }}><Link href={getSortLink('name')} style={{ display: 'block', padding: '12px 16px', color: 'inherit', textDecoration: 'none' }}>Customer Name{renderSortIndicator('name')}</Link></th>
-              <th style={{ padding: 0 }}><Link href={getSortLink('classification')} style={{ display: 'block', padding: '12px 16px', color: 'inherit', textDecoration: 'none' }}>Classification{renderSortIndicator('classification')}</Link></th>
-              <th style={{ padding: 0 }}><Link href={getSortLink('kgsSold')} style={{ display: 'block', padding: '12px 16px', color: 'inherit', textDecoration: 'none' }}>Total KGS Sold (Selected){renderSortIndicator('kgsSold')}</Link></th>
-              <th style={{ padding: 0 }}><Link href={getSortLink('prevKgsSold')} style={{ display: 'block', padding: '12px 16px', color: 'inherit', textDecoration: 'none' }}>Prev. Period KGs (YoY){renderSortIndicator('prevKgsSold')}</Link></th>
-              <th style={{ padding: 0 }}><Link href={getSortLink('target')} style={{ display: 'block', padding: '12px 16px', color: 'inherit', textDecoration: 'none' }}>Assigned Target{renderSortIndicator('target')}</Link></th>
-              <th style={{ padding: '12px 16px' }}>Actions</th>
+              <th style={{ padding: 0 }}><Link href={getSortLink('name')} style={{ display: 'block', padding: '11px 12px', color: 'inherit', textDecoration: 'none' }}>Customer Name{renderSortIndicator('name')}</Link></th>
+              <th style={{ padding: 0 }}><Link href={getSortLink('classification')} style={{ display: 'block', padding: '11px 12px', color: 'inherit', textDecoration: 'none' }}>Classification{renderSortIndicator('classification')}</Link></th>
+              <th className={styles.numCell} style={{ padding: 0 }}><Link href={getSortLink('kgsSold')} style={{ display: 'block', padding: '11px 12px', color: 'inherit', textDecoration: 'none' }}>Total KGS Sold (Selected){renderSortIndicator('kgsSold')}</Link></th>
+              <th className={styles.numCell} style={{ padding: 0 }}><Link href={getSortLink('prevKgsSold')} style={{ display: 'block', padding: '11px 12px', color: 'inherit', textDecoration: 'none' }}>Prev. Period KGs (YoY){renderSortIndicator('prevKgsSold')}</Link></th>
+              <th className={styles.numCell} style={{ padding: 0 }}><Link href={getSortLink('target')} style={{ display: 'block', padding: '11px 12px', color: 'inherit', textDecoration: 'none' }}>Assigned Target{renderSortIndicator('target')}</Link></th>
+              <th style={{ padding: '11px 12px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
