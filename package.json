@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node tests/run-e2e-real.js",
+    "test": "node --test \"src/lib/__tests__/*.test.js\"",
     "test:e2e": "node tests/run-e2e-real.js"
   },
   "dependencies": {
