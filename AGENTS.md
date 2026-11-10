@@ -65,6 +65,12 @@ seconds means a referenced secret is missing or unreadable; a failure in
 - `ANTHROPIC_API_KEY` powers the Claude chat assistant (`/api/chat`). It is a
   console environment-variable override, like `SESSION_SECRET`. Without it the
   chat answers "ANTHROPIC_API_KEY is not set".
+- `CRON_SECRET` guards the scheduled volume-alert run (`POST /api/cron/alerts`).
+  It is a console environment-variable override, and the same value is stored
+  as the `CRON_SECRET` repository secret on GitHub, where the
+  `.github/workflows/volume-alerts.yml` workflow calls the endpoint every two
+  days. Without it the endpoint answers 503 and no scheduled run happens. The
+  run also needs `ANTHROPIC_API_KEY` to write explanations.
 
 Vercel hosted this app until September 2026 and is being decommissioned. If
 anything in the repo still refers to Vercel as production, it is stale.

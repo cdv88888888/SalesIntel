@@ -266,3 +266,19 @@
 @keyframes alertsSpin {
   to { transform: rotate(360deg); }
 }
+
+.runLine {
+  margin-top: 6px !important;
+  font-size: 0.8rem !important;
+}
+
+.newTag {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--primary-accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  vertical-align: middle;
+}

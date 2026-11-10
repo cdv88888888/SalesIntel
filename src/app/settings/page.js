@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import { normalizeBaseSegment } from '../../lib/segments';
 import { isPermanentAdmin } from '../../lib/admins';
+import AlertAgentsSection from './AlertAgentsSection';
 
 function SettingsContent() {
   const searchParams = useSearchParams();
@@ -556,6 +557,8 @@ function SettingsContent() {
           </div>
         </section>
       )}
+
+      <AlertAgentsSection />
     </div>
   );
 }
