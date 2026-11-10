@@ -100,7 +100,7 @@ export default async function Dashboard({ searchParams }) {
     <div className={styles.dashboard}>
       <main className={styles.mainColumn}>
         <header className={styles.header}>
-          <h1>CDV-sales-intelligence</h1>
+          <h1>MGC Sales Intelligence</h1>
           <p>Smart Relationship Management & Operational Automation</p>
         </header>
 

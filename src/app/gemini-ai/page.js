@@ -437,7 +437,7 @@ export default function GeminiAIPage() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask your CDV-sales-intelligence AI..."
+              placeholder="Ask your MGC Sales Intelligence AI..."
               disabled={isLoading}
               style={{
                 flex: 1,

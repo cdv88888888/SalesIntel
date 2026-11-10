@@ -6,7 +6,7 @@ const ChatContext = createContext();
 
 const INITIAL_GREETING = { 
   role: 'model', 
-  content: "Hi! I'm your CDV-sales-intelligence AI. Ask me anything about your accounts, sales trends, or missed orders!" 
+  content: "Hi! I'm your MGC Sales Intelligence AI. Ask me anything about your accounts, sales trends, or missed orders!" 
 };
 
 export function ChatProvider({ children }) {
