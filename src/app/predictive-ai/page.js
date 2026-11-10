@@ -6,6 +6,14 @@ import { normalizeSegment } from "../../lib/segments";
 import { getSettings } from "../../lib/settings";
 import ClientClickWrapper from "../../components/ClientClickWrapper";
 import { cookies } from "next/headers";
+import {
+  targetFor, recentMonths, projectEndOfMonth, paceStatus, monthProgress,
+  BASELINE_MONTHS, PACE_AHEAD,
+} from "../../lib/targets";
+
+// Accounts with less than this sold so far are left off the forecast: a
+// run-rate projected from one small order says nothing.
+const MIN_FORECAST_KGS = 500;
 
 export default async function PredictiveAI({ searchParams }) {
   const params = await searchParams;
@@ -13,56 +21,37 @@ export default async function PredictiveAI({ searchParams }) {
 
   const settings = await getSettings(null, segment);
   const dealerTargets = settings.dealerTargets || {};
-  
-  let predictions = [];
 
-  // Calculate days in current month to figure out run-rate
-  const today = new Date();
-  const currentDay = today.getDate();
-  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const monthProgressPct = currentDay / lastDayOfMonth;
+  let predictions = [];
+  let loadError = null;
 
   try {
     const availableMonths = await getAvailableMonths();
     if (availableMonths.length > 0) {
       const latest = availableMonths[0];
-      // Only forecast if we are looking at the current month
-      const isCurrentMonth = latest.year === today.getFullYear() && latest.month === (today.getMonth() + 1);
-      
+      const calendar = monthProgress(latest);
+
       const currentPeriod = `${latest.year}-${String(latest.month).padStart(2, '0')}`;
       const dealers = await getDealerAggregates(currentPeriod, currentPeriod, [], segment);
 
       for (const d of dealers) {
-        if (!d.monthlyHistory || d.kgsSold < 500) continue; // Skip small accounts for cleaner predictions
+        if (!d.monthlyHistory || d.kgsSold < MIN_FORECAST_KGS) continue;
 
-        const history = JSON.parse(d.monthlyHistory);
-        // Exclude current month from history average if it's incomplete
-        const pastMonths = history.filter(h => h.year !== latest.year || h.month !== latest.month);
-        
-        if (pastMonths.length < 3) continue; // Need at least 3 months of history to predict
+        // The same baseline and target every other page uses.
+        const recent3 = recentMonths(d, BASELINE_MONTHS, latest);
+        if (recent3.length < BASELINE_MONTHS) continue; // Not enough history to forecast from
 
-        // Calculate 3-month moving average
-        const recent3 = pastMonths.slice(0, 3);
-        const avg3Month = recent3.reduce((sum, m) => sum + m.monthlyKgs, 0) / 3;
-
-        // Current Run-Rate Calculation
+        const target = targetFor(d, dealerTargets, latest);
+        const avg3Month = target.baselineKgs;
         const currentKgs = d.kgsSold || 0;
-        let projectedKgs = currentKgs;
-        
-        if (isCurrentMonth) {
-          // If we are halfway through the month, multiply current by (total_days / current_day)
-          // But blend it with the historical average to smooth out spikes
-          const pureRunRate = currentKgs / monthProgressPct;
-          projectedKgs = (pureRunRate * 0.7) + (avg3Month * 0.3); 
-        } else {
-          // If the month is already over, the projected is just the final amount
-          projectedKgs = currentKgs;
-        }
+        const projectedKgs = projectEndOfMonth({
+          kgsSoFar: currentKgs,
+          baselineKgs: avg3Month,
+          ...calendar,
+        });
+        const projectedProgressPct = target.kgs > 0 ? (projectedKgs / target.kgs) * 100 : 0;
+        const status = paceStatus({ kgsSoFar: currentKgs, projectedKgs, targetKgs: target.kgs });
 
-        const target = dealerTargets[d.id] || (avg3Month * 1.15); // Default target is 15% growth over 3mo avg
-        const projectedProgressPct = (projectedKgs / target) * 100;
-        
-        let status = "SAFE";
         let insight = (
           <ul className={styles.insightList}>
             <li>Projected to hit <strong>{Math.round(projectedProgressPct)}% of target</strong></li>
@@ -70,16 +59,14 @@ export default async function PredictiveAI({ searchParams }) {
           </ul>
         );
         
-        if (currentKgs >= target) {
-          status = "ACHIEVED";
+        if (status === "ACHIEVED") {
           insight = (
             <ul className={styles.insightList}>
-              <li>Reached <strong>{Math.round((currentKgs / target) * 100)}% of target</strong></li>
+              <li>Reached <strong>{Math.round((currentKgs / target.kgs) * 100)}% of target</strong></li>
               <li>Volume is strong and secure</li>
             </ul>
           );
-        } else if (projectedProgressPct < 85) {
-          status = "DANGER";
+        } else if (status === "DANGER") {
           insight = (
             <ul className={styles.insightList}>
               <li>Pacing <strong>{Math.round(100 - projectedProgressPct)}% below target</strong></li>
@@ -97,16 +84,14 @@ export default async function PredictiveAI({ searchParams }) {
               <li><strong>Action:</strong> Intervene immediately</li>
             </ul>
           );
-        } else if (projectedProgressPct < 100) {
-          status = "WARNING";
+        } else if (status === "WARNING") {
           insight = (
             <ul className={styles.insightList}>
               <li>Pacing <strong>{Math.round(100 - projectedProgressPct)}% below target</strong></li>
-              <li>Needs a push to hit {Math.round(target).toLocaleString()} kg</li>
+              <li>Needs a push to hit {Math.round(target.kgs).toLocaleString()} kg</li>
             </ul>
           );
-        } else if (projectedProgressPct > 120) {
-          status = "SAFE";
+        } else if (projectedProgressPct > PACE_AHEAD * 100) {
           insight = (
             <ul className={styles.insightList}>
               <li>Tracking <strong>{Math.round(projectedProgressPct - 100)}% above target</strong></li>
@@ -120,31 +105,13 @@ export default async function PredictiveAI({ searchParams }) {
           name: d.name || "Unknown Dealer",
           currentKgs: currentKgs,
           projectedKgs: Math.round(projectedKgs),
-          target: Math.round(target),
+          target: Math.round(target.kgs),
           avg3Month: Math.round(avg3Month),
           projectedProgressPct: Math.min(150, Math.round(projectedProgressPct)),
           status,
           insight
         });
       }
-      
-      // Inject a mock "ACHIEVED" dealer so the user can see the UI for it
-      predictions.push({
-        id: "MOCK-ACHIEVED-1",
-        name: "LPG SUMMIT TRADING (Demo)",
-        currentKgs: 25000,
-        projectedKgs: 30000,
-        target: 22000,
-        avg3Month: 19100,
-        projectedProgressPct: 136,
-        status: "ACHIEVED",
-        insight: (
-          <ul className={styles.insightList}>
-            <li>Reached <strong>113% of target</strong></li>
-            <li>Volume is strong and secure</li>
-          </ul>
-        )
-      });
 
       // Sort by status (Danger first, then warning, then safe, then achieved)
       const statusWeight = { "DANGER": 4, "WARNING": 3, "SAFE": 2, "ACHIEVED": 1 };
@@ -157,33 +124,7 @@ export default async function PredictiveAI({ searchParams }) {
     }
   } catch (error) {
     console.error("Failed to load BigQuery data for Predictive AI:", error);
-    // Mock data fallback
-    predictions = [
-      {
-        id: "MOCK-1",
-        name: "SEVA LPG TRADING (Mock)",
-        currentKgs: 12400,
-        projectedKgs: 14500,
-        target: 20000,
-        avg3Month: 18500,
-        projectedProgressPct: 72,
-        status: "DANGER",
-        insight: (
-          <ul className={styles.insightList}>
-            <li>Pacing <strong>28% below target</strong></li>
-            <li>
-              <div>Weak run-rate vs 3-mo avg</div>
-              <div className={styles.historyTable}>
-                <div className={styles.historyRow}><span className={styles.historyMonth}>May</span><span className={styles.historyKgs}>18,200 kg</span></div>
-                <div className={styles.historyRow}><span className={styles.historyMonth}>Apr</span><span className={styles.historyKgs}>19,100 kg</span></div>
-                <div className={styles.historyRow}><span className={styles.historyMonth}>Mar</span><span className={styles.historyKgs}>18,200 kg</span></div>
-              </div>
-            </li>
-            <li><strong>Action:</strong> Intervene immediately</li>
-          </ul>
-        )
-      }
-    ];
+    loadError = error?.message || String(error);
   }
 
   return (
@@ -192,6 +133,17 @@ export default async function PredictiveAI({ searchParams }) {
         <h1>Predictive AI Forecast</h1>
         <p>Mathematical modeling of end-of-month volume based on historical run-rates</p>
       </header>
+
+      {loadError && (
+        <p style={{ color: 'var(--danger-color, #ef4444)', fontSize: '15px', lineHeight: '22px', marginBottom: '16px' }}>
+          Could not load sales data, so there is no forecast. The query failed: {loadError}
+        </p>
+      )}
+      {!loadError && predictions.length === 0 && (
+        <p style={{ color: 'var(--muted, var(--text-secondary))', fontSize: '15px', lineHeight: '22px', marginBottom: '16px' }}>
+          No account has enough history this month to forecast from.
+        </p>
+      )}
 
       <div className={styles.grid}>
         {predictions.map(dealer => (

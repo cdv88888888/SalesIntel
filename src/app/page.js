@@ -4,6 +4,11 @@ export const dynamic = 'force-dynamic';
 import { getDealerAggregates, getAvailableMonths } from "../lib/bigquery";
 import { normalizeSegment } from "../lib/segments";
 import { getSettings } from "../lib/settings";
+import { targetFor, TARGET_BASIS_LABEL } from "../lib/targets";
+
+// An account averaging less than this a month is skipped by the escalation
+// list: one order more or less swings it by half, so "% of target" is noise.
+const MIN_ESCALATION_BASELINE_KGS = 1000;
 import ClientClickWrapper from "../components/ClientClickWrapper";
 import CrmUpdatesStream from "./intelligence/CrmUpdatesStreamWrapper";
 import { cookies } from "next/headers";
@@ -39,6 +44,7 @@ export default async function Dashboard({ searchParams }) {
   const dealerTargets = settings.dealerTargets || {};
   let atRiskDealers = [];
   let totalKgsMonth = 0;
+  let loadError = null;
 
   // Calculate remaining days in current month
   const today = new Date();
@@ -51,14 +57,17 @@ export default async function Dashboard({ searchParams }) {
       const latest = availableMonths[0];
       const currentPeriod = `${latest.year}-${String(latest.month).padStart(2, '0')}`;
       const dealers = await getDealerAggregates(currentPeriod, currentPeriod, [], segment);
-      
+
       for (const d of dealers) {
         totalKgsMonth += (d.kgsSold || 0);
-        
-        if (d.prevKgsSold && d.prevKgsSold > 1000) { // filter out tiny dealers to avoid noise
-          const target = dealerTargets[d.id] || (d.prevKgsSold * 1.15);
-          const progress = (d.kgsSold / target) * 100;
-          
+
+        // Same target rule as every other page: saved, else 3-month average
+        // plus 15%. Accounts too small for a percentage to mean anything are
+        // left out of the escalation list.
+        const target = targetFor(d, dealerTargets, latest);
+        if (target.baselineKgs > MIN_ESCALATION_BASELINE_KGS && target.kgs > 0) {
+          const progress = ((d.kgsSold || 0) / target.kgs) * 100;
+
           // Define "Needs Attention" as less than 90% of target
           if (progress < 90) {
             atRiskDealers.push({
@@ -66,35 +75,25 @@ export default async function Dashboard({ searchParams }) {
               id: d.id,
               name: d.name || "Unknown Dealer",
               kgsSold: d.kgsSold || 0,
-              target: Math.round(target),
+              target: Math.round(target.kgs),
               progress: Math.min(100, Math.max(0, Math.round(progress))),
               pctDiff: progress - 100
             });
           }
         }
       }
-      
+
       // Sort so the worst performers are at the top
       atRiskDealers.sort((a, b) => a.progress - b.progress);
     }
   } catch (error) {
     console.error("Failed to load BigQuery data for dashboard:", error);
+    loadError = error?.message || String(error);
   }
 
   // Calculate Monthly Target Progress
   const kgsRemaining = Math.max(0, MONTHLY_SALES_TARGET - totalKgsMonth);
   const targetProgressPct = Math.min(100, Math.round((totalKgsMonth / MONTHLY_SALES_TARGET) * 100));
-
-  // If BigQuery fails, provide some fallback data for preview
-  if (atRiskDealers.length === 0) {
-    atRiskDealers = [{
-      id: "FB-1",
-      name: "MARISON LPG TRADING (Mockup)",
-      kgsSold: 1248,
-      target: 1600,
-      progress: 78
-    }];
-  }
 
   return (
     <div className={styles.dashboard}>
@@ -156,6 +155,16 @@ export default async function Dashboard({ searchParams }) {
           </h2>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {loadError && (
+              <p style={{ color: 'var(--danger-color, #ef4444)', fontSize: '15px', lineHeight: '22px' }}>
+                Could not load sales data, so no escalations are shown. The query failed: {loadError}
+              </p>
+            )}
+            {!loadError && atRiskDealers.length === 0 && (
+              <p style={{ color: 'var(--muted, var(--text-secondary))', fontSize: '15px', lineHeight: '22px' }}>
+                No account is below 90% of its target this month.
+              </p>
+            )}
             {atRiskDealers.map(dealer => (
               <ClientClickWrapper key={dealer.id} dealerId={dealer.id} className={styles.alertCard}>
                 <div className={styles.alertHeader}>
@@ -191,7 +200,7 @@ export default async function Dashboard({ searchParams }) {
                     <div className={styles.statValue} style={{ fontSize: "17px" }}>{dealer.kgsSold.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div className={styles.statLabel}>Target (Avg + 15%)</div>
+                    <div className={styles.statLabel}>Target ({TARGET_BASIS_LABEL})</div>
                     <div className={styles.statValue} style={{ fontSize: "17px" }}>{dealer.target.toLocaleString()} kg</div>
                   </div>
                 </div>
