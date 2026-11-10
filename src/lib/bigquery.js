@@ -564,6 +564,129 @@ async function _getAccountSignals() {
   return rows;
 }
 
+// How many accounts one volume-watch agent looks after.
+export const WATCH_BATCH_SIZE = 50;
+
+// One row per watched account with the raw figures the volume-decline rule
+// needs: recent pace against the account's own earlier pace, the ordering
+// cycle, and which agent (batch) the account belongs to. The rule itself lives
+// in lib/declineAlerts.js - this query only measures.
+async function _getVolumeWatch() {
+  const bq = getBigQueryClient();
+  const allChannels = quoteChannels(channelsFor(ALL_SEGMENT));
+  const query = `
+    WITH Bounds AS (
+      SELECT
+        MAX(Date) as maxDate,
+        -- Batches are ranked on the six months ending at the last month-end,
+        -- so membership holds still for a whole month instead of reshuffling
+        -- every time a large order lands.
+        DATE_SUB(DATE_TRUNC(MAX(Date), MONTH), INTERVAL 1 DAY) as rankThrough
+      FROM \`accounts-recieva.SALES.SALES2023\`
+      WHERE Date IS NOT NULL
+    ),
+    Lines AS (
+      SELECT
+        s.Customer_No_ as id,
+        s.Customer_Name as name,
+        s.Date,
+        s.Transaction_No_,
+        s.Channel,
+        ${getSegmentExpression()} as segment,
+        s.Total_KGS_Sold as kgs,
+        b.maxDate,
+        b.rankThrough
+      FROM \`accounts-recieva.SALES.SALES2023\` s
+      CROSS JOIN Bounds b
+      WHERE s.Date IS NOT NULL
+        AND s.Customer_No_ IS NOT NULL
+        AND s.Channel IN (${allChannels})
+        AND s.Date > DATE_SUB(b.maxDate, INTERVAL 365 DAY)
+    ),
+    Account AS (
+      SELECT
+        id,
+        ANY_VALUE(name HAVING MAX Date) as name,
+        ANY_VALUE(Channel HAVING MAX Date) as channel,
+        ANY_VALUE(segment HAVING MAX Date) as segment,
+        MAX(Date) as lastOrderDate,
+        COUNT(DISTINCT Date) as deliveryDays,
+        ANY_VALUE(maxDate) as dataThrough,
+        SUM(IF(Date <= rankThrough
+               AND Date > DATE_SUB(rankThrough, INTERVAL 180 DAY), kgs, 0)) as rankKgs
+      FROM Lines
+      GROUP BY id
+    ),
+    Gaps AS (
+      SELECT
+        id,
+        DATE_DIFF(Date, LAG(Date) OVER (PARTITION BY id ORDER BY Date), DAY) as gapDays
+      FROM (SELECT DISTINCT id, Date FROM Lines)
+    ),
+    -- Median gap between deliveries: one long dormancy would drag a mean out
+    -- past anything the account has ever actually done.
+    Cycle AS (
+      SELECT id, CAST(APPROX_QUANTILES(gapDays, 2)[OFFSET(1)] AS INT64) as cycleDays
+      FROM Gaps
+      WHERE gapDays > 0
+      GROUP BY id
+    ),
+    -- The "recent" window stretches for accounts that order rarely: someone on
+    -- a 40-day cycle cannot be judged on 30 days. Three cycles, held between
+    -- 30 and 90 days.
+    Win AS (
+      SELECT
+        a.id,
+        LEAST(90, GREATEST(30, IFNULL(c.cycleDays, 0) * 3)) as windowDays,
+        LEAST(90, GREATEST(30, IFNULL(c.cycleDays, 0) * 3)) + 90 as lookbackDays
+      FROM Account a
+      LEFT JOIN Cycle c ON c.id = a.id
+    ),
+    Pace AS (
+      SELECT
+        l.id,
+        SUM(IF(l.Date > DATE_SUB(l.maxDate, INTERVAL w.windowDays DAY), l.kgs, 0)) as recentKgs,
+        -- The 90 days immediately before the recent window.
+        SUM(IF(l.Date <= DATE_SUB(l.maxDate, INTERVAL w.windowDays DAY)
+               AND l.Date > DATE_SUB(l.maxDate, INTERVAL w.lookbackDays DAY), l.kgs, 0)) as baseKgs
+      FROM Lines l
+      JOIN Win w ON w.id = l.id
+      GROUP BY l.id
+    ),
+    Ranked AS (
+      SELECT
+        id,
+        ROW_NUMBER() OVER (PARTITION BY segment ORDER BY rankKgs DESC, id) as segmentRank
+      FROM Account
+      WHERE rankKgs > 0
+    )
+    SELECT
+      a.id,
+      a.name,
+      a.channel,
+      a.segment,
+      a.lastOrderDate,
+      a.deliveryDays,
+      DATE_DIFF(a.dataThrough, a.lastOrderDate, DAY) as daysSinceLast,
+      c.cycleDays,
+      w.windowDays,
+      p.recentKgs,
+      p.baseKgs,
+      a.rankKgs,
+      r.segmentRank,
+      DIV(r.segmentRank - 1, ${WATCH_BATCH_SIZE}) + 1 as batch,
+      a.dataThrough
+    FROM Ranked r
+    JOIN Account a ON a.id = r.id
+    JOIN Win w ON w.id = a.id
+    JOIN Pace p ON p.id = a.id
+    LEFT JOIN Cycle c ON c.id = a.id
+    ORDER BY a.segment, r.segmentRank
+  `;
+  const [rows] = await bq.query({ query });
+  return rows;
+}
+
 async function _getProactiveCallingData(segment = 'dealer') {
   const bq = getBigQueryClient();
   const channelFilter = getChannelFilterString(segment);
@@ -649,6 +772,12 @@ export const getDealerAggregates = (startPeriod, endPeriod, customerIds = [], se
 export const getAccountSignals = unstable_cache(
   async () => await _getAccountSignals(),
   ['bq-account-signals'],
+  { revalidate: 7200 }
+);
+
+export const getVolumeWatch = unstable_cache(
+  async () => await _getVolumeWatch(),
+  ['bq-volume-watch'],
   { revalidate: 7200 }
 );
 
