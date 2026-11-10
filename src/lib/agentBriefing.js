@@ -14,6 +14,9 @@ import { segmentLabel } from './segments';
 const MODEL = 'claude-sonnet-5-5';
 const MAX_QUERY_ROUNDS = 12;
 const COLLECTION = 'alert_briefings';
+// Bump when the briefing format changes, so stored briefings in the old
+// format are rewritten on the next run instead of being reused.
+const FORMAT_VERSION = 2;
 
 const SYSTEM_PROMPT = `You are a volume-watch agent inside "CDV Sales Intelligence", an internal app for an LPG (cooking gas) distributor in the Philippines. You look after one batch of customer accounts in one sales channel. Your single job is volume decline: find which accounts in your batch are really losing volume, work out what changed in how they buy, and tell the person who owns the batch who to call first and what to ask.
 
@@ -38,15 +41,20 @@ Rules for what you write:
 - You have no CRM notes and no competitor or pricing intelligence. Do not state an outside cause (a competitor, a price change, a closure) as fact; you may name it as something to ask the customer.
 - Rank by kilograms at stake, not by percentage.
 
-Write the briefing in Markdown, at most 350 words, with exactly these sections (omit a section only if it would be empty):
-## Call first
-Up to five accounts, most kilograms at stake first. One line each: **Account name** — what changed, with one or two numbers — what to ask or do.
-## Patterns across the batch
-Anything shared by several accounts. One to three bullets.
-## Early warnings
-Accounts the rule did not flag that are sliding. One line each.
-## Probably not real
-Flagged accounts whose decline looks like an artefact, with the reason.
+Write the briefing in Markdown for a busy sales manager who will skim it. It is an action list, not a report: no narration of what you checked, no month-by-month history. At most 120 words in total. Use exactly these sections, and leave out any that would be empty:
+
+## Action plan
+A numbered list of at most five accounts, most kilograms at stake first. Each item is one line of at most 22 words in this shape:
+**Account name** — the action to take or question to ask. *(kg per 30 days at stake; the one change that matters, e.g. "deliveries 6 → 3 a month")*
+Start the action with a verb: Call, Visit, Ask, Confirm.
+
+## Watch
+At most three bullets: accounts the rule did not flag that are sliding. Name, then one short clause with one number.
+
+## Ignore
+One line: the flagged accounts whose decline is not real, as a comma-separated list, then the shared reason in a few words.
+
+Use short account names (drop suffixes like "(DEALER)" and "LPG TRADING" when the name stays unambiguous). Round every figure. One number per clause.
 
 If nothing in the batch is declining, say so in one sentence instead.`;
 
@@ -115,7 +123,7 @@ export async function runAgentBriefing(agentKey, { force = false } = {}) {
 
   if (!force) {
     const existing = (await getStoredBriefings())[agentKey];
-    if (existing && existing.dataThrough === dataThrough) {
+    if (existing && existing.dataThrough === dataThrough && existing.version === FORMAT_VERSION) {
       return { briefing: existing, cached: true };
     }
   }
@@ -183,6 +191,7 @@ export async function runAgentBriefing(agentKey, { force = false } = {}) {
 
   const briefing = {
     agentKey,
+    version: FORMAT_VERSION,
     text,
     dataThrough,
     model: MODEL,
