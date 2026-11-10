@@ -209,3 +209,60 @@
 .reason {
   font-size: 0.8rem;
 }
+
+.explain {
+  margin-top: 8px;
+}
+
+.explainText {
+  padding: 8px 10px;
+  border-left: 2px solid var(--primary-accent);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.explainMeta {
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.explainBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.explainBtn:hover:not(:disabled) {
+  border-color: var(--primary-accent);
+  color: var(--text-primary);
+}
+
+.explainBtn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.explainError {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--danger-color);
+}
+
+.spin {
+  animation: alertsSpin 1s linear infinite;
+}
+
+@keyframes alertsSpin {
+  to { transform: rotate(360deg); }
+}

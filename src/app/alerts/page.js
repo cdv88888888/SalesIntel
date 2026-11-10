@@ -10,6 +10,8 @@ import {
   DECLINE_THRESHOLD,
   STALE_AFTER_DAYS,
 } from "../../lib/declineAlerts";
+import { getStoredExplanations } from "../../lib/alertExplanations";
+import ExplainButton from "./ExplainButton";
 
 const formatDate = (iso) => {
   if (!iso) return '—';
@@ -36,9 +38,10 @@ export default async function VolumeAlerts({ searchParams }) {
   const segment = normalizeSegment(params?.segment);
 
   let rows = [];
+  let explanations = {};
   let loadError = null;
   try {
-    rows = await getVolumeWatch();
+    [rows, explanations] = await Promise.all([getVolumeWatch(), getStoredExplanations()]);
   } catch (err) {
     console.error('Failed to load volume watch:', err);
     loadError = err?.message || String(err);
@@ -152,6 +155,11 @@ export default async function VolumeAlerts({ searchParams }) {
                           ))}
                         </div>
                         <div className={styles.sub}>{acc.alert.summary}</div>
+                        <ExplainButton
+                          accountId={acc.id}
+                          initial={explanations[acc.id] || null}
+                          dataThrough={dataThrough}
+                        />
                       </td>
                       <td className={styles.num}>{formatKgs(acc.base30)} kg</td>
                       <td className={styles.num}>{formatKgs(acc.recent30)} kg</td>

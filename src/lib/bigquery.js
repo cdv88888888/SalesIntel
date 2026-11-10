@@ -687,6 +687,55 @@ async function _getVolumeWatch() {
   return rows;
 }
 
+// What one account actually bought over the last seven months: kilograms and
+// deliveries per month per product, and each delivery day in the last 120 days.
+// This is the evidence the alert explanation is written from.
+export async function getAccountOrderDetail(customerId) {
+  const bq = getBigQueryClient();
+  const params = { customerId: String(customerId) };
+  const monthly = `
+    WITH Bounds AS (
+      SELECT MAX(Date) as maxDate
+      FROM \`accounts-recieva.SALES.SALES2023\`
+      WHERE Date IS NOT NULL
+    )
+    SELECT
+      FORMAT_DATE('%Y-%m', s.Date) as month,
+      s.Item_Description as item,
+      SUM(s.Total_KGS_Sold) as kgs,
+      COUNT(DISTINCT s.Date) as deliveryDays
+    FROM \`accounts-recieva.SALES.SALES2023\` s
+    CROSS JOIN Bounds b
+    WHERE s.Customer_No_ = @customerId
+      AND s.Date IS NOT NULL
+      AND s.Date > DATE_SUB(b.maxDate, INTERVAL 210 DAY)
+    GROUP BY month, item
+    ORDER BY month, kgs DESC
+  `;
+  const deliveries = `
+    WITH Bounds AS (
+      SELECT MAX(Date) as maxDate
+      FROM \`accounts-recieva.SALES.SALES2023\`
+      WHERE Date IS NOT NULL
+    )
+    SELECT
+      s.Date as orderDate,
+      SUM(s.Total_KGS_Sold) as kgs
+    FROM \`accounts-recieva.SALES.SALES2023\` s
+    CROSS JOIN Bounds b
+    WHERE s.Customer_No_ = @customerId
+      AND s.Date IS NOT NULL
+      AND s.Date > DATE_SUB(b.maxDate, INTERVAL 120 DAY)
+    GROUP BY orderDate
+    ORDER BY orderDate
+  `;
+  const [[monthlyRows], [deliveryRows]] = await Promise.all([
+    bq.query({ query: monthly, params }),
+    bq.query({ query: deliveries, params }),
+  ]);
+  return { monthly: monthlyRows, deliveries: deliveryRows };
+}
+
 async function _getProactiveCallingData(segment = 'dealer') {
   const bq = getBigQueryClient();
   const channelFilter = getChannelFilterString(segment);
