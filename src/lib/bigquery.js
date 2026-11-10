@@ -568,7 +568,8 @@ async function _getAccountSignals() {
 export const WATCH_BATCH_SIZE = 50;
 
 // One row per watched account with the raw figures the volume-decline rule
-// needs: recent pace against the account's own earlier pace, the ordering
+// needs, all in calendar months: this month to date, the same days of the six
+// months before, the last full month and the three before it, the ordering
 // cycle, and which agent (batch) the account belongs to. The rule itself lives
 // in lib/declineAlerts.js - this query only measures.
 async function _getVolumeWatch() {
@@ -578,6 +579,8 @@ async function _getVolumeWatch() {
     WITH Bounds AS (
       SELECT
         MAX(Date) as maxDate,
+        DATE_TRUNC(MAX(Date), MONTH) as monthStart,
+        EXTRACT(DAY FROM MAX(Date)) as dayOfMonth,
         -- Batches are ranked on the six months ending at the last month-end,
         -- so membership holds still for a whole month instead of reshuffling
         -- every time a large order lands.
@@ -590,18 +593,24 @@ async function _getVolumeWatch() {
         s.Customer_No_ as id,
         s.Customer_Name as name,
         s.Date,
-        s.Transaction_No_,
         s.Channel,
         ${getSegmentExpression()} as segment,
         s.Total_KGS_Sold as kgs,
+        -- 0 = the month the data is in now, 1 = last month, and so on.
+        DATE_DIFF(b.monthStart, DATE_TRUNC(s.Date, MONTH), MONTH) as monthsAgo,
+        -- Falls inside the same stretch of its own month as the data covers
+        -- of this one (e.g. days 1-7), so partial months compare like for like.
+        EXTRACT(DAY FROM s.Date) <= b.dayOfMonth as inSameDays,
         b.maxDate,
+        b.dayOfMonth,
         b.rankThrough
       FROM \`accounts-recieva.SALES.SALES2023\` s
       CROSS JOIN Bounds b
       WHERE s.Date IS NOT NULL
         AND s.Customer_No_ IS NOT NULL
         AND s.Channel IN (${allChannels})
-        AND s.Date > DATE_SUB(b.maxDate, INTERVAL 365 DAY)
+        -- Whole months only: the current month plus the twelve before it.
+        AND s.Date >= DATE_SUB(b.monthStart, INTERVAL 12 MONTH)
     ),
     Account AS (
       SELECT
@@ -612,6 +621,15 @@ async function _getVolumeWatch() {
         MAX(Date) as lastOrderDate,
         COUNT(DISTINCT Date) as deliveryDays,
         ANY_VALUE(maxDate) as dataThrough,
+        ANY_VALUE(dayOfMonth) as dayOfMonth,
+        -- How many months back the account's first order in the window was;
+        -- a newer account is averaged over the months it has existed.
+        MAX(monthsAgo) as firstMonthsAgo,
+        SUM(IF(monthsAgo = 0, kgs, 0)) as mtdKgs,
+        SUM(IF(monthsAgo BETWEEN 1 AND 6 AND inSameDays, kgs, 0)) as prior6SameDaysKgs,
+        SUM(IF(monthsAgo BETWEEN 1 AND 6, kgs, 0)) as prior6FullKgs,
+        SUM(IF(monthsAgo = 1, kgs, 0)) as lastMonthKgs,
+        SUM(IF(monthsAgo BETWEEN 2 AND 4, kgs, 0)) as prev3Kgs,
         SUM(IF(Date <= rankThrough
                AND Date > DATE_SUB(rankThrough, INTERVAL 180 DAY), kgs, 0)) as rankKgs
       FROM Lines
@@ -631,28 +649,6 @@ async function _getVolumeWatch() {
       WHERE gapDays > 0
       GROUP BY id
     ),
-    -- The "recent" window stretches for accounts that order rarely: someone on
-    -- a 40-day cycle cannot be judged on 30 days. Three cycles, held between
-    -- 30 and 90 days.
-    Win AS (
-      SELECT
-        a.id,
-        LEAST(90, GREATEST(30, IFNULL(c.cycleDays, 0) * 3)) as windowDays,
-        LEAST(90, GREATEST(30, IFNULL(c.cycleDays, 0) * 3)) + 90 as lookbackDays
-      FROM Account a
-      LEFT JOIN Cycle c ON c.id = a.id
-    ),
-    Pace AS (
-      SELECT
-        l.id,
-        SUM(IF(l.Date > DATE_SUB(l.maxDate, INTERVAL w.windowDays DAY), l.kgs, 0)) as recentKgs,
-        -- The 90 days immediately before the recent window.
-        SUM(IF(l.Date <= DATE_SUB(l.maxDate, INTERVAL w.windowDays DAY)
-               AND l.Date > DATE_SUB(l.maxDate, INTERVAL w.lookbackDays DAY), l.kgs, 0)) as baseKgs
-      FROM Lines l
-      JOIN Win w ON w.id = l.id
-      GROUP BY l.id
-    ),
     Ranked AS (
       SELECT
         id,
@@ -669,17 +665,19 @@ async function _getVolumeWatch() {
       a.deliveryDays,
       DATE_DIFF(a.dataThrough, a.lastOrderDate, DAY) as daysSinceLast,
       c.cycleDays,
-      w.windowDays,
-      p.recentKgs,
-      p.baseKgs,
+      a.dayOfMonth,
+      a.firstMonthsAgo,
+      a.mtdKgs,
+      a.prior6SameDaysKgs,
+      a.prior6FullKgs,
+      a.lastMonthKgs,
+      a.prev3Kgs,
       a.rankKgs,
       r.segmentRank,
       DIV(r.segmentRank - 1, ${WATCH_BATCH_SIZE}) + 1 as batch,
       a.dataThrough
     FROM Ranked r
     JOIN Account a ON a.id = r.id
-    JOIN Win w ON w.id = a.id
-    JOIN Pace p ON p.id = a.id
     LEFT JOIN Cycle c ON c.id = a.id
     ORDER BY a.segment, r.segmentRank
   `;
@@ -826,7 +824,7 @@ export const getAccountSignals = unstable_cache(
 
 export const getVolumeWatch = unstable_cache(
   async () => await _getVolumeWatch(),
-  ['bq-volume-watch'],
+  ['bq-volume-watch-monthly'],
   { revalidate: 7200 }
 );
 

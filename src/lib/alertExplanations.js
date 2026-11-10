@@ -9,16 +9,20 @@ import { asIsoDate } from './declineAlerts';
 // The low-cost model: this is a short summary over a few dozen numbers.
 const MODEL = 'claude-haiku-5-5';
 const COLLECTION = 'alert_explanations';
+// Bump when the figures or wording an explanation is built from change, so
+// stored ones written the old way are replaced rather than reused.
+export const EXPLANATION_VERSION = 2;
 
 const SYSTEM_PROMPT = `You explain volume-decline warnings inside a sales app for an LPG (cooking gas) distributor in the Philippines. The reader is a salesperson deciding whether to call the account.
 
-You are given one account's figures: its normal and recent pace, its ordering cycle, kilograms and delivery days per month per product for about seven months, and each delivery day in the last 120 days.
+You are given one account's figures. The business measures sales by calendar month, so the figures are: this month to date against the 6-month average for the same days of the month, the last full month against the average of the three months before it, its ordering cycle, kilograms and delivery days per month per product for about seven months, and each delivery day in the last 120 days.
 
 Work out what changed in how the account buys. Typical patterns: it orders less often, each delivery is smaller, one product stopped while others continue, it shifted to a smaller cylinder size, it stopped completely, or the drop is a one-off after an unusually large earlier month.
 
 Rules:
 - Use only the figures given. You have no CRM notes, prices or competitor information, so do not state an outside cause (a competitor, pricing, a closure) as fact. You may name one as something to ask about.
-- The newest month is usually incomplete; do not read a low newest month as a drop on its own.
+- The newest month is incomplete; compare it only with the same days of earlier months, never with a full month.
+- Speak in calendar months and name them (October, November to date).
 - If the figures show the decline is probably not real (for example the baseline held one unusually large order), say so plainly.
 - Quote at most two or three numbers, rounded, in kg.
 
@@ -70,9 +74,12 @@ function buildFacts(account, detail) {
     account: account.name,
     channel: account.channel,
     warnings: account.alert.reasons,
-    normalKgPer30Days: round(account.base30),
-    recentKgPer30Days: round(account.recent30),
-    recentWindowDays: account.windowDays,
+    dayOfMonthDataRunsTo: account.dayOfMonth,
+    thisMonthToDateKg: round(account.mtdKgs),
+    usualKgByThisDayOfMonth_6MonthAvg: round(account.mtdUsual),
+    lastFullMonthKg: round(account.lastMonthKgs),
+    avgKgOfThe3MonthsBeforeIt: round(account.prev3Avg),
+    usualKgPerMonth_6MonthAvg: round(account.monthUsual),
     usualDaysBetweenOrders: account.cycleDays,
     lastOrderDate: account.lastOrderDate,
     daysSinceLastOrder: account.daysSinceLast,
@@ -106,6 +113,7 @@ export async function explainAccount(account, detail) {
 
   const record = {
     accountId: account.id,
+    version: EXPLANATION_VERSION,
     text,
     dataThrough: account.dataThrough,
     model: MODEL,

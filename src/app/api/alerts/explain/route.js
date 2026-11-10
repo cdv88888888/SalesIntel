@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { verifySession } from '@/lib/session';
 import { getVolumeWatch, getAccountOrderDetail } from '@/lib/bigquery';
 import { assessAccount, asIsoDate } from '@/lib/declineAlerts';
-import { explainAccount, getStoredExplanations } from '@/lib/alertExplanations';
+import { explainAccount, getStoredExplanations, EXPLANATION_VERSION } from '@/lib/alertExplanations';
 
 export const maxDuration = 120;
 
@@ -37,7 +37,7 @@ export async function POST(request) {
 
     // Already explained on this data: do not pay for it twice.
     const stored = (await getStoredExplanations())[accountId];
-    if (stored && stored.dataThrough === account.dataThrough) {
+    if (stored && stored.dataThrough === account.dataThrough && stored.version === EXPLANATION_VERSION) {
       return NextResponse.json({ explanation: stored, cached: true });
     }
 
