@@ -69,7 +69,7 @@ export default function AboutPage() {
             <div className={styles.cardIcon}>🧠</div>
             <h3 className={styles.cardTitle}>AI-Driven Strategic Action Plans</h3>
             <p className={styles.cardDesc}>
-              <strong>The Fix:</strong> Integrated Gemini AI acts as your automated sales strategist, analyzing purchasing patterns in real-time.<br/><br/>
+              <strong>The Fix:</strong> Integrated Claude AI acts as your automated sales strategist, analyzing purchasing patterns in real-time.<br/><br/>
               <strong>The Impact:</strong> When cadence slows, the AI doesn&apos;t just alert you—it generates a localized playbook, suggesting immediate interventions like pre-approved volume promotions to shield the account from rivals.
             </p>
           </div>

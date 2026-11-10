@@ -1,165 +1,221 @@
-import { GoogleGenAI } from '@google/genai';
+import Anthropic from '@anthropic-ai/sdk';
 import { getBigQueryClient } from '../../../lib/bigquery';
 
-const systemInstruction = `
-You are a highly capable data assistant for an application called "CDV-sales-intelligence".
-Your job is to answer the user's questions by querying the BigQuery database and presenting the results.
-You have access to a tool called "runBigQuery" that executes a standard SQL query and returns the JSON result.
+// Chat assistant: Claude answers questions about the sales data by writing and
+// running read-only BigQuery SQL through the `run_sql` tool.
 
-Schema of the primary table: \`accounts-recieva.SALES.SALES2023\`
-Columns:
-- Customer_No_ (STRING): The unique ID of the customer/dealer.
-- Customer_Name (STRING): The name of the customer/dealer.
-- Classification (STRING): e.g., 'A', 'B', 'C'.
-- Total_KGS_Sold (FLOAT64): Volume of LPG sold in kilograms.
-- Net_Sales_Amount (FLOAT64): Revenue in PHP.
-- Date (TIMESTAMP): The date of the transaction.
-- Channel (STRING): The sales channel (e.g., 'DEALER', 'COMMERCIAL', 'RETAIL').
-- Transaction_No_ (STRING): Unique transaction identifier.
+const MODEL = 'claude-opus-5-5';
+const MAX_TOOL_TURNS = 10;
+const MAX_ROWS_TO_MODEL = 200;
+const MAX_RESULT_CHARS = 60000;
+// Hard cap on bytes a single query may scan (10 GB), so a runaway query cannot
+// run up a BigQuery bill.
+const MAX_BYTES_BILLED = String(10 * 1024 ** 3);
 
-When the user asks a question, write a BigQuery SQL query to find the answer.
-Call the runBigQuery tool with the SQL string.
-When you receive the result, format it beautifully as a Markdown table (unless it's a single value, then just state the value).
-Make sure to explain what the data shows briefly.
+const SYSTEM_PROMPT = `You are the data assistant inside "CDV Sales Intelligence", an internal app for an LPG (liquefied petroleum gas) distributor in the Philippines. Answer any question about the company's sales data by querying BigQuery with the run_sql tool.
 
-IMPORTANT FORMATTING RULES:
-1. When returning figures in the table header, ALWAYS indicate what they are, e.g., "(kgs)" or "(Php)".
-2. Remove all centavos/decimals from figures (round to nearest whole number).
-3. ALWAYS include commas per thousand (e.g., 1,000 instead of 1000).
+Data:
+- Main table: \`accounts-recieva.SALES.SALES2023\` (despite the name, it holds all years). One row per sales line.
+- Known columns include Customer_No_, Customer_Name, Classification, Channel, Area, Item_Description, Quantity, Total_KGS_Sold (kg), Net_Sales_Amount (PHP), Date, Transaction_No_. There may be more.
+- If you are unsure of a column name or type, or a question may need another table, first query \`accounts-recieva.SALES.INFORMATION_SCHEMA.COLUMNS\` (or \`accounts-recieva.SALES.INFORMATION_SCHEMA.TABLES\`). Do not guess column names.
+- Segments used in the app are groups of Channel values:
+  - Dealer: MGSA, MARKETER, DEALER, CODO, DEALER - COBANKIAT, DEALER-EXMARKETER, RETAIL
+  - Commercial: COMMERCIAL, commercial, Commercial, PHILGEPS, philgeps
+  - Bulk: BULK, bulk, Bulk
+- The latest month in the data may be incomplete; say so when it affects an answer.
 
-For example, to get month on month kg sales for a user, you should group by EXTRACT(MONTH from Date).
-Limit the number of rows returned by SQL to 50 unless the user specifically asks for more, to prevent massive text blocks.
-`;
+How to work:
+- Only SELECT / WITH queries are allowed. Use fully qualified table names.
+- Aggregate in SQL rather than pulling raw rows; return at most ~50 rows unless the user asks for more.
+- If a query errors, read the error, fix the SQL and retry.
+- Base every number on query results. Never invent figures. If the data cannot answer the question, say what is missing.
+
+Answer format:
+- Lead with the answer in one or two sentences, then a Markdown table if there is more than one figure.
+- Put units in table headers, e.g. "Volume (kg)" or "Sales (PHP)".
+- Round to whole numbers and use thousands separators (1,234,567).
+- Keep it short. Briefly note any assumption (date range, segment) you made.`;
+
+const TOOLS = [
+  {
+    name: 'run_sql',
+    description:
+      'Run a read-only BigQuery Standard SQL query (SELECT or WITH only) and return the rows as JSON. ' +
+      'Results are capped at 200 rows; aggregate in SQL for large data.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'BigQuery Standard SQL. SELECT or WITH only.' },
+      },
+      required: ['query'],
+      additionalProperties: false,
+    },
+    strict: true,
+  },
+];
+
+function toPlain(val) {
+  if (val === null || val === undefined) return val;
+  if (val instanceof Date) return val.toISOString();
+  if (typeof val === 'bigint') return Number(val);
+  if (Buffer.isBuffer(val)) return val.toString('base64');
+  if (Array.isArray(val)) return val.map(toPlain);
+  if (typeof val === 'object') {
+    if (val.value !== undefined && Object.keys(val).length === 1) return val.value;
+    const out = {};
+    for (const k in val) out[k] = toPlain(val[k]);
+    return out;
+  }
+  return val;
+}
+
+function isReadOnly(sql) {
+  const stripped = sql
+    .replace(/--.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .trim()
+    .replace(/^\(+\s*/, '');
+  if (!/^(select|with)\b/i.test(stripped)) return false;
+  // Reject multi-statement scripts and DML/DDL anywhere in the text.
+  if (/;\s*\S/.test(stripped)) return false;
+  return !/\b(insert|update|delete|merge|create|drop|alter|truncate|grant|revoke|call|execute|declare|set)\s/i.test(
+    stripped.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`[^`]*`/g, "''"),
+  );
+}
+
+async function runSql(query) {
+  if (typeof query !== 'string' || !isReadOnly(query)) {
+    return { error: 'Only a single read-only SELECT or WITH query is allowed.' };
+  }
+  try {
+    const [rows] = await getBigQueryClient().query({
+      query,
+      maximumBytesBilled: MAX_BYTES_BILLED,
+      jobTimeoutMs: 60000,
+    });
+    const plain = rows.slice(0, MAX_ROWS_TO_MODEL).map(toPlain);
+    let json = JSON.stringify({
+      total_rows: rows.length,
+      returned_rows: plain.length,
+      truncated: rows.length > plain.length,
+      rows: plain,
+    });
+    if (json.length > MAX_RESULT_CHARS) {
+      json = json.slice(0, MAX_RESULT_CHARS) + '... [output cut; aggregate further or select fewer columns]';
+    }
+    return { json };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+// The widget keeps history as [{ role: 'user' | 'model', content: string }].
+// Convert it into alternating user/assistant turns starting with a user turn.
+function toMessages(history, message) {
+  const turns = [];
+  for (const h of Array.isArray(history) ? history : []) {
+    const text = String(h?.content ?? '').trim();
+    if (!text) continue;
+    const role = h.role === 'user' ? 'user' : 'assistant';
+    if (turns.length === 0 && role !== 'user') continue;
+    const last = turns[turns.length - 1];
+    if (last && last.role === role) last.content += `\n\n${text}`;
+    else turns.push({ role, content: text });
+  }
+  const userText = String(message ?? '').trim();
+  const last = turns[turns.length - 1];
+  if (last && last.role === 'user') last.content += `\n\n${userText}`;
+  else turns.push({ role: 'user', content: userText });
+  return turns;
+}
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// A question can take several query rounds; give it time.
+export const maxDuration = 300;
 
 export async function POST(req) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return json({ error: 'ANTHROPIC_API_KEY is not set on the server.' }, 503);
+  }
+
+  let body;
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set in the environment variables. Please add it to your .env file.");
-    }
-    const ai = new GoogleGenAI({ apiKey: apiKey });
-    const { history, message } = await req.json();
+    body = await req.json();
+  } catch {
+    return json({ error: 'Invalid request body.' }, 400);
+  }
+  if (!String(body?.message ?? '').trim()) {
+    return json({ error: 'Message is empty.' }, 400);
+  }
 
+  const client = new Anthropic();
+  const messages = toMessages(body.history, body.message);
 
-    const tools = [{
-      functionDeclarations: [
-        {
-          name: 'runBigQuery',
-          description: 'Executes a BigQuery SQL query and returns the results as JSON string.',
-          parameters: {
-            type: 'OBJECT',
-            properties: {
-              query: {
-                type: 'STRING',
-                description: 'The standard SQL query to execute in BigQuery.'
-              }
-            },
-            required: ['query']
-          }
-        }
-      ]
-    }];
+  try {
+    for (let turn = 0; turn <= MAX_TOOL_TURNS; turn++) {
+      const response = await client.beta.messages
+        .stream({
+          model: MODEL,
+          max_tokens: 32000,
+          betas: ['server-side-fallback-2026-07-01'],
+          fallbacks: 'default',
+          output_config: { effort: 'medium' },
+          system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+          tools: TOOLS,
+          messages,
+        })
+        .finalMessage();
 
-    // Format history for the SDK, ensuring turn alternation starting with a user turn
-    const rawHistory = Array.isArray(history) ? history : [];
-    // Drop initial model messages if history starts with model role
-    let firstUserIdx = rawHistory.findIndex(h => h.role === 'user');
-    const validHistory = firstUserIdx >= 0 ? rawHistory.slice(firstUserIdx) : [];
-
-    const formattedHistory = validHistory.map(h => ({
-      role: h.role === 'user' ? 'user' : 'model',
-      parts: [{ text: String(h.content || '') }]
-    }));
-
-    const chatWithHistory = ai.chats.create({
-      model: 'gemini-2.5-flash',
-      history: formattedHistory,
-      config: {
-        systemInstruction: systemInstruction,
-        tools: tools,
-        temperature: 0.1,
+      if (response.stop_reason === 'refusal') {
+        return json({ text: "I can't help with that request." });
       }
-    });
 
-    console.log("Sending message to Gemini...");
-    let result = await chatWithHistory.sendMessage({ message: message });
+      const text = response.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('\n')
+        .trim();
 
-    let finalResponseText = result.text || '';
-    
-    // Process function call turns in a loop (up to 5 iterations)
-    let turns = 0;
-    while (result.functionCalls && result.functionCalls.length > 0 && turns < 5) {
-       turns++;
-       const call = result.functionCalls[0];
-       if (call.name === 'runBigQuery') {
-          const sqlQuery = call.args.query;
-          console.log(`[Turn ${turns}] Gemini generated SQL:`, sqlQuery);
-          
-          let queryResultJSON = '[]';
-          try {
-             const bq = getBigQueryClient();
-             const [rows] = await bq.query({ query: sqlQuery });
-             
-             // Sanitize values to prevent BigQuery types (Date objects, BigInt, custom objects) from crashing JSON.stringify
-             const sanitizedRows = rows.map(row => {
-               const newRow = {};
-               for (const key in row) {
-                 const val = row[key];
-                 if (val === null || val === undefined) {
-                   newRow[key] = val;
-                 } else if (val instanceof Date) {
-                   newRow[key] = val.toISOString();
-                 } else if (typeof val === 'object' && val.value !== undefined) {
-                   newRow[key] = val.value;
-                 } else if (typeof val === 'bigint') {
-                   newRow[key] = Number(val);
-                 } else {
-                   newRow[key] = val;
-                 }
-               }
-               return newRow;
-             });
-             queryResultJSON = JSON.stringify(sanitizedRows);
-          } catch (bqError) {
-             console.error('BigQuery execution error:', bqError);
-             queryResultJSON = JSON.stringify({ error: bqError.message });
+      if (response.stop_reason !== 'tool_use') {
+        return json({ text: text || 'No answer was returned. Please rephrase your question.' });
+      }
+
+      messages.push({ role: 'assistant', content: response.content });
+
+      const toolUses = response.content.filter(b => b.type === 'tool_use');
+      const results = await Promise.all(
+        toolUses.map(async b => {
+          if (b.name !== 'run_sql') {
+            return { type: 'tool_result', tool_use_id: b.id, content: `Unknown tool ${b.name}`, is_error: true };
           }
-
-          console.log(`[Turn ${turns}] Sending query results back to Gemini...`);
-          result = await chatWithHistory.sendMessage({
-            message: [{
-              functionResponse: {
-                name: 'runBigQuery',
-                response: { result: queryResultJSON }
-              }
-            }]
-          });
-          
-          if (result.text) {
-             finalResponseText = result.text;
-          }
-       } else {
-          break;
-       }
+          console.log('[chat] SQL:', b.input?.query);
+          const r = await runSql(b.input?.query);
+          return r.error
+            ? { type: 'tool_result', tool_use_id: b.id, content: r.error, is_error: true }
+            : { type: 'tool_result', tool_use_id: b.id, content: r.json };
+        }),
+      );
+      messages.push({ role: 'user', content: results });
     }
 
-    if (!finalResponseText && result.text) {
-      finalResponseText = result.text;
-    }
-
-    if (!finalResponseText) {
-      finalResponseText = "No text content was returned by the AI. Please rephrase your query.";
-    }
-
-    return new Response(JSON.stringify({ text: finalResponseText }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return json({ text: 'That question needed too many queries. Please try narrowing it down.' });
   } catch (error) {
-    console.error('Chat API Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    console.error('Chat API error:', error);
+    if (error instanceof Anthropic.AuthenticationError) {
+      return json({ error: 'The Claude API key was rejected. Check ANTHROPIC_API_KEY.' }, 502);
+    }
+    if (error instanceof Anthropic.RateLimitError) {
+      return json({ error: 'Claude is rate-limited right now. Try again in a minute.' }, 429);
+    }
+    if (error instanceof Anthropic.APIError) {
+      return json({ error: `Claude API error (${error.status}): ${error.message}` }, 502);
+    }
+    return json({ error: error.message || 'Something went wrong.' }, 500);
   }
 }

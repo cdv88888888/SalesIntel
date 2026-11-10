@@ -50,16 +50,16 @@ env:
     availability:
       - RUNTIME
 
+  # ANTHROPIC_API_KEY (Claude chat assistant, /api/chat) is NOT declared here
+  # either: set it as a console environment-variable override, like
+  # SESSION_SECRET. Without it the chat returns "ANTHROPIC_API_KEY is not set".
+
   # --- Secret Manager references (all disabled for now) --------------------
   # Each entry below is disabled until the matching secret exists and the
   # App Hosting compute service account has "Secret Manager Secret Accessor"
   # on it. A referenced-but-missing secret fails the rollout in the preparer
   # step. Re-enable one at a time as the secrets are created.
   #
-  # - variable: GEMINI_API_KEY          # Gemini chat widget
-  #   secret: GEMINI_API_KEY
-  #   availability:
-  #     - RUNTIME
   # - variable: MONDAY_API_TOKEN        # Monday.com CRM updates feed
   #   secret: MONDAY_API_TOKEN
   #   availability:

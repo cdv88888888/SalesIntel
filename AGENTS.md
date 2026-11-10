@@ -50,9 +50,12 @@ seconds means a referenced secret is missing or unreadable; a failure in
   authenticates as the App Hosting compute service account, which holds
   BigQuery Data Viewer and Job User on `accounts-recieva`. `BQ_PROJECT_ID`
   points jobs at that project.
-- `GEMINI_API_KEY` and `MONDAY_API_TOKEN` are commented-out Secret Manager
-  references in `apphosting.yaml`, pending the same IAM problem; set them as
-  console overrides instead.
+- `MONDAY_API_TOKEN` is a commented-out Secret Manager reference in
+  `apphosting.yaml`, pending the same IAM problem; set it as a console
+  override instead.
+- `ANTHROPIC_API_KEY` powers the Claude chat assistant (`/api/chat`). It is a
+  console environment-variable override, like `SESSION_SECRET`. Without it the
+  chat answers "ANTHROPIC_API_KEY is not set".
 
 Vercel hosted this app until September 2026 and is being decommissioned. If
 anything in the repo still refers to Vercel as production, it is stale.

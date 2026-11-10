@@ -125,7 +125,7 @@ export default function GeminiChatWidget() {
           }}>
             <Bot size={20} color="white" />
           </div>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600, color: 'white' }}>Gemini Intelligence</h3>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600, color: 'white' }}>Claude Intelligence</h3>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
