@@ -3,6 +3,9 @@
   max-width: 1440px;
   margin: 0 auto;
   min-height: calc(100vh - 64px);
+  background: var(--bg);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .header {
@@ -10,58 +13,84 @@
 }
 
 .header h1 {
-  font-size: 2rem;
+  font-size: 28px;
+  line-height: 32px;
   font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
   margin-bottom: 8px;
 }
 
 .header p {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .dashboardGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
+/* Card: flat solid group */
 .kpiCard {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-group);
+  box-shadow: none;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.kpiTitle {
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0;
+}
+
 .kpiLabel {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  font-weight: 500;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
 }
 
 .kpiValue {
-  font-size: 2rem;
+  font-size: 28px;
+  line-height: 32px;
   font-weight: 700;
-  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .kpiTrend {
-  font-size: 0.9rem;
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 500;
 }
 
 .trendUp {
-  color: var(--success-color);
+  color: var(--green);
 }
 
 .trendDown {
-  color: var(--danger-color);
+  color: var(--red);
 }
 
 .chartContainer {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-group);
   padding: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .chartHeader {
@@ -72,16 +101,18 @@
 }
 
 .chartTitle {
-  font-size: 1.25rem;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .mockChart {
   height: 300px;
   width: 100%;
-  border-radius: 8px;
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
-  border-bottom: 2px solid var(--primary-accent);
+  border-radius: var(--r-card);
+  background: var(--s2);
   position: relative;
   display: flex;
   align-items: flex-end;
@@ -91,17 +122,20 @@
 
 .chartBar {
   width: 40px;
-  background: var(--primary-accent);
-  border-radius: 4px 4px 0 0;
-  opacity: 0.8;
-  transition: opacity 0.2s ease, height 1s ease-out;
+  background: var(--blue);
+  border-radius: 6px 6px 0 0;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .chartBar:hover {
-  opacity: 1;
+  opacity: 0.8;
 }
 
+/* Table: inset-grouped card */
 .tableContainer {
+  background: var(--surface);
+  border: 0;
+  border-radius: var(--r-group);
   padding: 24px;
   overflow-x: auto;
 }
@@ -110,60 +144,81 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  font-variant-numeric: tabular-nums;
 }
 
 .table th {
-  padding: 12px 16px;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.9rem;
-  border-bottom: 1px solid var(--border-color);
+  padding: 11px 12px;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 18px;
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .table td {
-  padding: 16px;
-  border-bottom: 1px solid var(--glass-border);
-  font-size: 0.95rem;
+  padding: 11px 12px;
+  min-height: 44px;
+  height: 44px;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--trk);
 }
 
+.numCell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status / category pills */
 .badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
 }
 
 .badgeExclusive {
-  background: var(--primary-glow);
-  color: var(--primary-accent);
+  background: var(--purple);
+  color: #fff;
 }
 
 .badgeStandard {
-  background: var(--box-bg);
-  color: var(--text-secondary);
+  background: var(--trk);
+  color: var(--text);
 }
 
 /* Modal Styles */
 .iconButton {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
+  background: var(--trk);
+  border: 0;
+  color: var(--text);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .iconButton:hover {
-  color: var(--primary-accent);
-  background: rgba(59, 130, 246, 0.1);
+  opacity: 0.7;
 }
 
 .modalOverlay {
@@ -172,12 +227,12 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(8px);
   display: flex;
   justify-content: flex-start;
   z-index: 10000;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .modalContent {
@@ -186,11 +241,13 @@
   height: 100vh;
   max-height: 100vh;
   overflow-y: auto;
-  padding: 40px;
-  background: var(--modal-bg);
-  box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
-  border-right: 1px solid var(--border-color);
-  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding: 32px;
+  background: var(--surface);
+  color: var(--text);
+  border: 0;
+  border-radius: 0 28px 28px 0;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  animation: slideInLeft 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .modalHeader {
@@ -198,32 +255,37 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--line);
   padding-bottom: 16px;
 }
 
 .modalTitle {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
   margin: 0;
-  background: linear-gradient(90deg, #60a5fa, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .closeButton {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
+  background: var(--trk);
+  border: 0;
+  color: var(--text);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .closeButton:hover {
-  color: var(--danger-color);
-  background: rgba(239, 68, 68, 0.1);
+  opacity: 0.7;
 }
 
 .modalBody {
@@ -234,9 +296,11 @@
 
 .historySection h4, .aiHeader h4 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
-  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .historyStats {
@@ -247,9 +311,9 @@
 
 .historyStatBox {
   flex: 1;
-  background: var(--box-bg);
-  border: 1px solid var(--box-border);
-  border-radius: 8px;
+  background: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -257,21 +321,25 @@
 }
 
 .historyStatLabel {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
 }
 
 .historyStatValue {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .aiSection {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
-  border: 1px solid rgba(167, 139, 250, 0.2);
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
+  padding: 16px;
 }
 
 .aiHeader {
@@ -282,9 +350,9 @@
 }
 
 .aiInsightsContainer {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--muted);
 }
 
 .aiInsightsText p {
@@ -292,7 +360,7 @@
 }
 
 .aiInsightsText strong {
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .aiInsightsText ul {
@@ -322,32 +390,34 @@
 /* Modal UI Enhancements */
 .progressContainer {
   margin-bottom: 24px;
-  background: var(--box-bg);
+  background: var(--s2);
   padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--box-border);
+  border-radius: var(--r-card);
+  border: 0;
 }
 
 .progressHeader {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  font-size: 0.9rem;
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--muted);
 }
 
 .progressBarBg {
-  height: 8px;
-  background: var(--border-color);
-  border-radius: 4px;
+  height: 6px;
+  background: var(--trk);
+  border-radius: var(--r-pill);
   overflow: hidden;
 }
 
 .progressBarFill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease-out;
+  background: var(--blue);
+  border-radius: var(--r-pill);
+  transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .statValueGroup {
@@ -357,9 +427,10 @@
 }
 
 .trendIndicator {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   margin-left: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .actionList {
@@ -371,24 +442,24 @@
   position: relative;
   padding-left: 24px;
   margin-bottom: 8px;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .actionList li::before {
   content: "→";
   position: absolute;
   left: 0;
-  color: var(--primary-accent);
+  color: var(--muted);
   font-weight: bold;
 }
 
 /* History Chart Styles */
 .historyChartSection {
   margin-top: 24px;
-  background: var(--box-bg);
+  background: var(--s2);
   padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--box-border);
+  border-radius: var(--r-card);
+  border: 0;
 }
 
 .timeframeHeader {
@@ -401,33 +472,36 @@
 .timeframeToggles {
   display: flex;
   gap: 4px;
-  background: var(--input-bg);
+  background: var(--surface);
   padding: 4px;
-  border-radius: 8px;
-  border: 1px solid var(--box-border);
+  border-radius: var(--r-pill);
+  border: 0;
 }
 
 .timeframeButton {
   background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  border: 0;
+  color: var(--muted);
+  padding: 0 14px;
+  min-height: 36px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  line-height: 18px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   font-weight: 500;
 }
 
 .timeframeButton:hover {
-  color: var(--text-primary);
-  background: var(--surface-hover);
+  color: var(--text);
+  background: var(--trk);
 }
 
-.timeframeButtonActive {
-  background: var(--primary-glow);
-  color: var(--primary-accent);
-  border: 1px solid var(--primary-accent);
+.timeframeButtonActive,
+.timeframeButtonActive:hover {
+  background: var(--blue);
+  color: #fff;
+  border: 0;
 }
 
 .miniChart {
@@ -447,17 +521,17 @@
 }
 
 .miniChart::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 4px;
+  background: transparent;
+  border-radius: var(--r-pill);
 }
 
 .miniChart::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: var(--trk);
+  border-radius: var(--r-pill);
 }
 
 .miniChart::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--line);
 }
 
 .miniChartCol {
@@ -472,10 +546,9 @@
 
 .miniChartBar {
   width: 100%;
-  background: var(--primary-accent);
-  border-radius: 4px 4px 0 0;
-  opacity: 0.8;
-  transition: all 0.3s ease;
+  background: var(--blue);
+  border-radius: 6px 6px 0 0;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* Sits above the bar without taking part in the column's flex layout, so a
@@ -485,16 +558,15 @@
   bottom: calc(100% + 2px);
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.65rem;
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 600;
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
 }
 
 .miniChartBar:hover {
-  opacity: 1;
-  background: #60a5fa;
+  opacity: 0.8;
 }
 
 .chartBarHasTooltip {
@@ -506,34 +578,36 @@
   bottom: calc(100% + 4px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--surface-dark);
-  border: 1px solid var(--border-color);
+  background: var(--surface);
+  border: 0;
   padding: 6px 10px;
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-size: 0.8rem;
+  border-radius: var(--r-card);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   z-index: 100;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
 }
 
 .chartBarHasTooltip:hover .customTooltip {
   opacity: 1;
   visibility: visible;
-  bottom: calc(100% + 8px);
 }
 
 .miniChartLabel {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--muted);
   white-space: nowrap;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .headerTop {
@@ -566,9 +640,6 @@
     justify-content: space-between;
     width: 100%;
   }
-  .header h1 {
-    font-size: 1.8rem;
-  }
   .dashboardGrid {
     grid-template-columns: 1fr;
   }
@@ -576,8 +647,8 @@
     padding: 16px;
   }
   .table th, .table td {
-    padding: 12px 8px;
-    font-size: 0.85rem;
+    padding: 11px 8px;
+    font-size: 13px;
     white-space: nowrap;
   }
   .mockChart {
@@ -589,7 +660,11 @@
   .modalContent {
     width: 100%;
     max-width: 100vw;
-    padding: 20px;
+    padding: 16px;
+    border-radius: 0;
+  }
+  .historyStats {
+    flex-wrap: wrap;
   }
 }
 
@@ -607,20 +682,20 @@
 
 .rightPane {
   min-width: 0;
-  border-left: 1px solid var(--border-color);
+  border-left: 1px solid var(--line);
   padding-left: 32px;
 }
 
 @media (max-width: 1024px) {
   .splitLayout {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 32px;
   }
-  
+
   .rightPane {
     border-left: none;
     padding-left: 0;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--line);
     padding-top: 32px;
   }
 }
@@ -629,22 +704,23 @@
 .updatesFeed {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  gap: 16px;
 }
 
 .feedHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--line);
 }
 
 .feedHeader h4 {
-  font-size: 1.1rem;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
-  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  color: var(--text);
   margin: 0;
   display: flex;
   align-items: center;
@@ -652,18 +728,20 @@
 }
 
 .feedBadge {
-  background: rgba(99, 102, 241, 0.15);
-  color: var(--primary-accent);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
+  background: var(--trk);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-variant-numeric: tabular-nums;
 }
 
 .composerPlaceholder {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  background: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
@@ -672,56 +750,57 @@
 
 .composerInput {
   background: transparent;
-  border: none;
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  border: 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 22px;
   outline: none;
   resize: none;
   width: 100%;
 }
 
+.composerInput:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .composerInput::placeholder {
-  color: var(--text-secondary);
+  color: var(--muted);
 }
 
 .composerToolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--line);
   padding-top: 10px;
 }
 
 .composerTools {
   display: flex;
   gap: 12px;
-  color: var(--text-secondary);
+  color: var(--muted);
 }
 
 .composerToolIcon {
   cursor: pointer;
-  transition: color 0.2s;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   align-items: center;
 }
 
 .composerToolIcon:hover {
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .updateCard {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 20px;
+  background: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  transition: border-color 0.2s;
-}
-
-.updateCard:hover {
-  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .updateAuthorRow {
@@ -731,19 +810,19 @@
 }
 
 .avatarCircle {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.85rem;
-  color: #ffffff;
+  font-size: 13px;
+  color: #fff;
   flex-shrink: 0;
   background-size: cover;
   background-position: center;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border: 0;
 }
 
 .authorMeta {
@@ -754,20 +833,22 @@
 }
 
 .authorName {
-  font-size: 0.95rem;
+  font-size: 15px;
+  line-height: 22px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .updateTime {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
 }
 
 .updateContent {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--text);
   word-break: break-word;
 }
 
@@ -779,44 +860,35 @@
   margin-bottom: 0;
 }
 
-/* Styled mentions from Monday.com response HTML */
-.updateContent a[href*="/users/"] {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa !important;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 500;
-  text-decoration: none !important;
-  font-size: 0.9rem;
-}
-
+/* Mentions from Monday.com response HTML: one neutral chip style */
+.updateContent a[href*="/users/"],
 .updateContent a[href*="/board_subscribers"] {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399 !important;
-  padding: 1px 6px;
-  border-radius: 4px;
+  background: var(--blue-tint);
+  color: var(--blue) !important;
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
   font-weight: 500;
   text-decoration: none !important;
-  font-size: 0.9rem;
+  font-size: 13px;
 }
 
 .updateContent a {
-  color: var(--primary-accent);
+  color: var(--blue);
   text-decoration: underline;
 }
 
 .updateContent img {
   max-width: 100%;
-  border-radius: 6px;
+  border-radius: var(--r-card);
   margin: 8px 0;
-  border: 1px solid var(--border-color);
+  border: 0;
 }
 
 .attachmentsList {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--line);
   padding-top: 12px;
 }
 
@@ -824,19 +896,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 0.85rem;
+  background: var(--surface);
+  border: 0;
+  border-radius: 12px;
+  padding: 0 14px;
+  min-height: 44px;
+  font-size: 13px;
+  line-height: 18px;
   text-decoration: none;
-  color: var(--text-primary);
-  transition: background 0.2s;
+  color: var(--text);
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .attachmentItem:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--trk);
 }
 
 .attachmentName {
@@ -847,18 +920,19 @@
 }
 
 .attachmentSize {
-  color: var(--text-secondary);
-  font-size: 0.8rem;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .cardInteractions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--line);
   padding-top: 12px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
 }
 
 .interactionButtons {
@@ -868,36 +942,36 @@
 
 .interactionBtn {
   background: transparent;
-  border: none;
-  color: var(--text-secondary);
+  border: 0;
+  color: var(--muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .interactionBtn:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  background: var(--trk);
 }
 
 .replyComposerPlaceholder {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  background: var(--surface);
+  border: 0;
+  border-radius: 12px;
   padding: 10px 14px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
   cursor: text;
   margin-top: 8px;
-  transition: border-color 0.2s;
 }
 
 .replyComposerPlaceholder:hover {
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--trk);
 }
 
 .loadingContainer {
@@ -907,15 +981,15 @@
   justify-content: center;
   padding: 40px;
   gap: 16px;
-  color: var(--text-secondary);
+  color: var(--muted);
 }
 
 .loadingSpinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: 3px solid var(--trk);
   border-radius: 50%;
-  border-top-color: var(--primary-accent);
+  border-top-color: var(--blue);
   animation: spin 1s linear infinite;
 }
 
@@ -931,32 +1005,46 @@
   padding: 40px;
   text-align: center;
   gap: 12px;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.01);
-  border: 1px dashed var(--border-color);
-  border-radius: 8px;
+  color: var(--muted);
+  background: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
 }
 
+/* Secondary capsule button */
 .mondayLinkBtn {
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  color: var(--primary-accent);
+  background: var(--blue-tint);
+  border: 0;
+  color: var(--blue);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
+  padding: 0 16px;
+  min-height: 36px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   text-decoration: none;
 }
 
 .mondayLinkBtn:hover {
-  background: var(--primary-glow);
-  border-color: var(--primary-accent);
-  color: var(--primary-accent);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modalOverlay,
+  .modalContent,
+  .loadingSpinner {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+  .progressBarFill,
+  .chartBar,
+  .miniChartBar,
+  .customTooltip {
+    transition: none;
+  }
 }

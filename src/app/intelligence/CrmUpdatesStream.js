@@ -74,7 +74,7 @@ export default function CrmUpdatesStream() {
         <div className={styles.emptyState}>
           <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <strong>No updates yet</strong>
-          <span style={{ fontSize: '0.85rem' }}>Updates from Monday.com will appear here once posted.</span>
+          <span style={{ fontSize: '13px' }}>Updates from Monday.com will appear here once posted.</span>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxHeight: "65vh", overflowY: "auto", paddingRight: "4px" }}>
@@ -86,11 +86,11 @@ export default function CrmUpdatesStream() {
               .join('')
               .toUpperCase();
             
-            const colors = ['#10b981', '#8b5cf6', '#3b82f6', '#f59e0b', '#ec4899', '#14b8a6'];
+            const colors = ['var(--blue)', 'var(--indigo)', 'var(--purple)', 'var(--pink)', 'var(--brown)'];
             const avatarColor = colors[(update.creator?.name?.length || 0) % colors.length];
 
             return (
-              <div key={update.id} className={styles.updateCard} style={{ background: "rgba(255, 255, 255, 0.015)" }}>
+              <div key={update.id} className={styles.updateCard}>
                 <div className={styles.updateAuthorRow}>
                   <div 
                     className={styles.avatarCircle} 
@@ -107,24 +107,24 @@ export default function CrmUpdatesStream() {
                   </div>
                 </div>
 
-                <div style={{ fontSize: "0.85rem", color: "var(--primary-accent)", fontWeight: 600, background: "rgba(99, 102, 241, 0.08)", padding: "4px 8px", borderRadius: "4px", alignSelf: "flex-start" }}>
+                <div style={{ fontSize: "13px", lineHeight: "18px", color: "var(--text)", fontWeight: 500, background: "var(--trk)", padding: "3px 10px", borderRadius: "var(--r-pill)", alignSelf: "flex-start" }}>
                   📍 {update.itemName}
                 </div>
                 
                 <div 
                   className={styles.updateContent} 
-                  style={{ fontSize: "0.9rem" }}
+                  style={{ fontSize: "15px" }}
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(update.body) }}
                 />
 
-                <div className={styles.cardInteractions} style={{ borderTop: "1px solid rgba(255, 255, 255, 0.03)", paddingTop: "10px", marginTop: "4px" }}>
+                <div className={styles.cardInteractions} style={{ marginTop: "4px" }}>
                   {update.mondayUrl ? (
                     <a 
                       href={update.mondayUrl} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className={styles.mondayLinkBtn}
-                      style={{ fontSize: "0.8rem", padding: "4px 10px" }}
+                      style={{ fontSize: "13px", padding: "0 14px" }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>

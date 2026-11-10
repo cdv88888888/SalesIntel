@@ -90,7 +90,7 @@ export default async function AccountSync() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className="gradient-text">Account Sync Preview</h1>
+        <h1>Account Sync Preview</h1>
         <p>
           What would be written to Monday.com. Nothing is sent yet — this page is
           read-only while the account matching is set up.

@@ -78,15 +78,15 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
         onClick={() => setIsOpen(true)}
         style={{
           width: '100%',
-          padding: '10px 14px',
-          background: 'var(--input-bg)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
-          color: 'var(--text-primary)',
-          fontSize: '0.95rem',
-          outline: 'none',
-          boxShadow: isOpen ? '0 0 0 2px var(--primary-accent)' : 'none',
-          transition: 'box-shadow 0.2s ease'
+          minHeight: '44px',
+          padding: '0 14px',
+          background: 'var(--s2)',
+          border: 0,
+          borderRadius: '12px',
+          color: 'var(--text)',
+          fontSize: '15px',
+          outline: isOpen ? '2px solid var(--blue)' : 'none',
+          outlineOffset: '2px'
         }}
       />
 
@@ -100,11 +100,11 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'var(--primary-accent)',
-                color: 'white',
-                padding: '4px 10px',
-                borderRadius: '16px',
-                fontSize: '0.8rem',
+                background: 'var(--blue)',
+                color: '#fff',
+                padding: '3px 10px',
+                borderRadius: 'var(--r-pill)',
+                fontSize: '13px',
                 fontWeight: '500'
               }}>
                 <span style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -113,17 +113,17 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
                 <button
                   onClick={() => handleRemove(id)}
                   style={{
-                    background: 'rgba(0,0,0,0.2)',
-                    border: 'none',
+                    background: 'transparent',
+                    border: 0,
                     borderRadius: '50%',
-                    width: '18px',
-                    height: '18px',
+                    width: '20px',
+                    height: '20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    color: 'white',
-                    fontSize: '14px',
+                    color: '#fff',
+                    fontSize: '16px',
                     lineHeight: 1
                   }}
                 >
@@ -139,19 +139,19 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
       {isOpen && (
         <div style={{
           position: 'absolute',
-          top: '46px',
+          top: '52px',
           left: 0,
           right: 0,
-          background: 'var(--surface-dark)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
+          background: 'var(--surface)',
+          border: 0,
+          borderRadius: 'var(--r-card)',
           maxHeight: '300px',
           overflowY: 'auto',
           zIndex: 50,
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+          boxShadow: '0 24px 60px rgba(0,0,0,.35)'
         }}>
           {filteredDealers.length === 0 ? (
-            <div style={{ padding: '12px', color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
+            <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '13px', textAlign: 'center' }}>
               No dealers found
             </div>
           ) : (
@@ -160,14 +160,15 @@ export default function CustomerMultiSelect({ availableDealers, selectedCustomer
                 key={dealer.id}
                 onClick={() => handleSelect(dealer.id)}
                 style={{
-                  padding: '10px 14px',
+                  padding: '11px 14px',
+                  minHeight: '44px',
+                  boxSizing: 'border-box',
                   cursor: 'pointer',
-                  borderBottom: '1px solid var(--border-color)',
-                  fontSize: '0.9rem',
-                  color: 'var(--text-primary)',
-                  transition: 'background 0.2s ease'
+                  borderBottom: '1px solid var(--line)',
+                  fontSize: '15px',
+                  color: 'var(--text)'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-hover)'}
+                onMouseOver={(e) => e.currentTarget.style.background = 'var(--trk)'}
                 onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 {dealer.name}

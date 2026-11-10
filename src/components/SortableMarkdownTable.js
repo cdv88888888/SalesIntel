@@ -25,10 +25,9 @@ export default function SortableMarkdownTable({ children }) {
       th.style.cursor = 'pointer';
       th.style.userSelect = 'none';
       th.title = 'Click to sort column';
-      th.style.transition = 'background-color 0.2s';
-
+      
       th.onmouseover = () => {
-        th.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+        th.style.backgroundColor = 'var(--trk)';
       };
       th.onmouseout = () => {
         th.style.backgroundColor = 'transparent';
@@ -88,10 +87,9 @@ export default function SortableMarkdownTable({ children }) {
     const rows = tbody.querySelectorAll('tr');
     rows.forEach(row => {
       row.style.cursor = 'pointer';
-      row.style.transition = 'background-color 0.15s ease';
-
+      
       row.onmouseenter = () => {
-        row.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
+        row.style.backgroundColor = 'var(--trk)';
       };
       row.onmouseleave = () => {
         row.style.backgroundColor = 'transparent';
@@ -155,27 +153,25 @@ export default function SortableMarkdownTable({ children }) {
 
   return (
     <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', margin: '16px 0', width: '100%' }}>
-      <div style={{ width: '100%', overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+      <div style={{ width: '100%', overflowX: 'auto', border: 0, borderRadius: 'var(--r-card)', background: 'var(--surface)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>{children}</table>
       </div>
       <button 
         onClick={handleDownload} 
         style={{ 
-          background: 'var(--primary-accent)', 
-          color: 'white', 
-          padding: '8px 16px', 
-          borderRadius: '8px', 
-          border: 'none', 
+          background: 'var(--blue)', 
+          color: '#fff', 
+          minHeight: '44px', 
+          padding: '0 20px', 
+          borderRadius: '999px', 
+          border: 0, 
           cursor: 'pointer', 
-          fontSize: '0.9rem', 
+          fontSize: '15px', 
           display: 'flex', 
           alignItems: 'center', 
           gap: '8px',
-          fontWeight: 500,
-          transition: 'background-color 0.2s'
+          fontWeight: 600
         }}
-        onMouseOver={e => e.currentTarget.style.backgroundColor = '#2563eb'}
-        onMouseOut={e => e.currentTarget.style.backgroundColor = 'var(--primary-accent)'}
       >
         <Download size={16} />
         Download Data as CSV

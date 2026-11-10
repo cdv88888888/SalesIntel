@@ -16,7 +16,7 @@ export default function DealerRow({ dealer, startPeriod, endPeriod, target }) {
         <td style={{ fontWeight: 500 }}>
           <span 
             onClick={() => openClient(dealer)} 
-            style={{ color: "var(--primary-accent)", textDecoration: "underline", cursor: "pointer" }}
+            style={{ color: "var(--blue)", cursor: "pointer" }}
           >
             {dealer.name || "Unknown"}
           </span>
@@ -26,9 +26,9 @@ export default function DealerRow({ dealer, startPeriod, endPeriod, target }) {
             {dealer.classification || "Standard"}
           </span>
         </td>
-        <td>{dealer.kgsSold?.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</td>
-        <td style={{ color: "var(--text-secondary)" }}>{dealer.prevKgsSold ? `${dealer.prevKgsSold.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg` : "N/A"}</td>
-        <td style={{ color: "var(--text-secondary)" }}>{target > 0 ? `${target.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg` : "N/A"}</td>
+        <td className={styles.numCell}>{dealer.kgsSold?.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg</td>
+        <td className={styles.numCell} style={{ color: "var(--muted)" }}>{dealer.prevKgsSold ? `${dealer.prevKgsSold.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg` : "N/A"}</td>
+        <td className={styles.numCell} style={{ color: "var(--muted)" }}>{target > 0 ? `${target.toLocaleString(undefined, { maximumFractionDigits: 0 })} kg` : "N/A"}</td>
         <td>
           <button 
             className={styles.iconButton}

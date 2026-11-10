@@ -21,10 +21,10 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" data-theme={theme}>
       <body>
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--background-dark)' }}>
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: 'var(--bg)' }}>
           <ChatProvider>
             <ClientDrawerProvider>
-              <Suspense fallback={<div style={{ width: '80px', backgroundColor: 'var(--background-dark)' }} />}>
+              <Suspense fallback={<div style={{ width: '80px', backgroundColor: 'var(--bg)' }} />}>
                 <Sidebar />
               </Suspense>
               <main className="main-content">

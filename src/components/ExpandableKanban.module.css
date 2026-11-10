@@ -34,21 +34,20 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.8rem;
+  background: var(--trk);
+  color: var(--text);
+  border: 0;
+  border-radius: var(--r-pill);
+  padding: 8px 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   z-index: 20;
-  transition: background 0.2s;
+  transition: opacity 0.3s cubic-bezier(.2, .8, .2, 1);
 }
 
 .closeBtn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--s2);
 }
 
 @media (max-width: 768px) {
