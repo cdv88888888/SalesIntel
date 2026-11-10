@@ -12,7 +12,9 @@ import {
 } from "../../lib/declineAlerts";
 import { getStoredExplanations } from "../../lib/alertExplanations";
 import { getAssignments, getLastRun, getAlertState } from "../../lib/alertAgents";
+import { getStoredBriefings } from "../../lib/agentBriefing";
 import ExplainButton from "./ExplainButton";
+import AgentBriefing from "./AgentBriefing";
 
 const formatDate = (iso) => {
   if (!iso) return '—';
@@ -51,14 +53,16 @@ export default async function VolumeAlerts({ searchParams }) {
   let assignments = { batches: {}, owners: {} };
   let lastRun = null;
   let alertState = {};
+  let briefings = {};
   let loadError = null;
   try {
-    [rows, explanations, assignments, lastRun, alertState] = await Promise.all([
+    [rows, explanations, assignments, lastRun, alertState, briefings] = await Promise.all([
       getVolumeWatch(),
       getStoredExplanations(),
       getAssignments(),
       getLastRun(),
       getAlertState(),
+      getStoredBriefings(),
     ]);
   } catch (err) {
     console.error('Failed to load volume watch:', err);
@@ -150,6 +154,12 @@ export default async function VolumeAlerts({ searchParams }) {
                 : 'All on pace'}
             </span>
           </div>
+
+          <AgentBriefing
+            agentKey={agent.key}
+            initial={briefings[agent.key] || null}
+            dataThrough={dataThrough}
+          />
 
           {agent.alerts.length > 0 && (
             <div className={styles.tableWrap}>

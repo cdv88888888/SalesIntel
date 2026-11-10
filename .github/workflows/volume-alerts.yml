@@ -12,7 +12,7 @@ permissions: {}
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 90
     steps:
       - name: Run the agents
         env:
@@ -22,7 +22,20 @@ jobs:
             echo "The CRON_SECRET repository secret is not set." >&2
             exit 1
           fi
-          curl --fail-with-body --silent --show-error --max-time 420 \
-            -X POST \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            https://sales-intel--sales-intel-cdv-2026.asia-east1.hosted.app/api/cron/alerts
+          BASE=https://sales-intel--sales-intel-cdv-2026.asia-east1.hosted.app
+
+          # 1. Mark new and recovered accounts, write per-account explanations.
+          summary=$(curl --fail-with-body --silent --show-error --max-time 420 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" "$BASE/api/cron/alerts")
+          echo "$summary"
+
+          # 2. One investigating agent per batch, one request each.
+          failed=0
+          for agent in $(echo "$summary" | jq -r '.agentKeys[]?'); do
+            echo "--- $agent"
+            curl --fail-with-body --silent --show-error --max-time 420 \
+              -X POST -H "Authorization: Bearer $CRON_SECRET" \
+              "$BASE/api/cron/alerts/brief?agent=$agent" || failed=1
+            echo
+          done
+          exit $failed

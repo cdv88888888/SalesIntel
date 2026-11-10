@@ -179,6 +179,8 @@ export async function runAgents({ force = false } = {}) {
     dataAgeDays: daysStale(dataThrough),
     watched: rows.length,
     agents: agents.length,
+    // The scheduler runs one investigation per agent after this pass.
+    agentKeys: agents.map(a => a.key),
     flagged: flagged.length,
     newCount,
     resolvedCount,
