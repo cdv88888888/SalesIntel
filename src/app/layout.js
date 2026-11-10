@@ -8,7 +8,7 @@ import { ClientDrawerProvider } from "../context/ClientDrawerContext";
 import ViewDealerModal from "./intelligence/ViewDealerModal";
 
 export const metadata = {
-  title: "CDV-sales-intelligence",
+  title: "MGC Sales Intelligence",
   description: "Smart Relationship Management & Operational Automation",
 };
 

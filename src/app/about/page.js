@@ -3,7 +3,7 @@ import Link from 'next/link';
 import styles from './about.module.css';
 
 export const metadata = {
-  title: 'CDV Sales Intelligence | About',
+  title: 'MGC Sales Intelligence | About',
   description: 'Stop Reacting. Start Predicting. AI-powered sales intelligence platform.',
 };
 
@@ -23,7 +23,7 @@ export default function AboutPage() {
         <div className={styles.mockupContainer}>
           <Image 
             src="/landing-mockup.jpg" 
-            alt="CDV Sales Intelligence Dashboard Mockup" 
+            alt="MGC Sales Intelligence Dashboard Mockup" 
             width={1200} 
             height={800} 
             layout="responsive"
