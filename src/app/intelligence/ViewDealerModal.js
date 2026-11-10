@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import DOMPurify from "dompurify";
 import styles from "./intelligence.module.css";
 import { useClientDrawer } from "../../context/ClientDrawerContext";
+import { targetFor } from "../../lib/targets";
 
 const sanitizeHtml = (html) => {
   if (!html || typeof html !== 'string') return '';
@@ -161,7 +162,12 @@ export default function ViewDealerModal({ dealer: propDealer, customTrigger, isO
     );
   }
 
-  const target = (propTarget !== undefined && propTarget > 0) ? propTarget : (dealer?.prevKgsSold ? dealer.prevKgsSold * 1.15 : (dealer?.avgMonthKgs ? dealer.avgMonthKgs * 1.15 : 0));
+  // The page that opened the drawer passes the target it showed; a drawer
+  // opened by id gets it from the server action, which applies the saved
+  // targets. Only an account the server knows nothing about falls back.
+  const target = (propTarget !== undefined && propTarget > 0)
+    ? propTarget
+    : (dealer?.target > 0 ? dealer.target : targetFor(dealer).kgs);
   const current = dealer?.kgsSold || 0;
   const prev = dealer?.prevKgsSold || 0;
   const isBelowTarget = current < target;

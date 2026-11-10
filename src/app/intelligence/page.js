@@ -7,6 +7,7 @@ import CustomerMultiSelect from "./CustomerMultiSelect";
 import Link from "next/link";
 import DealerRow from "./DealerRow";
 import { getSettings } from "../../lib/settings";
+import { targetFor } from "../../lib/targets";
 import { cookies } from "next/headers";
 
 export default async function BusinessIntelligence({ searchParams }) {
@@ -71,8 +72,8 @@ export default async function BusinessIntelligence({ searchParams }) {
         let valB = b[sortBy];
         
         if (sortBy === 'target') {
-          valA = dealerTargets[a.id] !== undefined ? dealerTargets[a.id] : (a.prevKgsSold ? a.prevKgsSold * 1.15 : (a.avgMonthKgs ? a.avgMonthKgs * 1.15 : 0));
-          valB = dealerTargets[b.id] !== undefined ? dealerTargets[b.id] : (b.prevKgsSold ? b.prevKgsSold * 1.15 : (b.avgMonthKgs ? b.avgMonthKgs * 1.15 : 0));
+          valA = targetFor(a, dealerTargets).kgs;
+          valB = targetFor(b, dealerTargets).kgs;
         } else if (sortBy === 'name') {
           valA = a.name || "";
           valB = b.name || "";
@@ -298,7 +299,7 @@ export default async function BusinessIntelligence({ searchParams }) {
           </thead>
           <tbody>
             {dealers.map((dealer) => {
-              const target = dealerTargets[dealer.id] !== undefined ? dealerTargets[dealer.id] : (dealer.prevKgsSold ? dealer.prevKgsSold * 1.15 : (dealer.avgMonthKgs ? dealer.avgMonthKgs * 1.15 : 0));
+              const target = targetFor(dealer, dealerTargets).kgs;
               return (
                 <DealerRow 
                   key={dealer.id}

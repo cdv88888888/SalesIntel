@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { getBigQueryClient, getDealerAggregates, getAvailableMonths, getLatestCompleteMonth } from '../lib/bigquery';
 import { normalizeSegment, ALL_SEGMENT } from '../lib/segments';
+import { getSettings } from '../lib/settings';
+import { targetFor } from '../lib/targets';
 
 export async function setSegmentCookie(rawSegment) {
   const segment = normalizeSegment(rawSegment);
@@ -81,8 +83,12 @@ export async function getSingleDealerIntelligence(dealerId, rawSegment = 'dealer
     for (const [start, end, seg] of attempts) {
       const dealers = await getDealerAggregates(start, end, ids, seg);
       if (dealers && dealers.length > 0) {
+        // Attach the target the pages show, saved targets included, so the
+        // drawer never disagrees with the page it was opened from.
+        const settings = await getSettings(null, seg);
+        const target = targetFor(dealers[0], settings?.dealerTargets || {});
         // Return a plain object copy
-        return JSON.parse(JSON.stringify(dealers[0]));
+        return JSON.parse(JSON.stringify({ ...dealers[0], target: target.kgs, targetBasis: target.basis }));
       }
     }
     return null;
