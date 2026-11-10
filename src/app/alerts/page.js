@@ -10,7 +10,6 @@ import {
   DECLINE_THRESHOLD,
   STALE_AFTER_DAYS,
 } from "../../lib/declineAlerts";
-import { getStoredExplanations } from "../../lib/alertExplanations";
 import { getAssignments, getLastRun, getAlertState } from "../../lib/alertAgents";
 import { getStoredBriefings } from "../../lib/agentBriefing";
 import ExplainButton from "./ExplainButton";
@@ -49,16 +48,14 @@ export default async function VolumeAlerts({ searchParams }) {
   const segment = normalizeSegment(params?.segment);
 
   let rows = [];
-  let explanations = {};
   let assignments = { batches: {}, owners: {} };
   let lastRun = null;
   let alertState = {};
   let briefings = {};
   let loadError = null;
   try {
-    [rows, explanations, assignments, lastRun, alertState, briefings] = await Promise.all([
+    [rows, assignments, lastRun, alertState, briefings] = await Promise.all([
       getVolumeWatch(),
-      getStoredExplanations(),
       getAssignments(),
       getLastRun(),
       getAlertState(),
@@ -196,11 +193,7 @@ export default async function VolumeAlerts({ searchParams }) {
                           ))}
                         </div>
                         <div className={styles.sub}>{acc.alert.summary}</div>
-                        <ExplainButton
-                          accountId={acc.id}
-                          initial={explanations[acc.id] || null}
-                          dataThrough={dataThrough}
-                        />
+                        <ExplainButton accountId={acc.id} />
                       </td>
                       <td className={styles.num}>{formatKgs(acc.base30)} kg</td>
                       <td className={styles.num}>{formatKgs(acc.recent30)} kg</td>
