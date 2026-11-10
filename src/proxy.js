@@ -3,7 +3,7 @@ import { verifySession } from './lib/session';
 import { isPermanentAdmin } from './lib/admins';
 import { getAdminDb, FieldValue, withTimeout } from './lib/firebase-admin';
 
-const PROTECTED_PREFIXES = ['/intelligence', '/account-sync', '/alerts', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/gemini-ai', '/api/chat', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates'];
+const PROTECTED_PREFIXES = ['/intelligence', '/account-sync', '/alerts', '/risk', '/settings', '/predictive-ai', '/proactive', '/admin', '/gemini-ai', '/api/chat', '/api/settings', '/api/whitelist', '/api/admin', '/api/monday-updates', '/api/alerts'];
 
 // Module-level in-memory cache for the Firestore whitelist (15s TTL)
 let cachedWhitelist = null;
