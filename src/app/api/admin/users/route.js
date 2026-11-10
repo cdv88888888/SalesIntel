@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { getAdminDb } from '@/lib/firebase-admin';
 import { verifySession } from '@/lib/session';
 import { getUserRoleFromFirestore, getWhitelistedUsersFromFirestore } from '@/lib/whitelist';
 
@@ -83,8 +82,7 @@ export async function GET(request) {
   let scannedRows = 0;
   let logsError = null;
   try {
-    const logsRef = collection(db, 'access_logs');
-    const snap = await getDocs(query(logsRef, orderBy('timestamp', 'desc'), limit(SCAN_LIMIT)));
+    const snap = await getAdminDb().collection('access_logs').orderBy('timestamp', 'desc').limit(SCAN_LIMIT).get();
     snap.forEach((docSnap) => {
       const d = docSnap.data();
       const email = (d.email || '').trim().toLowerCase();

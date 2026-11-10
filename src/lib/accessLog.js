@@ -1,5 +1,4 @@
-import { db } from './firebase.js';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getAdminDb, FieldValue, withTimeout } from './firebase-admin.js';
 
 /**
  * Write an access/login event directly to the Firestore `access_logs`
@@ -16,14 +15,14 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 export async function recordAccessLog({ email, action, type = 'access', status = 'Allowed', ip = 'unknown' }) {
   try {
     if (!email || !action) return false;
-    await addDoc(collection(db, 'access_logs'), {
+    await withTimeout(getAdminDb().collection('access_logs').add({
       email: String(email).trim().toLowerCase(),
       action,
       type,
       status,
       ip: ip || 'unknown',
-      timestamp: serverTimestamp(),
-    });
+      timestamp: FieldValue.serverTimestamp(),
+    }));
     return true;
   } catch (err) {
     console.error('[ACCESS_LOG] Failed to write access log:', err?.message || err);

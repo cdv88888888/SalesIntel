@@ -1,5 +1,4 @@
-import { db } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { getAdminDb, withTimeout } from './firebase-admin';
 import { ALL_SEGMENT, BASE_SEGMENTS } from './segments';
 
 const SETTINGS_COLLECTION = "settings";
@@ -31,9 +30,8 @@ async function readSegmentSettings(month, segment) {
   const docId = getDocId(month, segment);
 
   try {
-    const docRef = doc(db, SETTINGS_COLLECTION, docId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
+    const docSnap = await withTimeout(getAdminDb().collection(SETTINGS_COLLECTION).doc(docId).get());
+    if (docSnap.exists) {
       const data = docSnap.data();
       memoryStore[docId] = data;
       return data;
@@ -89,8 +87,7 @@ export async function saveSettings(settings, month, segment = 'dealer') {
   const newSettings = { ...currentSettings, ...settings };
   
   try {
-    const docRef = doc(db, SETTINGS_COLLECTION, docId);
-    await setDoc(docRef, newSettings, { merge: true });
+    await withTimeout(getAdminDb().collection(SETTINGS_COLLECTION).doc(docId).set(newSettings, { merge: true }));
     memoryStore[docId] = newSettings;
   } catch (error) {
     console.error("Error saving settings to Firestore:", error);

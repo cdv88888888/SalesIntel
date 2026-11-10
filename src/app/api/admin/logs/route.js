@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { getAdminDb, FieldValue } from '@/lib/firebase-admin';
 import { verifySession, getSessionSecret } from '@/lib/session';
-import { getUserRole } from '@/lib/mockStore';
+import { getUserRoleFromFirestore } from '@/lib/whitelist';
 
 // GET: Fetch recent access logs from Firestore (Admin only)
 export async function GET(request) {
@@ -15,15 +14,13 @@ export async function GET(request) {
     }
 
     const email = session.email.trim().toLowerCase();
-    const role = getUserRole(email);
+    const role = await getUserRoleFromFirestore(email);
     
     if (role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const logsRef = collection(db, 'access_logs');
-    const q = query(logsRef, orderBy('timestamp', 'desc'), limit(1000));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getAdminDb().collection('access_logs').orderBy('timestamp', 'desc').limit(1000).get();
     
     const logs = [];
     querySnapshot.forEach((doc) => {
@@ -47,7 +44,7 @@ export async function GET(request) {
     // Explicitly return friendly explanation if Cloud Firestore is disabled
     let errorMessage = err.message || 'Unknown Firestore error';
     if (errorMessage.includes('PERMISSION_DENIED') || errorMessage.includes('disabled') || errorMessage.includes('Firestore API')) {
-      errorMessage = 'Cloud Firestore API is not enabled or provisioned in project sales-intel-cdv-2026. Please enable it in the Google Cloud/Firebase Console.';
+      errorMessage = 'The server could not read Cloud Firestore in project sales-intel-cdv-2026. Check that Firestore is enabled and that the App Hosting service account has Firestore access.';
     }
     
     return NextResponse.json({ 
@@ -83,14 +80,13 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and action are required' }, { status: 400 });
     }
 
-    const logsRef = collection(db, 'access_logs');
-    const docRef = await addDoc(logsRef, {
+    const docRef = await getAdminDb().collection('access_logs').add({
       email: email.trim().toLowerCase(),
       action,
       type: type || 'access',
       status: status || 'Allowed',
       ip: ip || 'unknown',
-      timestamp: serverTimestamp()
+      timestamp: FieldValue.serverTimestamp()
     });
 
     return NextResponse.json({ success: true, id: docRef.id });
@@ -111,14 +107,13 @@ export async function DELETE(request) {
     }
 
     const email = session.email.trim().toLowerCase();
-    const role = getUserRole(email);
+    const role = await getUserRoleFromFirestore(email);
     
     if (role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const logsRef = collection(db, 'access_logs');
-    const querySnapshot = await getDocs(query(logsRef, limit(1000)));
+    const querySnapshot = await getAdminDb().collection('access_logs').limit(1000).get();
     
     const isTestEmail = (em) => {
       if (!em || typeof em !== 'string') return true;
@@ -139,7 +134,7 @@ export async function DELETE(request) {
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
       if (isTestEmail(data.email)) {
-        deletePromises.push(deleteDoc(docSnap.ref));
+        deletePromises.push(docSnap.ref.delete());
         deletedCount++;
       }
     });

@@ -50,6 +50,15 @@ seconds means a referenced secret is missing or unreadable; a failure in
   authenticates as the App Hosting compute service account, which holds
   BigQuery Data Viewer and Job User on `accounts-recieva`. `BQ_PROJECT_ID`
   points jobs at that project.
+- Firestore (`whitelisted_users`, `settings`, `access_logs`) is reached only
+  from the server, through the Admin SDK in `src/lib/firebase-admin.js`,
+  authenticated as the App Hosting compute service account - no key file. The
+  browser never talks to Firestore, so `firestore.rules` denies all client
+  access. A rollout does **not** publish `firestore.rules`: after editing that
+  file, paste it into Firebase console > Firestore Database > Rules > Publish.
+  Firestore failures fall back silently to the built-in whitelist and
+  in-memory targets, so if saved targets or new users vanish after a restart,
+  look for `Firestore` errors in the backend logs first.
 - `MONDAY_API_TOKEN` is a commented-out Secret Manager reference in
   `apphosting.yaml`, pending the same IAM problem; set it as a console
   override instead.
