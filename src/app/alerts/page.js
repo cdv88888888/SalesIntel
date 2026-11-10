@@ -11,6 +11,7 @@ import {
   STALE_AFTER_DAYS,
 } from "../../lib/declineAlerts";
 import { getStoredExplanations } from "../../lib/alertExplanations";
+import { getAssignments, getLastRun, getAlertState } from "../../lib/alertAgents";
 import ExplainButton from "./ExplainButton";
 
 const formatDate = (iso) => {
@@ -18,6 +19,14 @@ const formatDate = (iso) => {
   const [y, m, day] = iso.split('-').map(Number);
   return new Date(y, m - 1, day).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
+  });
+};
+
+const formatDateTime = (iso) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    timeZone: 'Asia/Manila',
   });
 };
 
@@ -39,9 +48,18 @@ export default async function VolumeAlerts({ searchParams }) {
 
   let rows = [];
   let explanations = {};
+  let assignments = { batches: {}, owners: {} };
+  let lastRun = null;
+  let alertState = {};
   let loadError = null;
   try {
-    [rows, explanations] = await Promise.all([getVolumeWatch(), getStoredExplanations()]);
+    [rows, explanations, assignments, lastRun, alertState] = await Promise.all([
+      getVolumeWatch(),
+      getStoredExplanations(),
+      getAssignments(),
+      getLastRun(),
+      getAlertState(),
+    ]);
   } catch (err) {
     console.error('Failed to load volume watch:', err);
     loadError = err?.message || String(err);
@@ -68,6 +86,12 @@ export default async function VolumeAlerts({ searchParams }) {
           their own normal pace, or clearly overdue to order. Each agent watches{' '}
           {WATCH_BATCH_SIZE} accounts, ranked by volume — Agent 1 holds the largest.
         </p>
+        {lastRun && (
+          <p className={styles.runLine}>
+            Agents last ran {formatDateTime(lastRun.checkedAt || lastRun.ranAt)}: {lastRun.newCount} new,{' '}
+            {lastRun.resolvedCount} recovered.
+          </p>
+        )}
       </header>
 
       {loadError && (
@@ -117,6 +141,8 @@ export default async function VolumeAlerts({ searchParams }) {
             <h2>{segmentLabel(agent.segment)} · Agent {agent.batch}</h2>
             <span className={styles.agentMeta}>
               Accounts ranked {agent.firstRank}–{agent.lastRank} by volume
+              {' · '}
+              {assignments.batches[agent.key] || 'Unassigned'}
             </span>
             <span className={agent.alerts.length > 0 ? styles.badgeAlert : styles.badgeClear}>
               {agent.alerts.length > 0
@@ -143,7 +169,12 @@ export default async function VolumeAlerts({ searchParams }) {
                   {agent.alerts.map(acc => (
                     <tr key={acc.id}>
                       <td>
-                        <div className={styles.name}>{acc.name}</div>
+                        <div className={styles.name}>
+                          {acc.name}
+                          {lastRun && alertState[acc.id]?.firstFlaggedAt === lastRun.ranAt && (
+                            <span className={styles.newTag}>New</span>
+                          )}
+                        </div>
                         <div className={styles.sub}>{acc.id} · {acc.channel}</div>
                       </td>
                       <td className={styles.why}>

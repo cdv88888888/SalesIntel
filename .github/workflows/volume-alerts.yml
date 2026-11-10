@@ -1,0 +1,28 @@
+name: Volume alert agents
+
+# Runs the volume-watch agents every two days at 6:00 AM Manila time
+# (22:00 UTC the evening before), and on demand from the Actions tab.
+on:
+  schedule:
+    - cron: '0 22 */2 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run the agents
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "The CRON_SECRET repository secret is not set." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 420 \
+            -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://sales-intel--sales-intel-cdv-2026.asia-east1.hosted.app/api/cron/alerts
