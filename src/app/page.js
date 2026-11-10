@@ -212,7 +212,7 @@ export default async function Dashboard({ searchParams }) {
           </div>
         </section>
 
-        {/* Feature 2: Gemini AI Pattern Recognition Engine */}
+        {/* Feature 2: Claude AI Pattern Recognition Engine */}
         <section className={`${styles.section}`}>
           <h2 className={styles.sectionTitle}>
             🧠 Strategic Action Cards
@@ -221,7 +221,7 @@ export default async function Dashboard({ searchParams }) {
             {atRiskDealers.map(dealer => (
               <ClientClickWrapper key={`ai-${dealer.id}`} dealerId={dealer.id} className={styles.actionCard}>
                 <div className={styles.actionHeader}>
-                  ✨ Gemini AI Insight
+                  ✨ Claude AI Insight
                 </div>
                 <p>{dealer.name}&apos;s ordering cadence has slowed down significantly relative to their normal baseline. Suggest deploying a pre-approved volume promotion immediately to shield this account from rival poaching.</p>
               </ClientClickWrapper>

@@ -41,7 +41,7 @@ export default function GeminiChatWidget() {
     };
   }, [isOpen]);
 
-  // Hide the floating widget entirely if we are on the full-screen gemini-ai page or the public about page
+  // Hide the floating widget entirely if we are on the full-screen /gemini-ai chat page or the public about page
   if (pathname === '/gemini-ai' || pathname === '/about') {
     return null;
   }
